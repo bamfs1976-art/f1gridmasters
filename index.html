@@ -2220,6 +2220,9 @@ function renderDraft() {
       </div>
       ${headerStatus}
     </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+      <button class="share-standings-btn" onclick="sharePickOrderImage(${raceIdx})" title="Download pick order as shareable image" style="background:var(--gold);color:#000;font-weight:700;">📸 SHARE PICK ORDER</button>
+    </div>
   `;
 
   // ── DRIVER SELECTION GRID ────────────────────────────────────
@@ -6345,6 +6348,148 @@ async function shareStandingsImage() {
     link.href = canvas.toDataURL('image/png');
     link.click();
     showToast('Standings image downloaded!', 'success');
+  } catch(e) {
+    showToast('Image generation failed: ' + e.message, 'error');
+  }
+}
+
+// ── PICK ORDER SHARE IMAGE ────────────────────────────────────
+function sharePickOrderImage(raceIdx) {
+  const race = RACES[raceIdx];
+  if (!race) return;
+
+  const draftOrder = getDraftOrderForRace(raceIdx);
+  if (draftOrder.length === 0) { showToast('No players in draft order', 'info'); return; }
+
+  // Calculate "9pm Thursday before race" deadline
+  function getDeadlineLabel(raceDateStr) {
+    const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+    const parts = raceDateStr.trim().split(' ');
+    const mon = months[parts[0]]; const day = parseInt(parts[1]);
+    if (mon === undefined || isNaN(day)) return '9PM THURSDAY BEFORE RACE';
+    const raceDate = new Date(2026, mon, day);
+    const dow = raceDate.getDay();
+    const daysBack = dow === 4 ? 0 : ((dow + 3) % 7);
+    const thu = new Date(raceDate); thu.setDate(raceDate.getDate() - daysBack);
+    const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    return `9PM ${dayNames[thu.getDay()]} ${thu.getDate()} ${monNames[thu.getMonth()]}`;
+  }
+  const deadlineLabel = getDeadlineLabel(race.date);
+
+  showToast('Generating pick order image...', 'info');
+
+  const SCALE = 2, W = 540, PAD = 28;
+  const HEADER_H = 130, DEADLINE_H = 64, ROW_H = 58, FOOTER_H = 54, LABEL_H = 22;
+  const totalH = HEADER_H + DEADLINE_H + LABEL_H + 8 + draftOrder.length * ROW_H + FOOTER_H + 16;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * SCALE; canvas.height = totalH * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  // Background + top stripe
+  ctx.fillStyle = '#090910'; ctx.fillRect(0, 0, W, totalH);
+  ctx.fillStyle = '#E10600'; ctx.fillRect(0, 0, W, 6);
+
+  // App title
+  let y = 24;
+  ctx.font = '900 13px Orbitron, sans-serif';
+  ctx.fillStyle = '#E10600'; ctx.textAlign = 'center';
+  ctx.fillText('F1 GRID MASTERS 2026', W / 2, y);
+
+  // Race flag + name
+  y += 24;
+  ctx.font = '32px serif'; ctx.textAlign = 'center';
+  ctx.fillText(race.flag, W / 2, y + 2);
+  y += 30;
+  ctx.font = '900 21px Orbitron, sans-serif';
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+  ctx.fillText(`${race.name} GRAND PRIX`, W / 2, y);
+  y += 18;
+  ctx.font = '500 11px Rajdhani, sans-serif';
+  ctx.fillStyle = '#666677'; ctx.textAlign = 'center';
+  ctx.fillText(`${race.circuit}  ·  ${race.date} 2026${race.sprint ? '  ·  SPRINT WEEKEND' : ''}`, W / 2, y);
+
+  // Deadline banner
+  y += 16;
+  ctx.fillStyle = 'rgba(255,200,0,0.12)';
+  ctx.strokeStyle = 'rgba(255,200,0,0.5)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(PAD, y, W - PAD * 2, DEADLINE_H, 8); ctx.fill(); ctx.stroke();
+  ctx.font = '700 10px Orbitron, sans-serif';
+  ctx.fillStyle = '#FFD700'; ctx.textAlign = 'center';
+  ctx.fillText('⏰  PICKS DUE', W / 2, y + 16);
+  ctx.font = '900 17px Orbitron, sans-serif';
+  ctx.fillText(deadlineLabel, W / 2, y + 36);
+
+  // Column headers
+  y += DEADLINE_H + 14;
+  ctx.font = '700 10px Orbitron, sans-serif';
+  ctx.fillStyle = '#444455'; ctx.textAlign = 'left';
+  ctx.fillText('PICK ORDER', PAD + 46, y);
+  ctx.textAlign = 'right';
+  ctx.fillText('PLAYER', W - PAD, y);
+  y += 6;
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke();
+
+  // Player rows
+  const medals = ['🥇','🥈','🥉'];
+  draftOrder.forEach((pid, i) => {
+    const player = STATE.players.find(p => p.id === pid);
+    if (!player) return;
+    const rowY = y + i * ROW_H, midY = rowY + ROW_H / 2;
+
+    if (i % 2 === 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.02)';
+      ctx.fillRect(PAD, rowY + 2, W - PAD * 2, ROW_H - 4);
+    }
+
+    // Medal / position number
+    if (i < 3) {
+      ctx.font = '22px serif'; ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+      ctx.fillText(medals[i], PAD + 16, midY + 8);
+    } else {
+      ctx.font = '900 18px Orbitron, sans-serif';
+      ctx.fillStyle = '#334455'; ctx.textAlign = 'center';
+      ctx.fillText(`${i+1}`, PAD + 16, midY + 6);
+    }
+
+    // Player colour accent bar
+    ctx.fillStyle = player.color || '#E10600';
+    ctx.fillRect(PAD + 34, rowY + 10, 4, ROW_H - 20);
+
+    // Player name
+    ctx.font = '700 17px Rajdhani, sans-serif';
+    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+    ctx.fillText(player.name.toUpperCase(), PAD + 46, midY + 6);
+
+    // "PICK P1" label (right)
+    ctx.font = '700 11px Orbitron, sans-serif';
+    ctx.fillStyle = player.color || '#E10600';
+    ctx.textAlign = 'right';
+    ctx.fillText(`PICK P${i+1}`, W - PAD, midY + 5);
+
+    // Row divider
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD + 34, rowY + ROW_H - 1); ctx.lineTo(W - PAD, rowY + ROW_H - 1); ctx.stroke();
+  });
+
+  // Footer
+  const footerY = y + draftOrder.length * ROW_H + 8;
+  ctx.fillStyle = '#E10600'; ctx.fillRect(0, footerY, W, FOOTER_H);
+  ctx.font = 'bold 13px Orbitron, sans-serif';
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+  ctx.fillText('F1 GRID MASTERS 2026  ·  f1gridmasters.netlify.app', W / 2, footerY + FOOTER_H / 2 + 5);
+
+  // Download
+  try {
+    const link = document.createElement('a');
+    link.download = `f1-gridmasters-picks-${race.name.toLowerCase().replace(/\s+/g,'-')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('Pick order image downloaded!', 'success');
   } catch(e) {
     showToast('Image generation failed: ' + e.message, 'error');
   }
