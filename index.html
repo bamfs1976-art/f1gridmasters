@@ -1844,10 +1844,17 @@ function _normaliseState() {
   if (!STATE.draftSubmitted) STATE.draftSubmitted = {};
   if (!STATE.draftDeadlines) STATE.draftDeadlines = {}; // {raceId: ISO string}
   if (!STATE.adminUndoStack) STATE.adminUndoStack = [];
-  // Self-heal: if prefs exist but submitted flag is missing, backfill it
-  // and save back to Supabase so every browser gets the corrected state
+  // Self-heal: if prefs exist but submitted flag is missing, backfill it —
+  // BUT ONLY for races that are already fully resolved (all picks assigned).
+  // Never auto-mark a player as submitted on the live/upcoming race, as that
+  // would lock in their picks the moment they tap a single driver.
   let healed = false;
   Object.keys(STATE.draftPrefs).forEach(raceId => {
+    const picks = STATE.draftPicks[raceId] || {};
+    const fullyResolved = STATE.players.length > 0 &&
+                          Object.keys(picks).length >= STATE.players.length;
+    // Only backfill submitted flags for races that are already resolved
+    if (!fullyResolved) return;
     if (!STATE.draftSubmitted[raceId]) STATE.draftSubmitted[raceId] = {};
     Object.keys(STATE.draftPrefs[raceId]).forEach(playerId => {
       if (STATE.draftPrefs[raceId][playerId].length > 0 && !STATE.draftSubmitted[raceId][playerId]) {
@@ -1856,25 +1863,8 @@ function _normaliseState() {
       }
     });
   });
-  // Push the healed state back to Supabase so all browsers get the fix
-  // Also check if all prefs are now in and draft hasn't been resolved yet —
-  // this handles the case where the last player's flag was backfilled rather
-  // than set via submitMyPrefs (which is the only other place resolveDraft runs)
   if (healed) {
-    setTimeout(() => {
-      saveState();
-      // Check every active race for a pending auto-resolve
-      RACES.forEach((race, idx) => {
-        const raceId = race.id;
-        const picks = STATE.draftPicks[raceId] || {};
-        const alreadyResolved = Object.keys(picks).length >= STATE.players.length && STATE.players.length > 0;
-        if (!alreadyResolved && allPrefsSubmitted(raceId)) {
-          const draftOrder = getDraftOrderForRace(idx);
-          resolveDraft(raceId, draftOrder);
-          showToast('Draft auto-resolved after self-heal!', 'success');
-        }
-      });
-    }, 100);
+    setTimeout(() => saveState(), 100);
   }
 }
 
