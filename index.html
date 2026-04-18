@@ -14,7 +14,13 @@
 <meta property="og:image" content="https://f1gridmasters.netlify.app/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#E10600">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="F1 Grid Masters">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 95,27 95,73 50,98 5,73 5,27' fill='%23E10600'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-family='Arial Black' font-size='34' font-weight='900' fill='white'%3EF1%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23090910'/%3E%3Cpolygon points='50,8 88,30 88,70 50,92 12,70 12,30' fill='%23E10600'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-family='Arial Black' font-size='32' font-weight='900' fill='white'%3EF1%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22F1+Grid+Masters+2026%22%2C%22short_name%22%3A%22Grid+Masters%22%2C%22description%22%3A%22Fantasy+F1+draft+league+for+the+2026+season%22%2C%22start_url%22%3A%22%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23090910%22%2C%22theme_color%22%3A%22%23E10600%22%2C%22orientation%22%3A%22portrait-primary%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%2520viewBox%3D'0%25200%2520100%2520100'%253E%253Crect%2520width%3D'100'%2520height%3D'100'%2520rx%3D'18'%2520fill%3D'%2523090910'%2F%253E%253Cpolygon%2520points%3D'50%2C8%252088%2C30%252088%2C70%252050%2C92%252012%2C70%252012%2C30'%2520fill%3D'%2523E10600'%2F%253E%253Ctext%2520x%3D'50'%2520y%3D'62'%2520text-anchor%3D'middle'%2520font-family%3D'Arial%2520Black'%2520font-size%3D'32'%2520font-weight%3D'900'%2520fill%3D'white'%253EF1%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -159,6 +165,16 @@ nav {
 }
 .nav-tab:hover { color: var(--text); }
 .nav-tab.active { color: var(--text); border-bottom-color: var(--red); }
+/* Visual separator between primary and reference tabs */
+.nav-sep {
+  display: inline-block; width: 1px; height: 22px;
+  background: var(--border); margin: 0 4px; align-self: center; flex-shrink: 0;
+}
+/* Reference tabs slightly subdued to de-prioritise visually */
+.nav-tab-ref { color: #666688; font-size: 8px; }
+.nav-tab-ref:hover { color: var(--muted); }
+.nav-tab-ref.active { color: var(--text); border-bottom-color: var(--accent); }
+
 .nav-tab .tab-badge {
   display: inline-block; background: var(--red); color: white;
   font-size: 8px; padding: 1px 5px; border-radius: 10px; margin-left: 5px;
@@ -1189,8 +1205,9 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       <button class="nav-tab" onclick="showPage('schedule')">📅 CALENDAR</button>
       <button class="nav-tab" onclick="showPage('drivers')">👤 DRIVERS</button>
       <button class="nav-tab" onclick="showPage('stats')">📈 STATS</button>
-      <button class="nav-tab" onclick="showPage('2026gp')">🏁 2026 GP</button>
-      <button class="nav-tab" onclick="showPage('2025')">🗂 2025 SEASON</button>
+      <span class="nav-sep" aria-hidden="true"></span>
+      <button class="nav-tab nav-tab-ref" onclick="showPage('2026gp')">🏁 2026 GP</button>
+      <button class="nav-tab nav-tab-ref" onclick="showPage('2025')">🗂 2025 SEASON</button>
       <button class="nav-tab" onclick="showPage('admin')" id="nav-admin" style="color:#ffa500;">🔐 ADMIN</button>
     </div>
     <!-- Theme toggle + Identity badge + Hamburger button (mobile only) -->
@@ -1241,8 +1258,10 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   <button class="mobile-nav-tab" id="mob-stats" onclick="mobileNav('stats')">
     <span class="mob-icon">📈</span> STATS
   </button>
+  <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+  <div style="font-family:Share Tech Mono,monospace;font-size:9px;letter-spacing:2px;color:var(--muted);padding:2px 20px 6px;">REFERENCE</div>
   <button class="mobile-nav-tab" id="mob-2026gp" onclick="mobileNav('2026gp')">
-    <span class="mob-icon">🏁</span> 2026 GP
+    <span class="mob-icon">🏁</span> 2026 GP RESULTS
   </button>
   <button class="mobile-nav-tab" id="mob-2025" onclick="mobileNav('2025')">
     <span class="mob-icon">🗂</span> 2025 SEASON
@@ -2100,7 +2119,7 @@ function submitMyPrefs(raceId, rankedShorts) {
   updateRaceStatusBanner();
   setTimeout(() => { _localEditLock = false; }, 700);
 
-  const submittedCount = Object.keys(STATE.draftPrefs[raceId]).length;
+  const submittedCount = Object.keys(STATE.draftSubmitted[raceId]).length;
   const totalPlayers = STATE.players.length;
   showToast(`Preferences saved! (${submittedCount}/${totalPlayers} submitted)`, 'success');
   if (typeof playSubmitFeedback === 'function') playSubmitFeedback();
@@ -2716,17 +2735,26 @@ function renderResultEntry(raceId) {
     `;
   }).join('');
 
+  const entryPanel = adminUnlocked ? `
+    <div class="card card-accent">
+      <div class="section-head">${race.flag} ${race.name} — FINISHING ORDER (P1–P10)</div>
+      <div class="finishing-grid">${finishSlots}</div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn btn-red" onclick="saveResult('${raceId}')">💾 SAVE RESULT</button>
+        <button class="btn btn-outline btn-sm" onclick="clearResult('${raceId}')">CLEAR</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;">Enter only the top 10 from the <strong style="color:var(--text)">main race</strong>. Sprint race results do not count. Drivers outside P10 score 0 pts.</p>
+    </div>` : `
+    <div class="card" style="text-align:center;padding:32px 20px;border:1px solid rgba(255,165,0,0.2)">
+      <div style="font-size:40px;margin-bottom:12px">🔐</div>
+      <div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;margin-bottom:8px">ADMIN ONLY</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:18px">Result entry is restricted to the league admin.<br>Go to the Admin tab to unlock.</div>
+      <button class="btn btn-outline btn-sm" onclick="showPage('admin')" style="border-color:rgba(255,165,0,0.4);color:#ffa500">🔐 GO TO ADMIN</button>
+    </div>`;
+
   area.innerHTML = `
     <div class="grid-2">
-      <div class="card card-accent">
-        <div class="section-head">${race.flag} ${race.name} — FINISHING ORDER (P1–P10)</div>
-        <div class="finishing-grid">${finishSlots}</div>
-        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-          <button class="btn btn-red" onclick="saveResult('${raceId}')">💾 SAVE RESULT</button>
-          <button class="btn btn-outline btn-sm" onclick="clearResult('${raceId}')">CLEAR</button>
-        </div>
-        <p style="font-size:12px;color:var(--muted);margin-top:10px;">Enter only the top 10 from the <strong style="color:var(--text)">main race</strong>. Sprint race results do not count. Drivers outside P10 score 0 pts.</p>
-      </div>
+      ${entryPanel}
       <div class="card">
         <div class="section-head">PLAYER PICKS · POINTS</div>
         ${picksDisplay || '<p style="color:var(--muted);font-size:13px">No picks for this race</p>'}
@@ -2773,19 +2801,28 @@ function saveResult(raceId) {
 }
 
 function clearResult(raceId) {
-  openModal('Clear Result', 'Clear the result for this race? This will reset points.', () => {
-    delete STATE.raceResults[raceId];
-    saveState();
-    renderResults();
-    showToast('Result cleared', 'info');
-  });
+  const race = RACES.find(r => r.id === raceId);
+  openModal(
+    'Clear Result — ' + (race?.name || raceId),
+    'This removes the finishing order, resets all player points for this race, and re-seals the picks. Cannot be undone. Continue?',
+    () => {
+      pushUndo('Clear result ' + raceId);
+      delete STATE.raceResults[raceId];
+      // Also re-seal picks so players can't see each other's drivers without a result
+      if (STATE.draftRevealed) delete STATE.draftRevealed[raceId];
+      saveState();
+      renderResults();
+      renderLeaderboard();
+      showToast(race?.name + ' result cleared — picks re-sealed', 'info');
+    }
+  );
 }
 
 // ============================================================
 //  LEADERBOARD
 // ============================================================
 function calcPlayerPoints(playerId) {
-  let total = 0;
+  let total = 0, wins = 0, podiums = 0;
   const racePoints = {};
   RACES.forEach(race => {
     const picks = STATE.draftPicks[race.id] || {};
@@ -2794,14 +2831,19 @@ function calcPlayerPoints(playerId) {
     const driverShort = picks[playerId];
     if (!driverShort) { racePoints[race.id] = null; return; }
     const finishPos = Object.entries(result).find(([p, s]) => s === driverShort)?.[0];
-    const pts = finishPos ? (POINTS_MAP[parseInt(finishPos)] || 0) : 0;
+    const pos = finishPos ? parseInt(finishPos) : null;
+    const pts = pos ? (POINTS_MAP[pos] || 0) : 0;
     racePoints[race.id] = pts;
     // Only add to total if results are in AND picks are revealed
-    if (STATE.raceResults[race.id] && revealed) total += pts;
+    if (STATE.raceResults[race.id] && revealed) {
+      total += pts;
+      if (pos === 1) wins++;
+      if (pos !== null && pos <= 3) podiums++;
+    }
   });
   // Add prediction bonus if season is over and prediction was correct
   const bonus = (typeof getPredictionBonus === 'function') ? getPredictionBonus(playerId) : 0;
-  return { total: total + bonus, racePoints, predictionBonus: bonus };
+  return { total: total + bonus, racePoints, predictionBonus: bonus, wins, podiums };
 }
 
 function renderLeaderboard() {
@@ -2811,10 +2853,10 @@ function renderLeaderboard() {
     return;
   }
   const playerData = STATE.players.map(player => {
-    const { total, racePoints, predictionBonus } = calcPlayerPoints(player.id);
-    return { ...player, total, racePoints, predictionBonus: predictionBonus || 0 };
+    const { total, racePoints, predictionBonus, wins, podiums } = calcPlayerPoints(player.id);
+    return { ...player, total, racePoints, predictionBonus: predictionBonus || 0, wins, podiums };
   });
-  playerData.sort((a, b) => b.total - a.total);
+  playerData.sort((a, b) => b.total - a.total || b.wins - a.wins || b.podiums - a.podiums);
 
   // Calculate trend — position change from previous race result
   const completedRaces = RACES.filter(r => STATE.raceResults[r.id] && STATE.draftRevealed?.[r.id]);
@@ -3290,7 +3332,7 @@ function renderAdminDashboard() {
           <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">CURRENT RACE</div>
         </div>
         ${(() => {
-          const pd = STATE.players.map(p => { const {total} = calcPlayerPoints(p.id); return {...p, total}; }).sort((a,b)=>b.total-a.total);
+          const pd = STATE.players.map(p => { const {total,wins,podiums} = calcPlayerPoints(p.id); return {...p, total, wins, podiums}; }).sort((a,b)=>b.total-a.total||b.wins-a.wins||b.podiums-a.podiums);
           const leader = pd[0];
           const totalPts = pd.reduce((s,p)=>s+p.total,0);
           return leader ? `
@@ -4107,14 +4149,14 @@ function renderFormGuide(el) {
   const last5 = revealedRaces.slice(-5);
 
   const playerData = STATE.players.map(p => {
-    const { total, racePoints } = calcPlayerPoints(p.id);
+    const { total, racePoints, wins, podiums } = calcPlayerPoints(p.id);
     const last5pts = last5.map(r => racePoints[r.id] ?? null);
     const last5total = last5pts.filter(x => x !== null).reduce((a,b) => a+b, 0);
     const avg = revealedRaces.length > 0
       ? (total / revealedRaces.length).toFixed(1)
       : 0;
-    return { ...p, total, racePoints, last5pts, last5total, avg };
-  }).sort((a,b) => b.total - a.total);
+    return { ...p, total, racePoints, last5pts, last5total, avg, wins, podiums };
+  }).sort((a,b) => b.total - a.total || b.wins - a.wins || b.podiums - a.podiums);
 
   const maxPts = Math.max(...playerData.map(p => p.total), 1);
   const allPts = playerData.flatMap(p => Object.values(p.racePoints).filter(x => x !== null && x > 0));
@@ -6056,15 +6098,15 @@ function shareStandings() {
   const lastRace = completedRaces[completedRaces.length - 1] || null;
 
   const playerData = STATE.players.map(player => {
-    const { total, racePoints } = calcPlayerPoints(player.id);
+    const { total, racePoints, wins, podiums } = calcPlayerPoints(player.id);
     const lastPts  = lastRace ? (racePoints[lastRace.id] ?? null) : null;
     const lastPick = lastRace ? (STATE.draftPicks[lastRace.id]?.[player.id] || null) : null;
     // finish position of their driver in the last race
     const lastPos  = lastRace && lastPick
       ? Object.entries(STATE.raceResults[lastRace.id] || {}).find(([,s]) => s === lastPick)?.[0] || null
       : null;
-    return { ...player, total, lastPts, lastPick, lastPos };
-  }).sort((a, b) => b.total - a.total);
+    return { ...player, total, lastPts, lastPick, lastPos, wins, podiums };
+  }).sort((a, b) => b.total - a.total || b.wins - a.wins || b.podiums - a.podiums);
 
   const medals = ['🥇','🥈','🥉'];
   const lines = ['🏎 F1 GRID MASTERS 2026'];
@@ -6109,15 +6151,15 @@ async function shareStandingsImage() {
     const lastRace = completedRaces[completedRaces.length - 1] || null;
 
     const playerData = STATE.players.map(player => {
-      const { total, racePoints } = calcPlayerPoints(player.id);
+      const { total, racePoints, wins, podiums } = calcPlayerPoints(player.id);
       const lastPts  = lastRace ? (racePoints[lastRace.id] ?? 0) : 0;
       const lastPick = lastRace ? (STATE.draftPicks[lastRace.id]?.[player.id] || '—') : '—';
       const lastPos  = lastRace && lastPick !== '—'
         ? Object.entries(STATE.raceResults[lastRace.id] || {}).find(([,s]) => s === lastPick)?.[0] || null
         : null;
       const driver   = DRIVERS.find(d => d.short === lastPick);
-      return { ...player, total, lastPts, lastPick, lastPos, driverColor: driver?.teamColor || '#888' };
-    }).sort((a, b) => b.total - a.total);
+      return { ...player, total, lastPts, lastPick, lastPos, driverColor: driver?.teamColor || '#888', wins, podiums };
+    }).sort((a, b) => b.total - a.total || b.wins - a.wins || b.podiums - a.podiums);
 
     const raceRanked = lastRace ? [...playerData].sort((a, b) => (b.lastPts||0) - (a.lastPts||0)) : [];
     const maxTotal   = playerData[0]?.total || 1;
