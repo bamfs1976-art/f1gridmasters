@@ -1840,7 +1840,13 @@ async function loadState() {
   const sb = getSupabase();
   if (sb) {
     try {
-      const { data, error } = await sb.from('f1_game_state').select('state').eq('id','main').single();
+      // Race the Supabase query against an 8-second timeout so a hung
+      // network call can never freeze the loading screen indefinitely.
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Supabase load timeout')), 8000)
+      );
+      const queryPromise = sb.from('f1_game_state').select('state').eq('id','main').single();
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
       if (!error && data && data.state && Object.keys(data.state).length > 0) {
         STATE = data.state;
         _normaliseState();
@@ -1855,6 +1861,11 @@ async function loadState() {
 }
 
 function _normaliseState() {
+  if (!STATE.players) STATE.players = [];
+  if (!STATE.draftPicks) STATE.draftPicks = {};
+  if (!STATE.raceResults) STATE.raceResults = {};
+  if (!STATE.baseOrder) STATE.baseOrder = [];
+  if (!STATE.draftOrder) STATE.draftOrder = [];
   if (!STATE.draftRevealed) STATE.draftRevealed = {};
   if (!STATE.activityLog) STATE.activityLog = [];
   if (!STATE.predictions) STATE.predictions = {};
@@ -6528,28 +6539,32 @@ function sharePickOrderImage(raceIdx) {
 }
 
 async function initApp() {
-  await loadState();
-  subscribeToRealtime();
-  renderPlayerList();
-  renderSchedule();
-  updateIdentityBadge();
-  updateRaceStatusBanner();
-  if (typeof checkDraftDeadlines === 'function') checkDraftDeadlines();
-  if (typeof updateRaceCountdown === 'function') updateRaceCountdown();
+  try {
+    await loadState();
+    subscribeToRealtime();
+    renderPlayerList();
+    renderSchedule();
+    updateIdentityBadge();
+    updateRaceStatusBanner();
+    if (typeof checkDraftDeadlines === 'function') checkDraftDeadlines();
+    if (typeof updateRaceCountdown === 'function') updateRaceCountdown();
 
-  if (STATE.started && STATE.players.length > 0) {
-    showPage('draft');
-  } else {
-    syncMobileNav('setup');
+    if (STATE.started && STATE.players.length > 0) {
+      showPage('draft');
+    } else {
+      syncMobileNav('setup');
+    }
+
+    if (STATE.notifEnabled && typeof scheduleDraftReminders === 'function') {
+      scheduleDraftReminders();
+    }
+  } catch(e) {
+    console.error('initApp error:', e);
+  } finally {
+    // Always remove loading overlay — even if something above throws
+    const loader = document.getElementById('sb-loading');
+    if (loader) loader.remove();
   }
-
-  if (STATE.notifEnabled && typeof scheduleDraftReminders === 'function') {
-    scheduleDraftReminders();
-  }
-
-  // Remove loading overlay
-  const loader = document.getElementById('sb-loading');
-  if (loader) loader.remove();
 }
 
 initApp();
