@@ -148,7 +148,8 @@ nav {
 }
 
 /* Desktop tabs */
-.nav-tabs { display: flex; gap: 0; flex: 1; }
+.nav-tabs { display: flex; gap: 0; flex: 1; overflow-x: auto; scrollbar-width: none; }
+.nav-tabs::-webkit-scrollbar { display: none; }
 .nav-tab {
   padding: 16px 18px;
   background: none; border: none;
@@ -1189,9 +1190,9 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       <button class="nav-tab" onclick="showPage('schedule')">📅 CALENDAR</button>
       <button class="nav-tab" onclick="showPage('drivers')">👤 DRIVERS</button>
       <button class="nav-tab" onclick="showPage('stats')">📈 STATS</button>
+      <button class="nav-tab" onclick="showPage('admin')" id="nav-admin" style="color:#ffa500;">🔐 ADMIN</button>
       <button class="nav-tab" onclick="showPage('2026gp')">🏁 2026 GP</button>
       <button class="nav-tab" onclick="showPage('2025')">🗂 2025 SEASON</button>
-      <button class="nav-tab" onclick="showPage('admin')" id="nav-admin" style="color:#ffa500;">🔐 ADMIN</button>
     </div>
     <!-- Theme toggle + Identity badge + Hamburger button (mobile only) -->
     <span id="nav-identity-badge" style="display:none">
@@ -1241,14 +1242,14 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   <button class="mobile-nav-tab" id="mob-stats" onclick="mobileNav('stats')">
     <span class="mob-icon">📈</span> STATS
   </button>
+  <button class="mobile-nav-tab admin-tab" id="mob-admin" onclick="mobileNav('admin')">
+    <span class="mob-icon">🔐</span> ADMIN
+  </button>
   <button class="mobile-nav-tab" id="mob-2026gp" onclick="mobileNav('2026gp')">
     <span class="mob-icon">🏁</span> 2026 GP
   </button>
   <button class="mobile-nav-tab" id="mob-2025" onclick="mobileNav('2025')">
     <span class="mob-icon">🗂</span> 2025 SEASON
-  </button>
-  <button class="mobile-nav-tab admin-tab" id="mob-admin" onclick="mobileNav('admin')">
-    <span class="mob-icon">🔐</span> ADMIN
   </button>
   <div style="padding:20px 28px 0;font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);letter-spacing:1px;">
     2026 FANTASY LEAGUE
