@@ -3518,6 +3518,26 @@ function renderAdminDashboard() {
         <div style="max-height:400px;overflow-y:auto">${allPicksSummary}</div>
       </div>
 
+      <!-- SHARE CARDS -->
+      <div class="admin-card" style="grid-column: 1/-1">
+        <div class="admin-card-title">📸 SHARE CARDS · RACE PICKS</div>
+        <div class="admin-card-desc">Select a race to generate its pick card. Screenshot it and share via WhatsApp. Completed races show final positions and points.</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+          ${(() => {
+            const drafted = RACES.filter(r => STATE.draftPicks[r.id] && Object.keys(STATE.draftPicks[r.id]).length > 0);
+            if (!drafted.length) return '<p style="color:var(--muted);font-size:13px">No drafted races yet</p>';
+            return `<select id="share-race-select" onchange="renderPickCard(this.value)"
+              style="padding:8px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;
+                     color:var(--text);font-size:14px;cursor:pointer;font-family:Rajdhani,sans-serif">
+              <option value="">— Select a race —</option>
+              ${drafted.map(r => `<option value="${r.id}">${r.flag} ${r.name} · ${r.date}</option>`).join('')}
+            </select>
+            <span style="font-size:12px;color:var(--muted);font-family:Share Tech Mono,monospace">💡 Screenshot the card below to share</span>`;
+          })()}
+        </div>
+        <div id="pick-card-preview"></div>
+      </div>
+
       <!-- NOTIFICATIONS -->
       <div class="admin-card">
         <div class="admin-card-title">🔔 DRAFT REMINDERS</div>
@@ -3572,6 +3592,115 @@ function renderAdminDashboard() {
     </div>
   `;
   populateImportRoundSelect();
+}
+
+// ── Pick Share Card ──────────────────────────────────────────
+function renderPickCard(raceId) {
+  const el = document.getElementById('pick-card-preview');
+  if (!el) return;
+  if (!raceId) { el.innerHTML = ''; return; }
+
+  const race = RACES.find(r => r.id === raceId);
+  if (!race) return;
+
+  const raceResult = STATE.raceResults[raceId] || null;
+  const racePicks  = STATE.draftPicks[raceId]  || {};
+  const PM = {1:10,2:9,3:8,4:7,5:6,6:5,7:4,8:3,9:2,10:1};
+
+  function getPts(drv) {
+    if (!raceResult || !drv) return null;
+    for (const [p,d] of Object.entries(raceResult)) if (d === drv) return PM[+p] || 0;
+    return 0;
+  }
+  function getPos(drv) {
+    if (!raceResult || !drv) return null;
+    for (const [p,d] of Object.entries(raceResult)) if (d === drv) return +p;
+    return null;
+  }
+  function ptsClr(p) {
+    if (p === null) return '#aaa';
+    if (p >= 7)  return '#22c55e';
+    if (p >= 3)  return '#f59e0b';
+    if (p >= 1)  return '#94a3b8';
+    return '#333';
+  }
+  function rankClr(i) { return i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'#444'; }
+
+  const rows = STATE.players.map(p => ({
+    name: p.name,
+    driver: racePicks[p.id],
+    pts: getPts(racePicks[p.id]),
+    pos: getPos(racePicks[p.id]),
+  })).filter(r => r.driver);
+
+  const upcoming = !raceResult;
+  if (!upcoming) rows.sort((a,b) => (b.pts||0) - (a.pts||0) || a.name.localeCompare(b.name));
+  else rows.sort((a,b) => a.name.localeCompare(b.name));
+
+  const podClr = ['#FFD700','#C0C0C0','#CD7F32'];
+  const podium = raceResult ? [1,2,3].map(p => raceResult[p]) : [];
+
+  el.innerHTML = `
+    <div id="pick-share-card" style="
+      width:580px;max-width:100%;background:#0d0d0d;border-radius:10px;overflow:hidden;
+      border:1px solid #222;box-shadow:0 4px 24px rgba(0,0,0,0.5);font-family:Rajdhani,sans-serif">
+
+      <div style="background:linear-gradient(135deg,#E10600,#a00000);padding:18px 20px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-20px;right:-30px;width:110px;height:110px;background:rgba(255,255,255,0.06);border-radius:50%"></div>
+        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;margin-bottom:4px">F1 Grid Masters 2026 · Race Picks</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:30px;line-height:1">${race.flag}</span>
+          <div>
+            <div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:#fff;letter-spacing:1px;line-height:1">${race.name}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px;font-weight:600;letter-spacing:1px">${race.date} &nbsp;·&nbsp; ${race.circuit}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#111;padding:11px 20px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #222">
+        <span style="font-size:10px;letter-spacing:2px;color:#555;font-weight:700;margin-right:4px;text-transform:uppercase;font-family:Share Tech Mono,monospace">${upcoming?'STATUS':'RESULT'}</span>
+        ${upcoming
+          ? `<span style="font-size:13px;color:#f59e0b;font-weight:700;letter-spacing:1px;font-family:Share Tech Mono,monospace">⏳ PICKS LOCKED · RACE UPCOMING</span>`
+          : podium.map((d,i)=>{
+              const drv=DRIVERS.find(dr=>dr.short===d);
+              return `<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:4px;background:#1a1a1a;border:1px solid #2a2a2a">
+                <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:800;color:${podClr[i]}">P${i+1}</span>
+                <span style="font-family:Share Tech Mono,monospace;font-size:13px;font-weight:700;color:${drv?.teamColor||'#aaa'}">${d}</span>
+              </div>`;
+            }).join('')
+        }
+      </div>
+
+      <div style="display:flex;align-items:center;padding:4px 20px 2px;gap:10px;border-bottom:1px solid #1a1a1a">
+        <span style="width:20px;font-size:10px;color:#333;text-align:right;font-family:Share Tech Mono,monospace;font-weight:700">#</span>
+        <div style="width:4px"></div>
+        <span style="flex:1;font-size:10px;color:#333;font-weight:700;letter-spacing:1px;text-transform:uppercase">PLAYER</span>
+        <span style="font-size:10px;color:#333;font-weight:700;letter-spacing:1px;text-transform:uppercase;width:60px;text-align:center">DRIVER</span>
+        ${!upcoming?`<span style="font-size:10px;color:#333;font-weight:700;letter-spacing:1px;text-transform:uppercase;width:32px;text-align:center">POS</span>
+          <span style="font-size:10px;color:#333;font-weight:700;letter-spacing:1px;text-transform:uppercase;width:44px;text-align:right">PTS</span>`:''}
+      </div>
+
+      ${rows.map((row,idx)=>{
+        const drv=DRIVERS.find(d=>d.short===row.driver);
+        const tc=drv?.teamColor||'#555';
+        return `<div style="display:flex;align-items:center;padding:7px 20px;gap:10px;border-bottom:1px solid #141414;
+          background:${row.pts>0?'rgba(255,255,255,0.02)':'transparent'};opacity:${row.pts===0?'0.5':'1'}">
+          <span style="font-size:12px;color:${rankClr(idx)};font-weight:700;width:20px;text-align:right;font-family:Share Tech Mono,monospace">${upcoming?'':idx+1}</span>
+          <div style="width:4px;height:28px;border-radius:2px;background:${tc};flex-shrink:0"></div>
+          <span style="font-size:18px;font-weight:700;color:#e8e8e8;flex:1">${row.name}</span>
+          <span style="font-family:Share Tech Mono,monospace;font-size:14px;font-weight:700;letter-spacing:1px;
+            padding:3px 8px;border-radius:4px;background:#1a1a1a;border:1px solid #2a2a2a;color:${tc}">${row.driver}</span>
+          ${!upcoming?`<span style="font-size:12px;color:${row.pos?'#aaa':'#444'};font-weight:600;width:32px;text-align:center;font-family:Share Tech Mono,monospace">${row.pos?'P'+row.pos:'—'}</span>
+            <span style="font-size:18px;font-weight:800;width:44px;text-align:right;font-family:Share Tech Mono,monospace;color:${ptsClr(row.pts)}">${row.pts>0?row.pts:row.pts===0?'0':'—'}</span>`:''}
+        </div>`;
+      }).join('')}
+
+      <div style="padding:10px 20px;background:#080808;border-top:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;font-weight:900;letter-spacing:1px;color:#E10600;font-family:Orbitron,sans-serif">🏎 F1GM</span>
+        <span style="font-size:11px;color:#333;letter-spacing:2px;font-weight:700;text-transform:uppercase;font-family:Share Tech Mono,monospace">${upcoming?'picks revealed':'points scored'}</span>
+      </div>
+    </div>
+  `;
 }
 
 // ── Admin Actions ──────────────────────────────────────────
