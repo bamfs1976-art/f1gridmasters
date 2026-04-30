@@ -3215,26 +3215,47 @@ function renderAdminDashboard() {
     const driver = driverShort ? DRIVERS.find(d => d.short === driverShort) : null;
     const hasPick = !!driverShort;
     const hasPrefs = !!(prefs[pid] && prefs[pid].length > 0);
-    const prefsList = (prefs[pid] || []).map(s => {
+    const submitted = !!(STATE.draftSubmitted?.[currentRace?.id]?.[pid]);
+
+    // Build ranked prefs chips — shown in admin view regardless of reveal state
+    const prefsHtml = (prefs[pid] || []).map((s, rank) => {
       const d = DRIVERS.find(dr => dr.short === s);
-      return d ? d.short : s;
-    }).join(' → ');
+      const rankColor = rank === 0 ? 'var(--gold)' : rank === 1 ? 'var(--silver)' : rank === 2 ? 'var(--bronze)' : 'var(--muted)';
+      return `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;
+                background:${d?.teamColor ? d.teamColor + '18' : 'var(--panel3)'};
+                border:1px solid ${d?.teamColor ? d.teamColor + '44' : 'var(--border)'};
+                font-family:Share Tech Mono,monospace;font-size:11px;white-space:nowrap">
+               <span style="color:${rankColor};font-weight:700;font-size:10px">${rank+1}</span>
+               <span style="color:${d?.teamColor || 'var(--text)'};font-weight:700">${s}</span>
+             </span>`;
+    }).join('');
+
     return `
-      <div class="draft-review-item">
-        <div class="dri-slot">P${i+1}</div>
-        <div class="dri-player">${player?.name || '?'}</div>
+      <div class="draft-review-item" style="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:10px 0">
+        <div class="dri-slot" style="flex-shrink:0">P${i+1}</div>
+        <div class="dri-player" style="flex-shrink:0;min-width:80px">${player?.name || '?'}</div>
         ${hasPick
-          ? `<div class="dri-driver">
+          ? `<div class="dri-driver" style="flex:1">
                <span class="driver-tag" style="color:${driver?.teamColor};border-color:${driver?.teamColor}44;background:${driver?.teamColor}11">
                  ${driverShort} · ${driver?.team}
                </span>
+               ${hasPrefs ? `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px">${prefsHtml}</div>` : ''}
              </div>
              <button class="dri-edit-btn" style="color:#ffa500;border-color:rgba(255,165,0,0.3)" onclick="adminAmendPickOpen('${pid}','${currentRace?.id}')">✏</button>
              <button class="dri-edit-btn" onclick="adminRemovePick('${pid}','${currentRace?.id}')">✕</button>`
-          : hasPrefs
-          ? `<div class="dri-hidden" style="color:var(--green)">✅ ${Object.keys(prefs[pid]).length > 0 ? prefs[pid].length + ' prefs' : 'Prefs'} ranked</div>
+          : submitted
+          ? `<div style="flex:1">
+               <div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:1px;margin-bottom:5px">✅ SUBMITTED (${(prefs[pid]||[]).length} ranked)</div>
+               ${hasPrefs ? `<div style="display:flex;flex-wrap:wrap;gap:4px">${prefsHtml}</div>` : ''}
+             </div>
              <button class="dri-edit-btn" style="color:#ffa500;border-color:rgba(255,165,0,0.3)" onclick="adminAmendPickOpen('${pid}','${currentRace?.id}')">✏</button>`
-          : `<div class="dri-hidden">⏳ Not submitted</div>
+          : hasPrefs
+          ? `<div style="flex:1">
+               <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:5px">⏳ IN PROGRESS (${prefs[pid].length} ranked, not submitted)</div>
+               <div style="display:flex;flex-wrap:wrap;gap:4px">${prefsHtml}</div>
+             </div>
+             <button class="dri-edit-btn" style="color:#ffa500;border-color:rgba(255,165,0,0.3)" onclick="adminAmendPickOpen('${pid}','${currentRace?.id}')">✏</button>`
+          : `<div style="flex:1;font-size:11px;color:var(--muted);letter-spacing:1px">⏳ NOT SUBMITTED</div>
              <button class="dri-edit-btn" style="color:#ffa500;border-color:rgba(255,165,0,0.3)" onclick="adminAmendPickOpen('${pid}','${currentRace?.id}')">✏</button>`
         }
       </div>
