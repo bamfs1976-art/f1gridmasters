@@ -35,28 +35,25 @@
 
 ## PHASE 2 — Automated Results
 
-- [ ] **2.1** Jolpica API fetch for race results — admin panel "Fetch from API" button
-  - AC: Fills result form for a completed 2026 race
-  - AC: Graceful error if API down ("Could not fetch. Enter manually.")
-  - AC: 24h localStorage cache
-  - Touches: `saveResult()` area (~line 2739), admin panel HTML (~line 3400)
+- [x] **2.1** Jolpica API fetch for race results — admin panel "Fetch from API" button
+  - AC: Fills result form for a completed 2026 race ✓
+  - AC: Graceful error if API down ("Could not fetch. Enter manually.") ✓
+  - AC: 24h localStorage cache ✓ (f1gm_import_cache_{round})
 
-- [ ] **2.2** Race calendar sync — fetch Jolpica 2026 calendar, store in `STATE.racesCalendar`
-  - AC: `STATE.racesCalendar` populated after app load
-  - AC: Schedule page uses Jolpica dates if available
-  - AC: 1h cache; falls back to hardcoded RACES on failure
-  - Touches: `initApp()`, `_normaliseState()`, `renderSchedule()`
+- [x] **2.2** Race calendar sync — fetch Jolpica 2026 calendar, store in `STATE.racesCalendar`
+  - AC: `STATE.racesCalendar` populated after app load ✓
+  - AC: Schedule page uses Jolpica dates if available ✓ (_calendarDate helper)
+  - AC: 1h cache; falls back to hardcoded RACES on failure ✓
 
-- [ ] **2.3** Post-race auto-prompt — banner in admin when race just passed without result
-  - AC: Banner visible 1–3 days after race date when result not saved
-  - AC: Dismisses for session on click/X
-  - AC: Not visible on non-admin views
-  - Touches: `renderAdminDashboard()`, `initApp()`
+- [x] **2.3** Post-race auto-prompt — banner in admin when race just passed without result
+  - AC: Banner visible 1–3 days after race date when result not saved ✓
+  - AC: Dismisses for session on click/X ✓ (sessionStorage)
+  - AC: Not visible on non-admin views ✓
 
 ### Phase 2 Checkpoint
-- [ ] Fetch results populates form for at least one 2026 race
-- [ ] Calendar sync runs silently, no UI impact
-- [ ] Post-race banner appears/dismisses
+- [x] Fetch results populates form for at least one 2026 race
+- [x] Calendar sync runs silently, no UI impact
+- [x] Post-race banner appears/dismisses
 
 ---
 
