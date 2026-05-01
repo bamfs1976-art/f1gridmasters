@@ -1,39 +1,35 @@
 # F1 Grid Masters v2.0 — Task List
 **Branch:** `v2.0-upgrade`
-**Updated:** 2026-05-01
+**Updated:** 2026-05-01 (Phase 1 complete — commit 9095143)
 
 ---
 
 ## PHASE 1 — Reliability & Foundation
 
-- [ ] **1.1** `saveStateCritical()` — immediate Supabase write with 3-attempt exponential backoff retry
-  - AC: submit → Supabase updated_at changes within 2s
-  - AC: 3 retries logged, error toast on final failure
-  - Touches: `saveState()` area (~line 1809), `submitMyPrefs()` (~line 2091)
+- [x] **1.1** `saveStateCritical()` — immediate Supabase write with 3-attempt exponential backoff retry
+  - AC: submit → Supabase updated_at changes within 2s ✓
+  - AC: 3 retries logged, error toast on final failure ✓
 
-- [ ] **1.2** Edit preferences fix — reopen pick grid after submission, re-submit writes immediately
-  - AC: "Edit My Picks" button visible when submitted + picks not yet resolved
-  - AC: `_localEditLock` released in `finally` block
-  - AC: Realtime cannot overwrite during active edit session
-  - Touches: `renderDraft()` (~line 2149), `submitMyPrefs()` (~line 2091)
+- [x] **1.2** Edit preferences fix — reopen pick grid after submission, re-submit writes immediately
+  - AC: "Edit My Picks" button visible when submitted + picks not yet resolved ✓ (already existed)
+  - AC: `_localEditLock` released in `finally` block ✓
+  - AC: Realtime cannot overwrite during active edit session ✓
 
-- [ ] **1.3** Home / Dashboard tab — next race, standings top 5, draft status, activity feed
-  - AC: Default landing page when season started
-  - AC: Countdown timer ticks live
-  - AC: Activity feed shows last 10 log entries
-  - Touches: HTML pages, `showPage()`, nav HTML, `initApp()`
+- [x] **1.3** Home / Dashboard tab — next race, standings top 5, draft status, activity feed
+  - AC: Default landing page when season started ✓
+  - AC: Countdown timer ticks live ✓ (1s setInterval, d/h/m/s)
+  - AC: Activity feed shows last 10 log entries ✓
 
-- [ ] **1.4** Navigation consolidation — 5-tab desktop, bottom mobile nav bar
-  - AC: Desktop: HOME · DRAFT · RESULTS · STANDINGS · MORE at 1440px without scroll
-  - AC: Mobile: bottom nav visible at 375px, all items 44px+ tap targets
-  - AC: All existing pages still reachable
-  - Touches: CSS nav area, HTML nav, `syncMobileNav()`
+- [x] **1.4** Navigation consolidation — 5-tab desktop, bottom mobile nav bar
+  - AC: Desktop: HOME · DRAFT · RESULTS · STANDINGS · MORE at 1440px without scroll ✓
+  - AC: Mobile: bottom nav visible at 375px, all items 44px+ tap targets ✓
+  - AC: All existing pages still reachable via MORE dropdown + drawer ✓
 
 ### Phase 1 Checkpoint
-- [ ] App loads on branch without console errors
-- [ ] Supabase updated_at changes on pick submit
-- [ ] Home tab renders, countdown ticks
-- [ ] Bottom mobile nav functional at 375px
+- [x] App loads on branch without console errors
+- [x] Supabase updated_at changes on pick submit
+- [x] Home tab renders, countdown ticks
+- [x] Bottom mobile nav functional at 375px
 
 ---
 
