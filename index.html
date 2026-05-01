@@ -1986,6 +1986,7 @@ function _normaliseState() {
   if (!STATE.draftSubmitted) STATE.draftSubmitted = {};
   if (!STATE.draftDeadlines) STATE.draftDeadlines = {}; // {raceId: ISO string}
   if (!STATE.adminUndoStack) STATE.adminUndoStack = [];
+  if (!STATE.racesCalendar) STATE.racesCalendar = {}; // {round: {date, time, circuitName}}
   // Self-heal: if prefs exist but submitted flag is missing, backfill it —
   // BUT ONLY for races that are already fully resolved (all picks assigned).
   // Never auto-mark a player as submitted on the live/upcoming race, as that
@@ -3072,6 +3073,18 @@ function renderLeaderboard() {
 // ============================================================
 //  SCHEDULE PAGE
 // ============================================================
+// Returns a human-readable date string for a race, preferring Jolpica calendar data
+function _calendarDate(race) {
+  const round = race.id.replace('r', '');
+  const cal = STATE.racesCalendar?.[round];
+  if (cal && cal.date) {
+    // Jolpica date is "YYYY-MM-DD" — convert to "Mon DD"
+    const d = new Date(cal.date + 'T12:00:00Z'); // noon UTC avoids timezone offset flipping day
+    return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+  }
+  return race.date; // hardcoded fallback (e.g. "Mar 8")
+}
+
 function renderSchedule() {
   const raceIdx = STATE.currentRaceIdx;
   const myPlayer = getSessionPlayer();
@@ -3109,7 +3122,7 @@ function renderSchedule() {
           ${myPickHtml}
         </div>
         ${r.sprint ? '<div class="si-sprint">SPRINT</div>' : '<div></div>'}
-        <div class="si-date">${r.date} 2026</div>
+        <div class="si-date">${_calendarDate(r)} 2026</div>
         <div class="si-status ${isDone ? 'done' : hasDraft ? 'upcoming' : 'future'}">
           ${isDone ? '✓ DONE' : hasDraft ? '◉ DRAFTED' : '○ PENDING'}
         </div>
@@ -3448,7 +3461,57 @@ function renderAdminDashboard() {
       </div>`;
     }).join('') || '<p style="color:var(--muted);font-size:13px">No drafts completed yet</p>';
 
+  // ── Post-race prompts ──
+  // Find races that ended 1–3 days ago with no result and not dismissed
+  const monthMap2 = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const now = Date.now();
+  const pendingRaces = RACES.filter(r => {
+    if (STATE.raceResults[r.id]) return false; // already has result
+    const dismissed = sessionStorage.getItem('f1gm_prompt_dismissed_' + r.id);
+    if (dismissed) return false;
+    // Try Jolpica calendar date first, then parse hardcoded date
+    const round = r.id.replace('r','');
+    const calDate = STATE.racesCalendar?.[round]?.date;
+    let raceDate;
+    if (calDate) {
+      raceDate = new Date(calDate + 'T15:00:00Z').getTime(); // approx race end
+    } else {
+      const parts = (r.date || '').split(' ');
+      const mon = monthMap2[parts[0]];
+      const day = parseInt(parts[1]);
+      if (mon === undefined || isNaN(day)) return false;
+      raceDate = new Date(Date.UTC(2026, mon, day, 15, 0, 0)).getTime();
+    }
+    const daysSince = (now - raceDate) / 86400000;
+    return daysSince >= 1 && daysSince <= 3;
+  });
+
+  const promptBannerHtml = pendingRaces.map(r => `
+    <div id="post-race-prompt-${r.id}" style="
+      background:rgba(255,165,0,0.1);border:1px solid rgba(255,165,0,0.4);border-radius:8px;
+      padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span style="font-size:20px">${r.flag}</span>
+      <div style="flex:1">
+        <div style="font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:#ffa500;letter-spacing:1px">
+          ${r.name} GP RESULT MISSING
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">
+          Race passed — enter the result to update standings.
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-orange btn-sm" style="font-size:11px" onclick="showPage('results');selectedResultRace='${r.id}';renderResults()">
+          📋 ENTER RESULT
+        </button>
+        <button class="btn btn-outline btn-sm" style="font-size:11px;padding:6px 10px"
+          onclick="sessionStorage.setItem('f1gm_prompt_dismissed_${r.id}','1');document.getElementById('post-race-prompt-${r.id}').remove()">
+          ✕
+        </button>
+      </div>
+    </div>`).join('');
+
   inner.innerHTML = `
+    ${promptBannerHtml}
     <div class="admin-header-bar">
       <div class="admin-badge">
         <div class="dot"></div>
@@ -4285,6 +4348,55 @@ function adminClearAllDrafts() {
 
 
 // ============================================================
+//  JOLPICA API — CALENDAR SYNC
+// ============================================================
+async function fetchRaceCalendar() {
+  const CACHE_KEY = 'f1gm_calendar_cache_2026';
+  const CACHE_TTL = 3600000; // 1 hour
+
+  // Check cache
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if (cached && cached.ts && (Date.now() - cached.ts) < CACHE_TTL && cached.data) {
+      _applyCalendarData(cached.data);
+      return;
+    }
+  } catch(e) {}
+
+  // Fetch from Jolpica (silent — no UI impact)
+  try {
+    const resp = await fetch('https://api.jolpi.ca/ergast/f1/2026.json?limit=30');
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    const json = await resp.json();
+    const races = json?.MRData?.RaceTable?.Races;
+    if (!races || !races.length) throw new Error('No calendar data');
+
+    const data = {};
+    races.forEach(r => {
+      data[r.round] = {
+        date: r.date,         // e.g. "2026-03-08"
+        time: r.time || null, // e.g. "05:00:00Z"
+        circuitName: r.Circuit?.circuitName || '',
+        locality: r.Circuit?.Location?.locality || '',
+        country: r.Circuit?.Location?.country || ''
+      };
+    });
+
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch(e) {}
+    _applyCalendarData(data);
+
+  } catch(e) {
+    console.warn('Calendar fetch failed, using hardcoded dates:', e.message);
+    // Graceful fallback — STATE.racesCalendar stays empty, renderSchedule uses r.date
+  }
+}
+
+function _applyCalendarData(data) {
+  if (!STATE.racesCalendar) STATE.racesCalendar = {};
+  Object.assign(STATE.racesCalendar, data);
+}
+
+// ============================================================
 //  JOLPICA API — AUTO-IMPORT RACE RESULTS
 // ============================================================
 async function importResultsFromJolpica() {
@@ -4292,6 +4404,26 @@ async function importResultsFromJolpica() {
   const round = sel ? sel.value : null;
   if (!round) return;
   const statusEl = document.getElementById('import-status');
+
+  // Find our race by round number (race IDs encode the Jolpica round: r6 → round 6)
+  const race = RACES.find(r => r.id === 'r' + round);
+  if (!race) {
+    if (statusEl) statusEl.innerHTML = '<div class="import-status error">⚠ Race not found. This round may not be in the game.</div>';
+    return;
+  }
+
+  // 24h localStorage cache
+  const cacheKey = `f1gm_import_cache_${round}`;
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    if (cached && cached.ts && (Date.now() - cached.ts) < 86400000 && cached.resultMap) {
+      if (statusEl) statusEl.innerHTML = '<div class="import-status loading">⟳ Using cached results...</div>';
+      await new Promise(r => setTimeout(r, 300));
+      _showImportPreview(cached.resultMap, race, statusEl, true);
+      return;
+    }
+  } catch(e) { /* ignore bad cache */ }
+
   if (statusEl) statusEl.innerHTML = '<div class="import-status loading"><span class="import-spin">⟳</span> Fetching from Jolpica API...</div>';
 
   try {
@@ -4301,43 +4433,46 @@ async function importResultsFromJolpica() {
     const data = await resp.json();
     const results = data?.MRData?.RaceTable?.Races?.[0]?.Results;
     if (!results || results.length === 0) {
-      statusEl.innerHTML = '<div class="import-status error">⚠ No results found yet for this round. Try after the race weekend.</div>';
+      if (statusEl) statusEl.innerHTML = '<div class="import-status error">⚠ No results found yet for this round. Try after the race weekend.</div>';
       return;
     }
 
     // Map to our format: {1: 'NOR', 2: 'VER', ...}
-    const race = RACES[parseInt(round) - 1];
-    if (!race) throw new Error('Race not found');
-
     const resultMap = {};
     results.slice(0, 10).forEach(r => {
       const pos = parseInt(r.position);
       const code = r.Driver?.code || r.Driver?.driverId?.substring(0,3).toUpperCase();
-      // Map API code to our short codes
       const mapped = mapApiCodeToShort(code, r.Driver);
       if (mapped) resultMap[pos] = mapped;
     });
 
-    // Preview before saving
-    const preview = Object.entries(resultMap).map(([pos,short]) => {
-      const d = DRIVERS.find(dr => dr.short === short);
-      const medal = pos=='1'?'🥇':pos=='2'?'🥈':pos=='3'?'🥉':'P'+pos;
-      return `<span style="margin-right:8px">${medal} ${short}</span>`;
-    }).join('');
+    // Cache for 24h
+    try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), resultMap })); } catch(e) {}
 
-    statusEl.innerHTML = `
-      <div class="import-status success">
-        ✅ Got results: ${preview}
-        <br><br>
-        <button class="btn btn-green btn-sm" onclick="confirmImportResults(${JSON.stringify(resultMap).replace(/"/g,'&quot;')},'${race.id}')">
-          ✔ APPLY THESE RESULTS
-        </button>
-      </div>`;
+    _showImportPreview(resultMap, race, statusEl, false);
 
   } catch(e) {
     const statusEl2 = document.getElementById('import-status');
-    if (statusEl2) statusEl2.innerHTML = `<div class="import-status error">❌ ${e.message}. Check your connection or try again later.</div>`;
+    if (statusEl2) statusEl2.innerHTML = `<div class="import-status error">❌ Could not fetch. Enter manually. (${e.message})</div>`;
   }
+}
+
+function _showImportPreview(resultMap, race, statusEl, fromCache) {
+  const preview = Object.entries(resultMap).map(([pos, short]) => {
+    const d = DRIVERS.find(dr => dr.short === short);
+    const medal = pos=='1'?'🥇':pos=='2'?'🥈':pos=='3'?'🥉':'P'+pos;
+    return `<span style="margin-right:8px;font-family:Share Tech Mono,monospace;font-size:12px">${medal} <span style="color:${d?.teamColor||'var(--text)'}">${short}</span></span>`;
+  }).join('');
+
+  if (!statusEl) return;
+  statusEl.innerHTML = `
+    <div class="import-status success" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <div>✅ ${fromCache ? '(cached) ' : ''}${race.flag} ${race.name} results:</div>
+      <div style="flex-wrap:wrap;display:flex;gap:4px">${preview}</div>
+      <button class="btn btn-green btn-sm" onclick="confirmImportResults(${JSON.stringify(resultMap).replace(/"/g,'&quot;')},'${race.id}')">
+        ✔ APPLY THESE RESULTS
+      </button>
+    </div>`;
 }
 
 function mapApiCodeToShort(apiCode, driverObj) {
@@ -4363,19 +4498,30 @@ function confirmImportResults(resultMap, raceId) {
   STATE.draftRevealed[raceId] = true;
   saveState();
   const race = RACES.find(r => r.id === raceId);
+  // Clear import cache so a re-import fetches fresh data
+  try { localStorage.removeItem('f1gm_import_cache_' + raceId.replace('r','')); } catch(e) {}
+  // Dismiss any pending post-race prompt for this race
+  try { sessionStorage.setItem('f1gm_prompt_dismissed_' + raceId, '1'); } catch(e) {}
   addLog(`Auto-imported results for ${race?.name} via Jolpica API`, 'good');
   showToast(`✅ Results imported for ${race?.name}!`, 'success');
   const statusEl = document.getElementById('import-status');
-  if (statusEl) statusEl.innerHTML = '<div class="import-status success">✅ Results saved successfully!</div>';
-  setTimeout(() => renderAdminDashboard(), 1500);
+  if (statusEl) statusEl.innerHTML = '<div class="import-status success">✅ Results saved! Updating dashboard...</div>';
+  setTimeout(() => renderAdminDashboard(), 1200);
 }
 
 function populateImportRoundSelect() {
   const sel = document.getElementById('import-round-select');
   if (!sel) return;
-  sel.innerHTML = RACES.map((r,i) => `<option value="${i+1}">${r.flag} R${i+1} · ${r.name}</option>`).join('');
+  // Use the actual Jolpica round number encoded in the race ID (r6 → round 6)
+  sel.innerHTML = RACES.map(r => {
+    const round = r.id.replace('r', '');
+    const hasResult = STATE.raceResults[r.id] ? ' ✓' : '';
+    return `<option value="${round}">${r.flag} Round ${round} · ${r.name}${hasResult}</option>`;
+  }).join('');
   // Default to current race
-  if (STATE.currentRaceIdx < RACES.length) sel.value = STATE.currentRaceIdx + 1;
+  if (STATE.currentRaceIdx < RACES.length) {
+    sel.value = RACES[STATE.currentRaceIdx].id.replace('r', '');
+  }
 }
 
 // ============================================================
@@ -7021,6 +7167,8 @@ function sharePickOrderImage(raceIdx) {
 async function initApp() {
   await loadState();
   subscribeToRealtime();
+  // Silently sync calendar from Jolpica in background (1h cache, graceful fallback)
+  fetchRaceCalendar().catch(() => {});
   renderPlayerList();
   renderSchedule();
   updateIdentityBadge();
