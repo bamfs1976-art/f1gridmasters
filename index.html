@@ -1128,6 +1128,91 @@ nav {
 }
 .share-standings-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ── HOME PAGE ── */
+.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 768px) { .home-grid { grid-template-columns: 1fr; } }
+.home-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+.home-card-head { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.home-card-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.home-next-flag { font-size: 48px; line-height: 1; margin-bottom: 8px; }
+.home-next-name { font-family: 'Orbitron', sans-serif; font-size: clamp(18px,4vw,28px); font-weight: 900; letter-spacing: 2px; }
+.home-next-sub { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; }
+.home-countdown { font-family: 'Share Tech Mono', monospace; font-size: clamp(22px,5vw,34px); color: var(--red); margin-top: 12px; letter-spacing: 2px; }
+.home-countdown-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-top: 2px; }
+.home-standings-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.home-standings-row:last-child { border-bottom: none; }
+.home-rank { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 900; width: 24px; text-align: center; color: var(--muted); }
+.home-rank.r1 { color: var(--gold); } .home-rank.r2 { color: var(--silver); } .home-rank.r3 { color: var(--bronze); }
+.home-player-name { flex: 1; font-size: 15px; font-weight: 600; }
+.home-pts { font-family: 'Share Tech Mono', monospace; font-size: 16px; font-weight: 700; color: var(--text); }
+.home-pts-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-left: 2px; }
+.home-my-rank { font-family: 'Orbitron', sans-serif; font-size: clamp(36px,8vw,52px); font-weight: 900; line-height: 1; }
+.home-my-pts { font-family: 'Share Tech Mono', monospace; font-size: 28px; color: var(--green); margin-top: 4px; }
+.home-draft-status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.home-submitted-bar { flex: 1; height: 6px; background: var(--panel3); border-radius: 3px; overflow: hidden; min-width: 80px; }
+.home-submitted-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.5s ease; }
+.home-activity-row { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+.home-activity-row:last-child { border-bottom: none; }
+.home-activity-time { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+.home-activity-msg { color: var(--text-secondary, var(--muted)); }
+.home-activity-msg.success { color: var(--green); }
+.home-activity-msg.error { color: var(--red); }
+.home-activity-msg.info { color: #60a5fa; }
+
+/* ── BOTTOM MOBILE NAV ── */
+.bottom-nav { display: none; }
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    background: rgba(9,9,16,0.97); border-top: 1px solid var(--border);
+    backdrop-filter: blur(20px); height: 60px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .bottom-nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; background: none; border: none; color: var(--muted); cursor: pointer;
+    font-family: 'Orbitron', sans-serif; font-size: 8px; letter-spacing: 1px;
+    transition: color 0.2s; min-height: 44px; padding: 4px 2px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bottom-nav-btn .bn-icon { font-size: 18px; line-height: 1; }
+  .bottom-nav-btn.active { color: var(--text); }
+  .bottom-nav-btn.active .bn-icon { filter: drop-shadow(0 0 4px var(--red)); }
+  .bottom-nav-btn .bn-badge {
+    position: absolute; top: 6px;
+    background: var(--red); color: white; font-size: 8px;
+    padding: 1px 4px; border-radius: 8px;
+  }
+  /* Extra bottom padding so pages don't hide behind bottom nav */
+  .page { padding-bottom: 80px !important; }
+  /* Hide hamburger — MORE button on bottom nav opens the drawer */
+  .hamburger { display: none !important; }
+  /* Nav tabs still hidden */
+  .nav-tabs { display: none !important; }
+}
+
+/* ── DESKTOP MORE DROPDOWN ── */
+.nav-more-wrap { position: relative; }
+.nav-more-dropdown {
+  display: none; position: absolute; top: 100%; right: 0;
+  background: rgba(9,9,16,0.98); border: 1px solid var(--border);
+  border-radius: 8px; min-width: 180px; z-index: 200;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5); padding: 6px 0;
+  backdrop-filter: blur(20px);
+}
+.nav-more-wrap:hover .nav-more-dropdown,
+.nav-more-wrap.open .nav-more-dropdown { display: block; }
+.nav-more-item {
+  display: block; width: 100%; padding: 10px 18px;
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 2px;
+  text-align: left; transition: all 0.15s; white-space: nowrap;
+}
+.nav-more-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.nav-more-item.active { color: var(--text); }
+.nav-more-item.admin-item { color: #ffa500; }
+
 /* ── PLAYER IDENTITY SELECTOR ── */
 .identity-overlay {
   position: fixed; inset: 0; z-index: 500;
@@ -1183,16 +1268,22 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       </div>
     </div>
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showPage('setup')">⚙ SETUP</button>
+      <button class="nav-tab" onclick="showPage('home')" id="nav-home">🏠 HOME</button>
       <button class="nav-tab" onclick="showPage('draft')" id="nav-draft">🏎 DRAFT <span class="tab-badge" id="draft-badge" style="display:none"></span></button>
       <button class="nav-tab" onclick="showPage('results')" id="nav-results">🏁 RESULTS</button>
       <button class="nav-tab" onclick="showPage('leaderboard')" id="nav-lb">🏆 STANDINGS</button>
-      <button class="nav-tab" onclick="showPage('schedule')">📅 CALENDAR</button>
-      <button class="nav-tab" onclick="showPage('drivers')">👤 DRIVERS</button>
-      <button class="nav-tab" onclick="showPage('stats')">📈 STATS</button>
-      <button class="nav-tab" onclick="showPage('admin')" id="nav-admin" style="color:#ffa500;">🔐 ADMIN</button>
-      <button class="nav-tab" onclick="showPage('2026gp')">🏁 2026 GP</button>
-      <button class="nav-tab" onclick="showPage('2025')">🗂 2025 SEASON</button>
+      <div class="nav-more-wrap" id="nav-more-wrap">
+        <button class="nav-tab" id="nav-more-btn" onclick="toggleMoreMenu()" aria-haspopup="true" aria-expanded="false">MORE ▾</button>
+        <div class="nav-more-dropdown" id="nav-more-dropdown" role="menu">
+          <button class="nav-more-item" onclick="showPage('schedule');closeMoreMenu()" id="nav-schedule">📅 CALENDAR</button>
+          <button class="nav-more-item" onclick="showPage('drivers');closeMoreMenu()" id="nav-drivers">👤 DRIVERS</button>
+          <button class="nav-more-item" onclick="showPage('stats');closeMoreMenu()" id="nav-stats">📈 STATS</button>
+          <button class="nav-more-item" onclick="showPage('2026gp');closeMoreMenu()" id="nav-2026gp">🏁 2026 GP</button>
+          <button class="nav-more-item" onclick="showPage('2025');closeMoreMenu()" id="nav-2025">🗂 2025 SEASON</button>
+          <button class="nav-more-item" onclick="showPage('setup');closeMoreMenu()" id="nav-setup">⚙ SETUP</button>
+          <button class="nav-more-item admin-item" onclick="showPage('admin');closeMoreMenu()" id="nav-admin">🔐 ADMIN</button>
+        </div>
+      </div>
     </div>
     <!-- Theme toggle + Identity badge + Hamburger button (mobile only) -->
     <span id="nav-identity-badge" style="display:none">
@@ -1218,7 +1309,10 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   </div>
   <button class="mobile-menu-close" onclick="closeMobileMenu()">✕</button>
 
-  <button class="mobile-nav-tab active" id="mob-setup" onclick="mobileNav('setup')">
+  <button class="mobile-nav-tab" id="mob-home" onclick="mobileNav('home')">
+    <span class="mob-icon">🏠</span> HOME
+  </button>
+  <button class="mobile-nav-tab" id="mob-setup" onclick="mobileNav('setup')">
     <span class="mob-icon">⚙</span> SETUP
   </button>
   <button class="mobile-nav-tab" id="mob-draft" onclick="mobileNav('draft')">
@@ -1270,6 +1364,25 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       <span id="mob-theme-icon">🌙</span> <span id="mob-theme-label">LIGHT MODE</span>
     </button>
   </div>
+</div>
+
+<!-- Bottom mobile nav -->
+<div class="bottom-nav" id="bottom-nav" role="navigation" aria-label="Main navigation">
+  <button class="bottom-nav-btn" id="bnav-home" onclick="showPage('home')" aria-label="Home">
+    <span class="bn-icon">🏠</span>HOME
+  </button>
+  <button class="bottom-nav-btn" id="bnav-draft" onclick="showPage('draft')" aria-label="Draft">
+    <span class="bn-icon" style="position:relative">🏎<span class="bn-badge" id="bnav-draft-badge" style="display:none">!</span></span>DRAFT
+  </button>
+  <button class="bottom-nav-btn" id="bnav-results" onclick="showPage('results')" aria-label="Results">
+    <span class="bn-icon">🏁</span>RESULTS
+  </button>
+  <button class="bottom-nav-btn" id="bnav-leaderboard" onclick="showPage('leaderboard')" aria-label="Standings">
+    <span class="bn-icon">🏆</span>STANDINGS
+  </button>
+  <button class="bottom-nav-btn" id="bnav-more" onclick="toggleMobileMenu()" aria-label="More navigation options">
+    <span class="bn-icon">☰</span>MORE
+  </button>
 </div>
 </nav>
 
@@ -1387,6 +1500,13 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       </button>
       <p style="font-size:12px;color:var(--muted);margin-top:10px;" id="start-hint">Add at least 2 players to begin</p>
     </div>
+  </div>
+</div>
+
+<!-- ===================== HOME PAGE ===================== -->
+<div class="page" id="page-home">
+  <div class="z1 animate-in" id="home-content">
+    <!-- Rendered by renderHome() -->
   </div>
 </div>
 
@@ -1818,6 +1938,27 @@ function saveState() {
   }, 400);
 }
 
+async function saveStateCritical() {
+  // Immediate localStorage write
+  try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
+  // 3-attempt Supabase write with exponential backoff (1s, 2s, 4s)
+  const sb = getSupabase();
+  if (!sb) return;
+  let lastErr = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await sb.from('f1_game_state').upsert({ id: 'main', state: STATE, updated_at: new Date().toISOString() });
+      return; // success
+    } catch(e) {
+      lastErr = e;
+      console.warn(`Supabase saveStateCritical attempt ${attempt} failed:`, e);
+      if (attempt < 3) await new Promise(r => setTimeout(r, attempt * 1000));
+    }
+  }
+  console.error('Supabase saveStateCritical failed after 3 attempts:', lastErr);
+  showToast('Save failed — check your connection', 'error');
+}
+
 async function loadState() {
   const sb = getSupabase();
   if (sb) {
@@ -1882,7 +2023,8 @@ function subscribeToRealtime() {
       const activePage = document.querySelector('.page.active');
       if (activePage) {
         const pageId = activePage.id.replace('page-','');
-        if (pageId === 'draft') renderDraft();
+        if (pageId === 'home') renderHome();
+        else if (pageId === 'draft') renderDraft();
         else if (pageId === 'results') renderResults();
         else if (pageId === 'leaderboard') renderLeaderboard();
         else if (pageId === 'setup') renderPlayerList();
@@ -1890,10 +2032,10 @@ function subscribeToRealtime() {
       }
       updateIdentityBadge();
       updateRaceStatusBanner();
-      // Auto-nav to draft if season just started
+      // Auto-nav to home if season just started
       if (STATE.started) {
         const curPage = document.querySelector('.page.active');
-        if (curPage && curPage.id === 'page-setup') showPage('draft');
+        if (curPage && curPage.id === 'page-setup') showPage('home');
       }
       showToast('🔄 Game updated', 'info');
     })
@@ -1922,19 +2064,39 @@ let _localEditLock = false;
 // ============================================================
 //  NAV / PAGE
 // ============================================================
+// Pages housed in the MORE dropdown
+const _MORE_PAGES = new Set(['schedule','drivers','stats','2026gp','2025','setup','admin']);
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-more-item').forEach(t => t.classList.remove('active'));
   // Hide sticky picks bar when navigating away from draft
   if (id !== 'draft') { const sb = document.getElementById('sticky-picks-bar'); if (sb) sb.style.display = 'none'; }
+  // Clear home countdown timer when navigating away
+  if (id !== 'home' && typeof _homeCountdownTimer !== 'undefined' && _homeCountdownTimer) {
+    clearInterval(_homeCountdownTimer); _homeCountdownTimer = null;
+  }
   document.getElementById('page-' + id).classList.add('active');
-  // Find matching nav tab
-  document.querySelectorAll('.nav-tab').forEach(t => {
-    if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+id+"'")) {
-      t.classList.add('active');
+  // Activate the correct desktop nav element
+  if (_MORE_PAGES.has(id)) {
+    // Activate the MORE button and the matching dropdown item
+    const moreBtn = document.getElementById('nav-more-btn');
+    if (moreBtn) moreBtn.classList.add('active');
+    const moreItem = document.getElementById('nav-' + id);
+    if (moreItem) moreItem.classList.add('active');
+  } else {
+    const tab = document.getElementById('nav-' + id);
+    if (tab) tab.classList.add('active');
+    else {
+      // Fallback: match by onclick
+      document.querySelectorAll('.nav-tab').forEach(t => {
+        if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+id+"'")) t.classList.add('active');
+      });
     }
-  });
+  }
 
+  if (id === 'home') renderHome();
   if (id === 'draft') {
     renderDraft();
     // If season started and no identity chosen yet, prompt after a short delay
@@ -2011,9 +2173,9 @@ function startGame() {
   renderPlayerList();
   showToast('Season started! 🚦 Time to draft for Race 1!', 'success');
   updateIdentityBadge();
-  showPage('draft');
+  showPage('home');
   // Prompt identity selection since season just started
-  setTimeout(showIdentityOverlay, 200);
+  setTimeout(showIdentityOverlay, 300);
 }
 
 function shuffle(arr) {
@@ -2095,11 +2257,11 @@ function submitMyPrefs(raceId, rankedShorts) {
   if (!STATE.draftSubmitted[raceId]) STATE.draftSubmitted[raceId] = {};
   STATE.draftSubmitted[raceId][SESSION_PLAYER_ID] = true;
   // Lock out realtime updates during save so another browser cannot
-  // overwrite the submitted flag before it reaches Supabase
+  // overwrite the submitted flag before it reaches Supabase.
+  // Release the lock in .finally() so it clears whether the save succeeds or fails.
   _localEditLock = true;
-  saveState();
+  saveStateCritical().finally(() => { _localEditLock = false; });
   updateRaceStatusBanner();
-  setTimeout(() => { _localEditLock = false; }, 700);
 
   const submittedCount = Object.keys(STATE.draftPrefs[raceId]).length;
   const totalPlayers = STATE.players.length;
@@ -2589,15 +2751,13 @@ function editMyPrefs() {
     delete STATE.draftSubmitted[raceId][SESSION_PLAYER_ID];
   }
   // Set a local edit lock so the realtime handler does not overwrite
-  // our cleared flag before the save completes
+  // our cleared flag before the save completes. Release in .finally().
   _localEditLock = true;
   // Render immediately so the UI responds — don't wait for Supabase round-trip
   renderDraft();
   showToast('Preferences unlocked — update and re-submit', 'info');
-  // Save after render so Supabase gets the cleared flag
-  saveState();
-  // Release lock after debounce window clears (500ms > 400ms debounce)
-  setTimeout(() => { _localEditLock = false; }, 600);
+  // Critical save: clear flag must reach Supabase immediately with retry
+  saveStateCritical().finally(() => { _localEditLock = false; });
 }
 
 function pickDriver(short) {
@@ -6035,17 +6195,239 @@ function mobileNav(id) {
 }
 
 function syncMobileNav(id) {
-  // Sync active state on mobile tabs
+  // Sync active state on mobile drawer tabs
   document.querySelectorAll('.mobile-nav-tab').forEach(t => t.classList.remove('active'));
   const mobTab = document.getElementById('mob-' + id);
   if (mobTab) mobTab.classList.add('active');
 
-  // Also sync the draft badge on mobile
+  // Sync bottom nav bar
+  document.querySelectorAll('.bottom-nav-btn').forEach(t => t.classList.remove('active'));
+  // Bottom nav covers: home, draft, results, leaderboard — others light up MORE
+  const bottomNavPages = ['home','draft','results','leaderboard'];
+  if (bottomNavPages.includes(id)) {
+    const bn = document.getElementById('bnav-' + id);
+    if (bn) bn.classList.add('active');
+  } else {
+    // Secondary page — highlight MORE button
+    const bMore = document.getElementById('bnav-more');
+    if (bMore) bMore.classList.add('active');
+  }
+
+  // Sync draft badge on mobile
   const draftBadge = document.getElementById('draft-badge');
   const mobDraftBadge = document.getElementById('mob-draft-badge');
-  if (draftBadge && mobDraftBadge) {
-    mobDraftBadge.style.display = draftBadge.style.display;
+  const bnavDraftBadge = document.getElementById('bnav-draft-badge');
+  if (draftBadge) {
+    const vis = draftBadge.style.display;
+    if (mobDraftBadge) mobDraftBadge.style.display = vis;
+    if (bnavDraftBadge) bnavDraftBadge.style.display = vis;
   }
+}
+
+// ============================================================
+//  DESKTOP MORE DROPDOWN
+// ============================================================
+function toggleMoreMenu() {
+  const wrap = document.getElementById('nav-more-wrap');
+  if (!wrap) return;
+  wrap.classList.toggle('open');
+  const btn = document.getElementById('nav-more-btn');
+  if (btn) btn.setAttribute('aria-expanded', wrap.classList.contains('open'));
+}
+
+function closeMoreMenu() {
+  const wrap = document.getElementById('nav-more-wrap');
+  if (wrap) { wrap.classList.remove('open'); }
+  const btn = document.getElementById('nav-more-btn');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+// Close MORE dropdown when clicking elsewhere
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('nav-more-wrap');
+  if (wrap && !wrap.contains(e.target)) closeMoreMenu();
+});
+
+// ============================================================
+//  HOME PAGE
+// ============================================================
+let _homeCountdownTimer = null;
+
+function renderHome() {
+  const el = document.getElementById('home-content');
+  if (!el) return;
+
+  if (!STATE.started || STATE.players.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🏠</div>
+        <h3>WELCOME TO F1 GRID MASTERS</h3>
+        <p>Head to Setup to add players and start the 2026 season</p>
+        <button class="btn btn-red" onclick="showPage('setup')" style="margin-top:16px">⚙ GO TO SETUP</button>
+      </div>`;
+    return;
+  }
+
+  // ── Next race ──
+  const nextRaceIdx = STATE.currentRaceIdx < RACES.length ? STATE.currentRaceIdx : RACES.length - 1;
+  const nextRace = RACES[nextRaceIdx];
+
+  // ── Standings (top 5) ──
+  const playerData = STATE.players.map(p => {
+    const { total } = calcPlayerPoints(p.id);
+    return { ...p, total };
+  }).sort((a, b) => b.total - a.total);
+
+  // ── My position ──
+  const me = SESSION_PLAYER_ID ? playerData.find(p => p.id === SESSION_PLAYER_ID) : null;
+  const myRank = me ? playerData.indexOf(me) + 1 : null;
+
+  // ── Draft status for current race ──
+  const raceId = nextRace.id;
+  const submittedMap = STATE.draftSubmitted?.[raceId] || {};
+  const submittedCount = Object.keys(submittedMap).filter(pid => submittedMap[pid]).length;
+  const totalPlayers = STATE.players.length;
+  const picksResolved = STATE.draftPicks[raceId] && Object.keys(STATE.draftPicks[raceId]).length >= totalPlayers;
+
+  // ── Activity log ──
+  const log = (STATE.activityLog || []).slice(0, 10);
+
+  // ── Top 5 standings HTML ──
+  const rankColors = ['r1','r2','r3'];
+  const standingsHtml = playerData.slice(0, 5).map((p, i) => {
+    const isMeRow = me && p.id === me.id;
+    return `<div class="home-standings-row" style="${isMeRow ? 'background:rgba(225,6,0,0.06);border-radius:6px;padding:8px 6px;' : ''}">
+      <span class="home-rank ${rankColors[i] || ''}">${i+1}</span>
+      <span class="home-player-name">${p.name}${isMeRow ? ' <span style="font-size:10px;color:var(--green);letter-spacing:1px">YOU</span>' : ''}</span>
+      <span class="home-pts">${p.total}<span class="home-pts-label">pts</span></span>
+    </div>`;
+  }).join('');
+
+  // ── Draft status HTML ──
+  const pct = totalPlayers > 0 ? Math.round((submittedCount / totalPlayers) * 100) : 0;
+  let draftStatusHtml;
+  if (picksResolved) {
+    const revealed = STATE.draftRevealed?.[raceId];
+    draftStatusHtml = `<div style="color:var(--green);font-weight:700;font-size:14px;">✓ Draft resolved${revealed ? ' & revealed' : ' — awaiting reveal'}</div>`;
+  } else {
+    draftStatusHtml = `
+      <div class="home-draft-status">
+        <div class="home-submitted-bar"><div class="home-submitted-fill" style="width:${pct}%"></div></div>
+        <span style="font-family:Share Tech Mono,monospace;font-size:13px;white-space:nowrap;">${submittedCount}/${totalPlayers} submitted</span>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn btn-red btn-sm" onclick="showPage('draft')" style="font-size:12px;padding:8px 16px;letter-spacing:2px;">
+          🏎 ${SESSION_PLAYER_ID && !submittedMap[SESSION_PLAYER_ID] ? 'SUBMIT YOUR PICKS' : 'VIEW DRAFT'}
+        </button>
+      </div>`;
+  }
+
+  // ── Activity feed HTML ──
+  const actHtml = log.length ? log.map(e =>
+    `<div class="home-activity-row">
+      <span class="home-activity-time">${e.time}</span>
+      <span class="home-activity-msg ${e.type || ''}">${e.msg}</span>
+    </div>`
+  ).join('') : `<p style="color:var(--muted);font-size:13px;padding:8px 0">No activity yet</p>`;
+
+  el.innerHTML = `
+    <div class="section-head">🏠 DASHBOARD</div>
+
+    <div class="home-grid">
+      <!-- Next race -->
+      <div class="home-card">
+        <div class="home-card-head">NEXT RACE</div>
+        <div class="home-next-flag">${nextRace.flag}</div>
+        <div class="home-next-name">${nextRace.name}</div>
+        <div class="home-next-sub">${nextRace.date} · ${nextRace.circuit}</div>
+        <div class="home-countdown" id="home-countdown-value">—</div>
+        <div class="home-countdown-label" id="home-countdown-label">LOADING...</div>
+      </div>
+
+      <!-- My position -->
+      <div class="home-card">
+        <div class="home-card-head">MY SEASON</div>
+        ${me ? `
+          <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
+            <div>
+              <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">POSITION</div>
+              <div class="home-my-rank" style="color:${myRank===1?'var(--gold)':myRank===2?'var(--silver)':myRank===3?'var(--bronze)':'var(--text)'}">${myRank}${myRank===1?'st':myRank===2?'nd':myRank===3?'rd':'th'}</div>
+            </div>
+            <div>
+              <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">POINTS</div>
+              <div class="home-my-pts">${me.total}</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--muted);">of ${totalPlayers} players</div>` :
+        `<div style="color:var(--muted);font-size:13px;margin-bottom:12px;">Set your identity to see your position</div>
+         <button class="btn btn-outline btn-sm" onclick="showIdentityOverlay()" style="font-size:12px;">👤 SELECT IDENTITY</button>`}
+      </div>
+
+      <!-- Draft status -->
+      <div class="home-card">
+        <div class="home-card-head">DRAFT STATUS · ${nextRace.name}</div>
+        ${draftStatusHtml}
+      </div>
+
+      <!-- Top 5 standings -->
+      <div class="home-card">
+        <div class="home-card-head">TOP 5 STANDINGS</div>
+        ${standingsHtml || '<p style="color:var(--muted);font-size:13px;">No completed races yet</p>'}
+        <div style="margin-top:10px;">
+          <button class="btn btn-outline btn-sm" onclick="showPage('leaderboard')" style="font-size:11px;width:100%">VIEW FULL STANDINGS →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="home-card" style="margin-top:0">
+      <div class="home-card-head">RECENT ACTIVITY</div>
+      <div id="home-activity-feed">${actHtml}</div>
+    </div>`;
+
+  // Start countdown timer
+  _startHomeCountdown(nextRace);
+}
+
+function _startHomeCountdown(race) {
+  if (_homeCountdownTimer) { clearInterval(_homeCountdownTimer); _homeCountdownTimer = null; }
+  // Parse race date — dates are like "Mar 8", "May 3" — we assume 2026 and 14:00 UTC
+  function _tick() {
+    const valEl = document.getElementById('home-countdown-value');
+    const lblEl = document.getElementById('home-countdown-label');
+    if (!valEl) { clearInterval(_homeCountdownTimer); _homeCountdownTimer = null; return; }
+
+    const monthMap = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    const parts = (race.date || '').split(' ');
+    const mon = monthMap[parts[0]];
+    const day = parseInt(parts[1]);
+    if (mon === undefined || isNaN(day)) { valEl.textContent = race.date; lblEl.textContent = 'RACE DATE'; return; }
+
+    const raceDate = new Date(Date.UTC(2026, mon, day, 14, 0, 0)); // approx race start
+    const now = new Date();
+    const diff = raceDate - now;
+
+    if (diff <= 0) {
+      valEl.textContent = 'RACE DAY';
+      lblEl.textContent = '🏁 IT\'S RACE WEEKEND!';
+      clearInterval(_homeCountdownTimer); _homeCountdownTimer = null;
+      return;
+    }
+
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+
+    if (d > 0) {
+      valEl.textContent = `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;
+    } else {
+      valEl.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+    lblEl.textContent = 'UNTIL RACE START';
+  }
+  _tick();
+  _homeCountdownTimer = setInterval(_tick, 1000);
 }
 
 // Wire up hamburger — single pointerdown handler works reliably for both mouse and touch.
@@ -6647,7 +7029,7 @@ async function initApp() {
   if (typeof updateRaceCountdown === 'function') updateRaceCountdown();
 
   if (STATE.started && STATE.players.length > 0) {
-    showPage('draft');
+    showPage('home');
   } else {
     syncMobileNav('setup');
   }
