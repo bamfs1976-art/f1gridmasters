@@ -1166,6 +1166,39 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0;
 }
 
+/* ── OpenF1 Form Guide ── */
+.of1-fg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+.of1-fg-card {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+/* Form badge pills */
+.of1-fb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 20px;
+  border-radius: 4px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 4px;
+}
+.of1-fb-top3 { background: rgba(34,197,94,0.25); color: #22c55e; border: 1px solid rgba(34,197,94,0.4); }
+.of1-fb-pts  { background: rgba(255,165,0,0.15);  color: #ffa500; border: 1px solid rgba(255,165,0,0.35); }
+.of1-fb-mid  { background: rgba(255,165,0,0.08);  color: #cc8400; border: 1px solid rgba(255,165,0,0.2); }
+.of1-fb-out  { background: rgba(239,68,68,0.12);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.of1-fb-dnf  { background: rgba(239,68,68,0.2);   color: #ef4444; border: 1px solid rgba(239,68,68,0.4); font-size: 9px; }
+.of1-fb-none { background: var(--panel3); color: var(--muted); border: 1px solid transparent; }
+
 </style>
 </head>
 <body>
@@ -2463,6 +2496,24 @@ function renderDraft() {
       ${/* ── ALL PICKS PANEL (post-reveal) ── */ ''}
       ${allPicksPanel}
 
+      ${/* ── OPENF1 FORM GUIDE (pre-resolution only) ── */ ''}
+      ${!picksResolved ? `
+      <div style="margin-top:16px">
+        <button id="of1-fg-toggle" class="btn btn-outline btn-sm"
+          onclick="of1ToggleFormGuide()"
+          aria-expanded="false" aria-controls="of1-fg-panel"
+          style="width:100%;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1.5px;padding:10px;">
+          📊 FORM GUIDE · LAST 3 RACES
+        </button>
+        <div id="of1-fg-panel" hidden>
+          <div id="of1-fg-body" style="padding-top:10px">
+            <div style="color:var(--muted);font-size:13px;padding:8px 0;display:flex;align-items:center;gap:8px">
+              <span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Fetching form data from OpenF1…
+            </div>
+          </div>
+        </div>
+      </div>` : ''}
+
       ${/* ── SUBMISSION STATUS (collapsed at bottom) ── */ ''}
       <details class="status-details" style="margin-top:20px;">
         <summary style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);cursor:pointer;padding:10px 0;list-style:none;display:flex;align-items:center;gap:8px;">
@@ -2476,7 +2527,7 @@ function renderDraft() {
                 ? `<button class="btn btn-green btn-sm" style="width:100%" onclick="goToNextRace()">
                     ADVANCE TO RACE ${raceIdx+2 <= RACES.length ? raceIdx+2 : '—'} DRAFT ▶
                    </button>`
-                : `<div style="padding:10px;background:rgba(255,165,0,0.05);border:1px solid rgba(255,165,0,0.2);border-radius:6px;text-align:center;font-size:12px;color:#ffa500;font-family:Share Tech Mono,monospace;">
+                : `<div style="padding:10px;background:rgba(255,163,0,0.05);border:1px solid rgba(255,163,0,0.2);border-radius:6px;text-align:center;font-size:12px;color:#ffa500;font-family:Share Tech Mono,monospace;">
                     ⏳ AWAITING ADMIN REVEAL
                    </div>`}
             </div>` : ''}
@@ -2485,6 +2536,9 @@ function renderDraft() {
 
     </div>
   `;
+
+  // Kick off form guide data load (fire-and-forget — will populate when open)
+  if (!picksResolved) _of1FormGuidePreload().catch(() => {});
 
   // Sticky picks bar (mobile)
   updateStickyPicksBar(myPrefs, iHaveSubmitted, picksResolved);
@@ -4539,6 +4593,222 @@ function of1ConfirmImport(resultMapJson, raceId) {
   </div>`;
 
   setTimeout(() => renderAdminDashboard(), 2000);
+}
+
+// ============================================================
+//  OPENF1 — PHASE 2: DRIVER FORM GUIDE
+// ============================================================
+
+const OF1_FG_CACHE_KEY = 'f1gm_of1_formguide';
+let _of1FgData = null;   // in-memory cache for this session
+
+function of1ToggleFormGuide() {
+  const panel = document.getElementById('of1-fg-panel');
+  const btn   = document.getElementById('of1-fg-toggle');
+  if (!panel || !btn) return;
+
+  const isOpen = !panel.hidden;
+  panel.hidden = isOpen;
+  btn.setAttribute('aria-expanded', String(!isOpen));
+
+  if (!isOpen) {
+    // Just opened — render if data is already loaded
+    _of1RenderFormGuide();
+  }
+}
+
+/**
+ * Preload form guide data in the background when the draft page opens.
+ * Results are stored in _of1FgData and persisted to localStorage (1h TTL).
+ */
+async function _of1FormGuidePreload() {
+  // Check in-memory cache first
+  if (_of1FgData) return;
+
+  // Check localStorage cache (1h)
+  try {
+    const raw = localStorage.getItem(OF1_FG_CACHE_KEY);
+    if (raw) {
+      const { data, expires } = JSON.parse(raw);
+      if (Date.now() < expires) { _of1FgData = data; return; }
+    }
+  } catch(e) {}
+
+  // Fetch from OpenF1
+  try {
+    // 1. Get all 2026 race sessions
+    const allSessions = await of1Fetch('/sessions', { year: 2026 }, 3600000);
+    if (!Array.isArray(allSessions)) return;
+
+    const now = new Date();
+
+    // 2. Filter for completed Race sessions only
+    const completedRaces = allSessions
+      .filter(s => s.session_type === 'Race' && s.date_end && new Date(s.date_end) < now)
+      .sort((a, b) => new Date(b.date_end) - new Date(a.date_end));
+
+    if (completedRaces.length === 0) { _of1FgData = {}; return; }
+
+    const last3 = completedRaces.slice(0, 3);
+
+    // 3. Find qualifying sessions for the same meetings
+    const qualiByMeeting = {};
+    allSessions
+      .filter(s => (s.session_type === 'Qualifying' || s.session_type === 'Sprint Qualifying') && s.date_end)
+      .forEach(s => {
+        const mk = s.meeting_key;
+        if (!qualiByMeeting[mk] || new Date(s.date_end) > new Date(qualiByMeeting[mk].date_end)) {
+          qualiByMeeting[mk] = s;
+        }
+      });
+
+    // 4. Fetch results for each of the last 3 races (in parallel, respects queue)
+    const [r0, r1, r2] = await Promise.all(last3.map(s =>
+      of1Fetch('/session_result', { session_key: s.session_key }, 0).catch(() => [])
+    ));
+    const raceResults = [r0, r1, r2].filter(Boolean);
+
+    // 5. Fetch qualifying grids
+    const qualiResults = await Promise.all(last3.map(s => {
+      const qs = qualiByMeeting[s.meeting_key];
+      if (!qs) return Promise.resolve([]);
+      return of1Fetch('/starting_grid', { session_key: qs.session_key }, 0).catch(() => []);
+    }));
+
+    // 6. Build per-driver data
+    const driverData = {};
+    DRIVERS.forEach(d => {
+      driverData[d.short] = {
+        short: d.short, name: d.name, team: d.team, teamColor: d.teamColor,
+        raceFinishes: [],     // [pos|null, pos|null, pos|null] newest first
+        qualiPositions: [],   // same order
+        racePts: [],          // Grid Masters points per race
+      };
+    });
+
+    raceResults.forEach((results, i) => {
+      if (!Array.isArray(results)) return;
+      results.forEach(r => {
+        const short = of1MapDriver(r.driver_number, null);
+        if (!short || !driverData[short]) return;
+        const pos = r.position != null ? parseInt(r.position) : null;
+        const isDNF = r.status && !r.status.toLowerCase().includes('finish') && !r.status.match(/^\+\d+ lap/i);
+        driverData[short].raceFinishes[i] = isDNF ? 'DNF' : pos;
+        driverData[short].racePts[i] = isDNF || !pos ? 0 : (POINTS_MAP[pos] || 0);
+      });
+    });
+
+    qualiResults.forEach((results, i) => {
+      if (!Array.isArray(results)) return;
+      results.forEach(r => {
+        const short = of1MapDriver(r.driver_number, null);
+        if (!short || !driverData[short]) return;
+        driverData[short].qualiPositions[i] = r.position != null ? parseInt(r.position) : null;
+      });
+    });
+
+    // 7. Compute averages and trends
+    Object.values(driverData).forEach(d => {
+      const numericFinishes = d.raceFinishes.filter(p => typeof p === 'number');
+      d.avgFinish = numericFinishes.length ? numericFinishes.reduce((a,b)=>a+b,0)/numericFinishes.length : 99;
+      d.totalPts  = d.racePts.reduce((a,b)=>a+b,0);
+      // Trend: compare most recent vs oldest (lower pos = better)
+      if (numericFinishes.length >= 2) {
+        const diff = numericFinishes[numericFinishes.length-1] - numericFinishes[0];
+        d.trend = diff < -2 ? '↑' : diff > 2 ? '↓' : '→';
+      } else {
+        d.trend = '—';
+      }
+      d.raceNames = last3.map(s => s.session_name || 'Race');
+    });
+
+    _of1FgData = driverData;
+
+    // Persist to localStorage for 1h
+    try {
+      localStorage.setItem(OF1_FG_CACHE_KEY, JSON.stringify({
+        data: driverData,
+        expires: Date.now() + 3600000
+      }));
+    } catch(e) {}
+
+    // If the panel is already open, render now
+    const panel = document.getElementById('of1-fg-panel');
+    if (panel && !panel.hidden) _of1RenderFormGuide();
+
+  } catch(e) {
+    // Silently fail — form guide is not essential
+  }
+}
+
+function _of1RenderFormGuide() {
+  const body = document.getElementById('of1-fg-body');
+  if (!body) return;
+
+  if (!_of1FgData || Object.keys(_of1FgData).length === 0) {
+    body.innerHTML = `<p style="color:var(--muted);font-size:13px;padding:8px 0">No 2026 race data available yet from OpenF1. Check back after the first race weekend.</p>`;
+    return;
+  }
+
+  // Sort by average finish (ascending = better)
+  const sorted = Object.values(_of1FgData).sort((a,b) => a.avgFinish - b.avgFinish);
+
+  const posLabel = p => {
+    if (p == null) return `<span class="of1-fb of1-fb-none">—</span>`;
+    if (p === 'DNF') return `<span class="of1-fb of1-fb-dnf">DNF</span>`;
+    if (p <= 3)  return `<span class="of1-fb of1-fb-top3">P${p}</span>`;
+    if (p <= 5)  return `<span class="of1-fb of1-fb-pts">P${p}</span>`;
+    if (p <= 10) return `<span class="of1-fb of1-fb-mid">P${p}</span>`;
+    return `<span class="of1-fb of1-fb-out">P${p}</span>`;
+  };
+
+  const qualiLabel = p => {
+    if (p == null) return `<span class="of1-fb of1-fb-none">—</span>`;
+    if (p <= 3)  return `<span class="of1-fb of1-fb-top3">Q${p}</span>`;
+    if (p <= 10) return `<span class="of1-fb of1-fb-pts">Q${p}</span>`;
+    return `<span class="of1-fb of1-fb-out">Q${p}</span>`;
+  };
+
+  const trendColor = t => t === '↑' ? '#22c55e' : t === '↓' ? '#ef4444' : 'var(--muted)';
+  const avgLabel = avg => avg >= 99 ? '—' : avg.toFixed(1);
+
+  const cards = sorted.map(d => `
+    <div class="of1-fg-card" style="border-left-color:${d.teamColor}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <div style="font-weight:700;font-size:13px">${d.short}</div>
+          <div style="font-size:11px;color:var(--muted)">${d.team.split(' ')[0]}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:700;color:${trendColor(d.trend)}" aria-label="Trend: ${d.trend}">${d.trend}</div>
+          <div style="font-size:10px;color:var(--muted)">avg ${avgLabel(d.avgFinish)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px">
+        ${(d.raceFinishes.length ? d.raceFinishes : [null,null,null]).map(p => posLabel(p)).join('')}
+      </div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap">
+        ${(d.qualiPositions.length ? d.qualiPositions : [null,null,null]).map(p => qualiLabel(p)).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">${d.totalPts} pts last 3</div>
+    </div>`).join('');
+
+  const anyRaceName = sorted[0]?.raceNames?.[0];
+  body.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-family:Share Tech Mono,monospace;letter-spacing:1px">
+      DATA: LAST 3 RACES · RACE FINISH + QUALIFYING · SORTED BY AVG FINISH
+      <button onclick="_of1ClearFgCache()" style="float:right;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;text-decoration:underline" aria-label="Refresh form guide data">REFRESH</button>
+    </div>
+    <div class="of1-fg-grid">${cards}</div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">↑ improving · ↓ declining · → stable (vs last 3 races). Green = top 5, amber = P6–10, red = P11+/DNF.</p>`;
+}
+
+function _of1ClearFgCache() {
+  _of1FgData = null;
+  try { localStorage.removeItem(OF1_FG_CACHE_KEY); } catch(e) {}
+  const body = document.getElementById('of1-fg-body');
+  if (body) body.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;display:flex;align-items:center;gap:8px"><span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Refreshing…</div>`;
+  _of1FormGuidePreload().catch(() => {});
 }
 
 // ============================================================
