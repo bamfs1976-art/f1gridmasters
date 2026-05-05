@@ -3016,6 +3016,7 @@ function renderSchedule() {
           <div class="si-name">${r.name} GRAND PRIX ${isCurrent ? '◀ CURRENT' : ''}</div>
           <div class="si-circuit">${r.circuit}</div>
           ${myPickHtml}
+          ${isDone ? `<div id="si-enrich-${r.id}" style="margin-top:4px;font-size:10px;color:var(--muted);font-family:Share Tech Mono,monospace"></div>` : ''}
         </div>
         ${r.sprint ? '<div class="si-sprint">SPRINT</div>' : '<div></div>'}
         <div class="si-date">${r.date} 2026</div>
@@ -3025,6 +3026,9 @@ function renderSchedule() {
       </div>`;
   }).join('');
   document.getElementById('schedule-list').innerHTML = html;
+
+  // Enrich calendar with OpenF1 weather + tyre data (async, non-blocking)
+  _of1EnrichCalendar().catch(() => {});
 }
 // ============================================================
 //  MODAL / TOAST
@@ -3092,13 +3096,14 @@ function renderDrivers() {
   const grid = document.getElementById('drivers-grid');
 
   if (activeTeamFilter !== 'ALL') {
-    // Show team header when filtered
     const teamDrivers = filtered;
-    const teamColor = teamDrivers[0]?.teamColor || 'var(--red)';
     grid.innerHTML = teamDrivers.map(d => driverCard(d)).join('');
   } else {
     grid.innerHTML = DRIVERS.map(d => driverCard(d)).join('');
   }
+
+  // Enrich driver cards with OpenF1 season stats (async, non-blocking)
+  _of1EnrichDriverCards().catch(() => {});
 }
 
 function filterByTeam(team) {
@@ -3150,6 +3155,10 @@ function driverCard(d) {
           <span style="font-size:12px;color:var(--muted);">${d.team}</span>
         </div>
         ${driverPickedBy(d.short)}
+        <!-- OpenF1 Season Stats (populated async) -->
+        <div id="dcard-stats-${d.short}" style="margin-top:8px;padding:6px 8px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--muted)">
+          <span class="of1-stat-loading">⟳ 2026 stats…</span>
+        </div>
       </div>
     </div>
   `;
@@ -5062,6 +5071,199 @@ function _calcStandings() {
     });
     return { name: p.name, total };
   }).sort((a,b) => b.total - a.total);
+}
+
+// ============================================================
+//  OPENF1 — PHASE 5: SEASON STATS ENRICHMENT
+// ============================================================
+
+const OF1_SEASON_CACHE = 'f1gm_of1_season2026';
+let _of1SeasonData = null;  // { byDriver: {NOR: {wins, podiums, dnfs, avgFinish}, ...}, calByRace: {r1: {weather, mainTyre}, ...} }
+
+/**
+ * Fetch all 2026 completed race data, compute per-driver stats + per-race weather/tyre.
+ * Cached indefinitely (completed race data never changes).
+ */
+async function _of1FetchSeasonData() {
+  if (_of1SeasonData) return _of1SeasonData;
+
+  try {
+    const raw = localStorage.getItem(OF1_SEASON_CACHE);
+    if (raw) {
+      const { data, built } = JSON.parse(raw);
+      // Re-use if built within last 24h (or indefinitely for fully completed seasons)
+      if (data && (Date.now() - built < 86400000)) {
+        _of1SeasonData = data;
+        return _of1SeasonData;
+      }
+    }
+  } catch(e) {}
+
+  // Get all 2026 sessions
+  const allSessions = await of1Fetch('/sessions', { year: 2026 }, 3600000);
+  if (!Array.isArray(allSessions)) return null;
+
+  const now = new Date();
+  const completedRaces = allSessions
+    .filter(s => s.session_type === 'Race' && s.date_end && new Date(s.date_end) < now)
+    .sort((a, b) => new Date(a.date_end) - new Date(b.date_end));
+
+  if (completedRaces.length === 0) return null;
+
+  // Find corresponding Qualifying sessions
+  const qualiByMeeting = {};
+  allSessions
+    .filter(s => s.session_type === 'Qualifying' && s.date_end)
+    .forEach(s => { qualiByMeeting[s.meeting_key] = s; });
+
+  // Initialise per-driver stats
+  const byDriver = {};
+  DRIVERS.forEach(d => {
+    byDriver[d.short] = { wins: 0, podiums: 0, dnfs: 0, finishes: [], bestQuali: 99 };
+  });
+
+  // Fetch session_results in batches (rate limiter handles throttle)
+  const calByRace = {};
+
+  for (const sess of completedRaces) {
+    const meetingKey = sess.meeting_key;
+
+    // Fetch race result + weather + stints in parallel
+    const [results, weather, stints, qualiGrid] = await Promise.all([
+      of1Fetch('/session_result', { session_key: sess.session_key }, 0).catch(() => []),
+      of1Fetch('/weather', { session_key: sess.session_key }, 0).catch(() => []),
+      of1Fetch('/stints', { session_key: sess.session_key }, 0).catch(() => []),
+      (() => {
+        const qs = qualiByMeeting[meetingKey];
+        return qs ? of1Fetch('/starting_grid', { session_key: qs.session_key }, 0).catch(() => []) : Promise.resolve([]);
+      })(),
+    ]);
+
+    // Process results
+    if (Array.isArray(results)) {
+      results.forEach(r => {
+        const short = of1MapDriver(r.driver_number, null);
+        if (!short || !byDriver[short]) return;
+        const pos = r.position != null ? parseInt(r.position) : null;
+        const isDNF = r.status && !r.status.toLowerCase().includes('finish') && !r.status.match(/^\+\d+ lap/i);
+        if (isDNF) {
+          byDriver[short].dnfs++;
+        } else if (pos) {
+          if (pos === 1) byDriver[short].wins++;
+          if (pos <= 3)  byDriver[short].podiums++;
+          byDriver[short].finishes.push(pos);
+        }
+      });
+    }
+
+    // Process qualifying grid
+    if (Array.isArray(qualiGrid)) {
+      qualiGrid.forEach(r => {
+        const short = of1MapDriver(r.driver_number, null);
+        if (!short || !byDriver[short]) return;
+        const qp = r.position != null ? parseInt(r.position) : null;
+        if (qp && qp < byDriver[short].bestQuali) byDriver[short].bestQuali = qp;
+      });
+    }
+
+    // Weather summary for this race
+    const weatherLine = (() => {
+      if (!Array.isArray(weather) || weather.length === 0) return '';
+      const w = weather[Math.floor(weather.length / 2)]; // mid-race sample
+      return `${w.rainfall ? '🌧 Wet' : '☀️ Dry'} · ${w.track_temperature ?? '?'}°C`;
+    })();
+
+    // Main tyre compound
+    const mainTyre = (() => {
+      if (!Array.isArray(stints) || stints.length === 0) return '';
+      const counts = {};
+      stints.forEach(s => {
+        const c = s.compound || 'UNKNOWN';
+        counts[c] = (counts[c] || 0) + 1;
+      });
+      const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
+      const emojis = { SOFT:'🔴', MEDIUM:'🟡', HARD:'⚪', INTERMEDIATE:'🟢', WET:'🔵' };
+      return top ? `${emojis[top[0]] || '⬛'} ${top[0]}` : '';
+    })();
+
+    // Find the game race ID matching this session's meeting (by country)
+    const sessionMeeting = allSessions.find(s => s.meeting_key === meetingKey && s.country_name);
+    if (sessionMeeting) {
+      const matchingRace = RACES.find(r =>
+        r.country.toLowerCase() === (sessionMeeting.country_name || '').toLowerCase()
+      );
+      if (matchingRace) {
+        calByRace[matchingRace.id] = { weather: weatherLine, mainTyre };
+      }
+    }
+  }
+
+  // Compute average finish per driver
+  Object.values(byDriver).forEach(d => {
+    d.avgFinish = d.finishes.length ? d.finishes.reduce((a,b)=>a+b,0)/d.finishes.length : null;
+    delete d.finishes; // don't need the raw array anymore
+  });
+
+  const data = { byDriver, calByRace };
+  _of1SeasonData = data;
+
+  try {
+    localStorage.setItem(OF1_SEASON_CACHE, JSON.stringify({ data, built: Date.now() }));
+  } catch(e) {}
+
+  return _of1SeasonData;
+}
+
+/**
+ * Enrich driver cards with 2026 season stats from OpenF1.
+ */
+async function _of1EnrichDriverCards() {
+  const seasonData = await _of1FetchSeasonData().catch(() => null);
+  if (!seasonData?.byDriver) {
+    // Hide loading placeholders
+    document.querySelectorAll('.of1-stat-loading').forEach(el => el.closest('[id^="dcard-stats-"]').innerHTML = '');
+    return;
+  }
+
+  DRIVERS.forEach(d => {
+    const el = document.getElementById(`dcard-stats-${d.short}`);
+    if (!el) return;
+    const stats = seasonData.byDriver[d.short];
+    if (!stats) { el.innerHTML = ''; return; }
+
+    const hasData = stats.wins > 0 || stats.podiums > 0 || stats.dnfs > 0 || stats.avgFinish != null;
+    if (!hasData) { el.innerHTML = '<span style="color:var(--muted);font-size:10px">No 2026 data yet</span>'; return; }
+
+    const bestQ = stats.bestQuali < 99 ? `Q${stats.bestQuali}` : '—';
+    const avg   = stats.avgFinish != null ? stats.avgFinish.toFixed(1) : '—';
+
+    el.innerHTML = `
+      <div style="font-size:9px;letter-spacing:1px;color:var(--muted);font-family:Share Tech Mono,monospace;margin-bottom:4px">2026 SEASON</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${stats.wins    > 0 ? `<span style="color:#ffd700;font-weight:700">🏆 ${stats.wins}W</span>` : ''}
+        ${stats.podiums > 0 ? `<span style="color:#c0c0c0">🏅 ${stats.podiums}P</span>` : ''}
+        ${stats.dnfs    > 0 ? `<span style="color:#ef4444">💔 ${stats.dnfs}DNF</span>` : ''}
+        <span>avg P${avg}</span>
+        <span>best Q: ${bestQ}</span>
+      </div>`;
+  });
+}
+
+/**
+ * Enrich calendar items with weather + tyre compound for completed races.
+ */
+async function _of1EnrichCalendar() {
+  const seasonData = await _of1FetchSeasonData().catch(() => null);
+  if (!seasonData?.calByRace) return;
+
+  RACES.forEach(r => {
+    const el = document.getElementById(`si-enrich-${r.id}`);
+    if (!el) return;
+    const d = seasonData.calByRace[r.id];
+    if (!d) return;
+    const parts = [d.weather, d.mainTyre].filter(Boolean);
+    if (parts.length) el.textContent = parts.join(' · ');
+  });
 }
 
 // ============================================================
