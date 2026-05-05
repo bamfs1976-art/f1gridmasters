@@ -1220,11 +1220,11 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       <button class="nav-tab" onclick="showPage('draft')" id="nav-draft">🏎 DRAFT <span class="tab-badge" id="draft-badge" style="display:none"></span></button>
       <button class="nav-tab" onclick="showPage('results')" id="nav-results">🏁 RESULTS</button>
       <button class="nav-tab" onclick="showPage('leaderboard')" id="nav-lb">🏆 STANDINGS</button>
+      <button class="nav-tab" onclick="showPage('live')" id="nav-live">📡 LIVE</button>
       <button class="nav-tab" onclick="showPage('schedule')">📅 CALENDAR</button>
       <button class="nav-tab" onclick="showPage('drivers')">👤 DRIVERS</button>
       <button class="nav-tab" onclick="showPage('stats')">📈 STATS</button>
       <button class="nav-tab" onclick="showPage('admin')" id="nav-admin" style="color:#ffa500;">🔐 ADMIN</button>
-      <button class="nav-tab" onclick="showPage('live')" id="nav-live">📡 LIVE</button>
       <button class="nav-tab" onclick="showPage('2026gp')">🏁 2026 GP</button>
       <button class="nav-tab" onclick="showPage('2025')">🗂 2025 SEASON</button>
     </div>
@@ -4364,7 +4364,8 @@ function _of1Enqueue(fn) {
 async function of1Fetch(endpoint, params = {}, ttlMs = 3600000) {
   const qs = new URLSearchParams(params).toString();
   const url = `${OF1_BASE}${endpoint}${qs ? '?' + qs : ''}`;
-  const cacheKey = OF1_CACHE_PFX + btoa(encodeURIComponent(url)).replace(/[^a-z0-9]/gi,'').slice(0, 80);
+  // base64url encode (replace +→- /→_ strip =) — no truncation to avoid key collisions
+  const cacheKey = OF1_CACHE_PFX + btoa(encodeURIComponent(url)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 
   if (ttlMs !== -1) {
     try {
@@ -4414,6 +4415,21 @@ function of1MapDriver(driverNumber, nameAcronym) {
     if (found) return found.short;
   }
   return null;
+}
+
+/**
+ * Fetch OpenF1 drivers list for a session and return a number→acronym map.
+ * Used as fallback when driver_number doesn't match our DRIVERS.num values.
+ * Cached indefinitely (driver assignments don't change after a session).
+ */
+async function _of1GetAcronymMap(sessionKey) {
+  if (!sessionKey) return {};
+  try {
+    const list = await of1Fetch('/drivers', { session_key: sessionKey }, 0);
+    const map = {};
+    if (Array.isArray(list)) list.forEach(d => { map[d.driver_number] = d.name_acronym; });
+    return map;
+  } catch(e) { return {}; }
 }
 
 /**
@@ -4691,10 +4707,13 @@ async function _of1FormGuidePreload() {
         }
       });
 
-    // 4. Fetch results for each of the last 3 races (in parallel, respects queue)
-    const [r0, r1, r2] = await Promise.all(last3.map(s =>
-      of1Fetch('/session_result', { session_key: s.session_key }, 0).catch(() => [])
-    ));
+    // 4. Fetch results + driver acronym map for the most recent session
+    const [r0, r1, r2, acMap] = await Promise.all([
+      of1Fetch('/session_result', { session_key: last3[0].session_key }, 0).catch(() => []),
+      last3[1] ? of1Fetch('/session_result', { session_key: last3[1].session_key }, 0).catch(() => []) : Promise.resolve([]),
+      last3[2] ? of1Fetch('/session_result', { session_key: last3[2].session_key }, 0).catch(() => []) : Promise.resolve([]),
+      _of1GetAcronymMap(last3[0].session_key),  // use most recent session for acronym fallback
+    ]);
     const raceResults = [r0, r1, r2].filter(Boolean);
 
     // 5. Fetch qualifying grids
@@ -4718,7 +4737,7 @@ async function _of1FormGuidePreload() {
     raceResults.forEach((results, i) => {
       if (!Array.isArray(results)) return;
       results.forEach(r => {
-        const short = of1MapDriver(r.driver_number, null);
+        const short = of1MapDriver(r.driver_number, acMap[r.driver_number]);
         if (!short || !driverData[short]) return;
         const pos = r.position != null ? parseInt(r.position) : null;
         const isDNF = r.status && !r.status.toLowerCase().includes('finish') && !r.status.match(/^\+\d+ lap/i);
@@ -4730,7 +4749,7 @@ async function _of1FormGuidePreload() {
     qualiResults.forEach((results, i) => {
       if (!Array.isArray(results)) return;
       results.forEach(r => {
-        const short = of1MapDriver(r.driver_number, null);
+        const short = of1MapDriver(r.driver_number, acMap[r.driver_number]);
         if (!short || !driverData[short]) return;
         driverData[short].qualiPositions[i] = r.position != null ? parseInt(r.position) : null;
       });
@@ -5128,8 +5147,8 @@ async function _of1FetchSeasonData() {
   for (const sess of completedRaces) {
     const meetingKey = sess.meeting_key;
 
-    // Fetch race result + weather + stints in parallel
-    const [results, weather, stints, qualiGrid] = await Promise.all([
+    // Fetch race result + weather + stints + driver acronym map in parallel
+    const [results, weather, stints, qualiGrid, acMap] = await Promise.all([
       of1Fetch('/session_result', { session_key: sess.session_key }, 0).catch(() => []),
       of1Fetch('/weather', { session_key: sess.session_key }, 0).catch(() => []),
       of1Fetch('/stints', { session_key: sess.session_key }, 0).catch(() => []),
@@ -5137,12 +5156,13 @@ async function _of1FetchSeasonData() {
         const qs = qualiByMeeting[meetingKey];
         return qs ? of1Fetch('/starting_grid', { session_key: qs.session_key }, 0).catch(() => []) : Promise.resolve([]);
       })(),
+      _of1GetAcronymMap(sess.session_key),
     ]);
 
     // Process results
     if (Array.isArray(results)) {
       results.forEach(r => {
-        const short = of1MapDriver(r.driver_number, null);
+        const short = of1MapDriver(r.driver_number, acMap[r.driver_number]);
         if (!short || !byDriver[short]) return;
         const pos = r.position != null ? parseInt(r.position) : null;
         const isDNF = r.status && !r.status.toLowerCase().includes('finish') && !r.status.match(/^\+\d+ lap/i);
@@ -5159,7 +5179,7 @@ async function _of1FetchSeasonData() {
     // Process qualifying grid
     if (Array.isArray(qualiGrid)) {
       qualiGrid.forEach(r => {
-        const short = of1MapDriver(r.driver_number, null);
+        const short = of1MapDriver(r.driver_number, acMap[r.driver_number]);
         if (!short || !byDriver[short]) return;
         const qp = r.position != null ? parseInt(r.position) : null;
         if (qp && qp < byDriver[short].bestQuali) byDriver[short].bestQuali = qp;
@@ -5271,6 +5291,7 @@ async function _of1EnrichCalendar() {
 // ============================================================
 
 let _liveTimer = null;
+let _liveAcMap = {};   // driver_number → name_acronym for current live session
 
 function renderLive() {
   const inner = document.getElementById('live-inner');
@@ -5351,6 +5372,9 @@ function _liveStopPoll() {
 async function _liveRender(session) {
   const inner = document.getElementById('live-inner');
   if (!inner) return;
+
+  // Fetch driver acronym map once for this session (for number→short fallback)
+  _liveAcMap = await _of1GetAcronymMap(session.session_key);
 
   // Build the shell immediately
   inner.innerHTML = `
@@ -5463,7 +5487,7 @@ async function _liveRefresh(session) {
       const pickedDrivers = new Set(Object.values(gmPicks)); // set of short codes
 
       const towerRows = rows.map(r => {
-        const short  = of1MapDriver(r.driver_number, null);
+        const short  = of1MapDriver(r.driver_number, _liveAcMap[r.driver_number]);
         const driver = DRIVERS.find(d => d.short === short);
         const tc     = driver?.teamColor || '#666';
         const isGM   = short && pickedDrivers.has(short);
@@ -5511,7 +5535,7 @@ async function _liveRefresh(session) {
       const posForShort = (short) => {
         const driver = DRIVERS.find(d => d.short === short);
         if (!driver) return null;
-        const entry = Object.values(latestPos2).find(p => of1MapDriver(p.driver_number, null) === short);
+        const entry = Object.values(latestPos2).find(p => of1MapDriver(p.driver_number, _liveAcMap[p.driver_number]) === short);
         return entry?.position ?? null;
       };
 
