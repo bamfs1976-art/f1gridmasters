@@ -1224,6 +1224,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       <button class="nav-tab" onclick="showPage('drivers')">👤 DRIVERS</button>
       <button class="nav-tab" onclick="showPage('stats')">📈 STATS</button>
       <button class="nav-tab" onclick="showPage('admin')" id="nav-admin" style="color:#ffa500;">🔐 ADMIN</button>
+      <button class="nav-tab" onclick="showPage('live')" id="nav-live">📡 LIVE</button>
       <button class="nav-tab" onclick="showPage('2026gp')">🏁 2026 GP</button>
       <button class="nav-tab" onclick="showPage('2025')">🗂 2025 SEASON</button>
     </div>
@@ -1522,6 +1523,17 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <div class="page" id="page-admin">
   <div class="z1 animate-in" id="admin-inner">
     <!-- Lock screen shown by default, JS swaps it out -->
+  </div>
+</div>
+
+<!-- ===================== LIVE RACE DASHBOARD ===================== -->
+<div class="page" id="page-live">
+  <div class="z1 animate-in" id="live-inner">
+    <div class="empty-state" style="padding:40px 0">
+      <div class="icon">📡</div>
+      <h3>LIVE DASHBOARD</h3>
+      <p>Loading…</p>
+    </div>
   </div>
 </div>
 
@@ -1958,6 +1970,8 @@ let _localEditLock = false;
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  // Stop live polling when navigating away
+  if (id !== 'live' && typeof _liveStopPoll === 'function') _liveStopPoll();
   // Hide sticky picks bar when navigating away from draft
   if (id !== 'draft') { const sb = document.getElementById('sticky-picks-bar'); if (sb) sb.style.display = 'none'; }
   document.getElementById('page-' + id).classList.add('active');
@@ -1983,6 +1997,7 @@ function showPage(id) {
   if (id === '2026gp') render2026GP();
   if (id === '2025') render2025();
   if (id === 'admin') renderAdmin();
+  if (id === 'live') renderLive();
   syncMobileNav(id);
 }
 
@@ -4809,6 +4824,288 @@ function _of1ClearFgCache() {
   const body = document.getElementById('of1-fg-body');
   if (body) body.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;display:flex;align-items:center;gap:8px"><span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Refreshing…</div>`;
   _of1FormGuidePreload().catch(() => {});
+}
+
+// ============================================================
+//  OPENF1 — PHASE 3: LIVE RACE DASHBOARD
+// ============================================================
+
+let _liveTimer = null;
+
+function renderLive() {
+  const inner = document.getElementById('live-inner');
+  if (!inner) return;
+  inner.innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:var(--muted);padding:20px 0;font-size:13px">
+    <span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Checking for live session…
+  </div>`;
+  _liveStartCheck();
+}
+
+async function _liveStartCheck() {
+  // Stop any existing poll
+  _liveStopPoll();
+
+  const inner = document.getElementById('live-inner');
+  if (!inner) return;
+
+  try {
+    // Check if a Race session is currently live
+    const sessions = await of1Fetch('/sessions', { session_key: 'latest' }, -1);
+    // -1 = no cache for live detection
+
+    const session = Array.isArray(sessions) ? sessions[0] : sessions;
+    if (!session) throw new Error('No session data');
+
+    const now = new Date();
+    const start = session.date_start ? new Date(session.date_start) : null;
+    const end   = session.date_end   ? new Date(session.date_end)   : null;
+
+    const isLiveSession = session.session_type === 'Race' &&
+      start && end && now >= start && now <= end;
+
+    if (!isLiveSession) {
+      // Show "not live" state with session info
+      const nextInfo = (session.session_name || session.session_type || 'Unknown')
+        + (session.date_start ? ` · ${session.date_start.split('T')[0]}` : '');
+      inner.innerHTML = `
+        <div class="section-head">📡 LIVE RACE DASHBOARD</div>
+        <div style="padding:32px;text-align:center;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-top:16px">
+          <div style="font-size:40px;margin-bottom:12px">🏁</div>
+          <div style="font-family:Orbitron,sans-serif;font-size:14px;letter-spacing:1px;color:var(--muted);margin-bottom:8px">NO RACE IN PROGRESS</div>
+          <div style="font-size:13px;color:var(--muted)">Latest OpenF1 session: <strong>${nextInfo}</strong></div>
+          ${session.session_type !== 'Race'
+            ? `<div style="margin-top:8px;font-size:12px;color:var(--muted)">Session type: ${session.session_type || 'unknown'}. Live data only available during Race sessions.</div>`
+            : ''}
+          <button class="btn btn-outline btn-sm" style="margin-top:16px" onclick="renderLive()">🔄 CHECK AGAIN</button>
+        </div>`;
+      return;
+    }
+
+    // It's live — kick off the full live view
+    _liveRender(session);
+
+    // Poll every 15 seconds
+    _liveTimer = setInterval(() => {
+      if (document.getElementById('live-inner')) {
+        _liveRefresh(session);
+      } else {
+        _liveStopPoll();
+      }
+    }, 15000);
+
+  } catch(e) {
+    const inner2 = document.getElementById('live-inner');
+    if (inner2) inner2.innerHTML = `
+      <div class="section-head">📡 LIVE RACE DASHBOARD</div>
+      <div style="padding:20px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;margin-top:16px;font-size:13px;color:#ef4444">
+        ❌ Could not reach OpenF1. ${e.message || 'Check your connection.'}
+        <button class="btn btn-outline btn-sm" style="margin-top:12px;display:block" onclick="renderLive()">RETRY</button>
+      </div>`;
+  }
+}
+
+function _liveStopPoll() {
+  if (_liveTimer) { clearInterval(_liveTimer); _liveTimer = null; }
+}
+
+async function _liveRender(session) {
+  const inner = document.getElementById('live-inner');
+  if (!inner) return;
+
+  // Build the shell immediately
+  inner.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <div class="section-head" style="margin:0">📡 LIVE · ${session.meeting_name || ''} RACE</div>
+      <div style="font-size:11px;color:var(--muted);font-family:Share Tech Mono,monospace" id="live-updated">Updating…</div>
+    </div>
+    <div id="live-weather" style="margin-bottom:12px"></div>
+    <div id="live-rc" style="margin-bottom:12px"></div>
+    <div style="display:grid;grid-template-columns:1fr;gap:12px">
+      <div id="live-tower"></div>
+      <div id="live-gm-lb"></div>
+    </div>
+    <div style="margin-top:12px;text-align:center">
+      <button class="btn btn-outline btn-sm" onclick="_liveStopPoll();renderLive()" aria-label="Stop polling and recheck">⏹ STOP POLLING</button>
+    </div>`;
+
+  await _liveRefresh(session);
+}
+
+async function _liveRefresh(session) {
+  const sk = session.session_key;
+  const now = new Date();
+
+  try {
+    // Parallel fetch: positions, intervals, weather, race control
+    const [positions, intervals, weather, rc] = await Promise.all([
+      of1Fetch('/position', { session_key: sk }, -1).catch(() => []),
+      of1Fetch('/intervals', { session_key: sk }, -1).catch(() => []),
+      of1Fetch('/weather', { session_key: sk }, 60000).catch(() => []),
+      of1Fetch('/race_control', { session_key: sk }, 30000).catch(() => []),
+    ]);
+
+    // Update timestamp
+    const updEl = document.getElementById('live-updated');
+    if (updEl) {
+      const t = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      updEl.textContent = `Last update: ${t}`;
+    }
+
+    // ── WEATHER ──────────────────────────────────────────────
+    const wEl = document.getElementById('live-weather');
+    if (wEl && Array.isArray(weather) && weather.length > 0) {
+      const w = weather[weather.length - 1]; // most recent
+      const rain = w.rainfall ? '🌧' : '☀️';
+      wEl.innerHTML = `
+        <div style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:Share Tech Mono,monospace">
+          <span title="Track temperature">🌡 Track: ${w.track_temperature ?? '—'}°C</span>
+          <span title="Air temperature">💨 Air: ${w.air_temperature ?? '—'}°C</span>
+          <span title="Rainfall">${rain} ${w.rainfall ? 'Rain' : 'Dry'}</span>
+          <span title="Humidity">💧 ${w.humidity ?? '—'}%</span>
+          <span title="Wind speed">🌬 ${w.wind_speed ?? '—'} m/s</span>
+        </div>`;
+    }
+
+    // ── RACE CONTROL MESSAGES ─────────────────────────────────
+    const rcEl = document.getElementById('live-rc');
+    if (rcEl && Array.isArray(rc) && rc.length > 0) {
+      const recent = rc.slice(-3).reverse(); // last 3, newest first
+      const rcHtml = recent.map(msg => {
+        const isFlag = msg.category === 'Flag';
+        const isSC   = msg.category === 'SafetyCar';
+        const color  = isFlag
+          ? (msg.flag === 'YELLOW' || msg.flag === 'DOUBLE YELLOW' ? '#ffa500'
+             : msg.flag === 'RED' ? '#ef4444'
+             : msg.flag === 'GREEN' ? '#22c55e'
+             : 'var(--muted)')
+          : isSC ? '#ffa500' : 'var(--muted)';
+        return `<div style="padding:6px 10px;background:var(--panel2);border-left:3px solid ${color};border-radius:0 4px 4px 0;font-size:12px;margin-bottom:4px">
+          <span style="color:${color};font-weight:700;font-family:Share Tech Mono,monospace;font-size:11px">${msg.category?.toUpperCase() || ''}${msg.flag ? ' · '+msg.flag : ''}</span>
+          <span style="color:var(--muted);font-size:11px;margin-left:8px">${msg.message || ''}</span>
+        </div>`;
+      }).join('');
+      rcEl.innerHTML = `<div style="margin-bottom:4px;font-size:10px;color:var(--muted);font-family:Share Tech Mono,monospace;letter-spacing:1px">RACE CONTROL</div>${rcHtml}`;
+    }
+
+    // ── TIMING TOWER ─────────────────────────────────────────
+    const towerEl = document.getElementById('live-tower');
+    if (towerEl) {
+      // Get the most recent position for each driver
+      const latestPos = {};
+      if (Array.isArray(positions)) {
+        positions.forEach(p => {
+          const dn = p.driver_number;
+          if (!latestPos[dn] || new Date(p.date) > new Date(latestPos[dn].date)) {
+            latestPos[dn] = p;
+          }
+        });
+      }
+
+      // Get most recent interval per driver
+      const latestInt = {};
+      if (Array.isArray(intervals)) {
+        intervals.forEach(iv => {
+          const dn = iv.driver_number;
+          if (!latestInt[dn] || new Date(iv.date) > new Date(latestInt[dn].date)) {
+            latestInt[dn] = iv;
+          }
+        });
+      }
+
+      // Build sorted driver list
+      const rows = Object.values(latestPos)
+        .sort((a, b) => (a.position || 99) - (b.position || 99))
+        .slice(0, 20);
+
+      // Which drivers are picked by Grid Masters players this race?
+      const currentRace = RACES[STATE.currentRaceIdx];
+      const gmPicks = currentRace ? (STATE.draftPicks[currentRace.id] || {}) : {};
+      const pickedDrivers = new Set(Object.values(gmPicks)); // set of short codes
+
+      const towerRows = rows.map(r => {
+        const short  = of1MapDriver(r.driver_number, null);
+        const driver = DRIVERS.find(d => d.short === short);
+        const tc     = driver?.teamColor || '#666';
+        const isGM   = short && pickedDrivers.has(short);
+        const ivData = latestInt[r.driver_number];
+        const gap    = ivData?.gap_to_leader != null ? `+${ivData.gap_to_leader}` : (r.position === 1 ? 'LEADER' : '—');
+        const gmTag  = isGM
+          ? (() => {
+              const player = STATE.players.find(p => gmPicks[p.id] === short);
+              return `<span style="font-size:10px;padding:2px 5px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:3px;color:#22c55e;margin-left:6px">${player?.name.split(' ')[0] || 'GM'}</span>`;
+            })()
+          : '';
+
+        return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;${isGM ? 'background:rgba(34,197,94,0.04);border-radius:4px;' : ''}">
+          <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);width:20px;text-align:right">${r.position || '—'}</span>
+          <span style="width:3px;height:18px;border-radius:2px;background:${tc};flex-shrink:0"></span>
+          <span style="font-weight:700;font-size:13px;flex:1">${short || '?'}</span>
+          ${gmTag}
+          <span style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted)">${gap}</span>
+        </div>`;
+      }).join('');
+
+      towerEl.innerHTML = `
+        <div style="margin-bottom:6px;font-size:10px;color:var(--muted);font-family:Share Tech Mono,monospace;letter-spacing:1px">RACE POSITIONS</div>
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;overflow:hidden">${towerRows || '<div style="padding:12px;color:var(--muted);font-size:13px">No position data yet</div>'}</div>`;
+    }
+
+    // ── GRID MASTERS MINI-LEADERBOARD ──────────────────────────
+    const gmEl = document.getElementById('live-gm-lb');
+    if (gmEl) {
+      const currentRace = RACES[STATE.currentRaceIdx];
+      const gmPicks = currentRace ? (STATE.draftPicks[currentRace.id] || {}) : {};
+
+      if (Object.keys(gmPicks).length === 0) {
+        gmEl.innerHTML = '';
+        return;
+      }
+
+      const latestPos2 = {};
+      if (Array.isArray(positions)) {
+        positions.forEach(p => {
+          const dn = p.driver_number;
+          if (!latestPos2[dn] || new Date(p.date) > new Date(latestPos2[dn].date)) latestPos2[dn] = p;
+        });
+      }
+      const posForShort = (short) => {
+        const driver = DRIVERS.find(d => d.short === short);
+        if (!driver) return null;
+        const entry = Object.values(latestPos2).find(p => of1MapDriver(p.driver_number, null) === short);
+        return entry?.position ?? null;
+      };
+
+      const gmRows = STATE.players
+        .map(p => {
+          const pickedShort = gmPicks[p.id] || null;
+          const pos = pickedShort ? posForShort(pickedShort) : null;
+          const pts = pos ? (POINTS_MAP[pos] || 0) : 0;
+          return { player: p, pickedShort, pos, pts };
+        })
+        .filter(r => r.pickedShort)
+        .sort((a, b) => (a.pos || 99) - (b.pos || 99));
+
+      const gmRowsHtml = gmRows.map((r, i) => {
+        const driver = DRIVERS.find(d => d.short === r.pickedShort);
+        const tc = driver?.teamColor || '#666';
+        return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px">
+          <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);width:16px">${i+1}</span>
+          <span style="font-size:12px;flex:1;font-weight:${i < 3 ? 700 : 400}">${r.player.name}</span>
+          <span style="width:3px;height:14px;border-radius:2px;background:${tc};flex-shrink:0"></span>
+          <span style="font-family:Share Tech Mono,monospace;font-size:11px;width:28px">${r.pickedShort}</span>
+          <span style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);width:20px;text-align:right">${r.pos ? 'P'+r.pos : '—'}</span>
+          <span style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--green);width:24px;text-align:right">${r.pts}pt</span>
+        </div>`;
+      }).join('');
+
+      gmEl.innerHTML = `
+        <div style="margin-bottom:6px;font-size:10px;color:var(--muted);font-family:Share Tech Mono,monospace;letter-spacing:1px">GRID MASTERS LEADERBOARD (LIVE)</div>
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;overflow:hidden">${gmRowsHtml || '<div style="padding:12px;color:var(--muted);font-size:13px">No picks resolved for this race</div>'}</div>`;
+    }
+
+  } catch(e) {
+    // Silent fail on refresh — keep existing UI
+  }
 }
 
 // ============================================================
