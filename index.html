@@ -4605,9 +4605,14 @@ function of1ConfirmImport(resultMapJson, raceId) {
   const statusEl = document.getElementById('of1-import-status');
   if (statusEl) statusEl.innerHTML = `<div style="padding:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:6px;font-size:13px;color:#22c55e">
     ✅ Results saved for ${race.name}. P1: ${resultMap[1] || '?'}
+    <button class="btn btn-outline btn-sm" style="margin-top:10px;display:block;width:100%" onclick="of1ShowSummaryCard('${raceId}')">
+      📊 GENERATE SHARE CARD
+    </button>
   </div>`;
 
-  setTimeout(() => renderAdminDashboard(), 2000);
+  // Auto-generate the share card after a short delay
+  setTimeout(() => of1ShowSummaryCard(raceId), 500);
+  setTimeout(() => renderAdminDashboard(), 3000);
 }
 
 // ============================================================
@@ -4824,6 +4829,239 @@ function _of1ClearFgCache() {
   const body = document.getElementById('of1-fg-body');
   if (body) body.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;display:flex;align-items:center;gap:8px"><span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Refreshing…</div>`;
   _of1FormGuidePreload().catch(() => {});
+}
+
+// ============================================================
+//  OPENF1 — PHASE 4: POST-RACE SUMMARY CARD
+// ============================================================
+
+// Add html2canvas lazily (only when needed)
+function _loadHtml2Canvas(cb) {
+  if (window.html2canvas) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  s.onload = cb;
+  s.onerror = () => showToast('Could not load image export library', 'error');
+  document.head.appendChild(s);
+}
+
+function of1ShowSummaryCard(raceId) {
+  const race = RACES.find(r => r.id === raceId);
+  if (!race) return;
+  const result = STATE.raceResults?.[raceId];
+  if (!result || Object.keys(result).length === 0) {
+    showToast('No result data for this race', 'info'); return;
+  }
+
+  // Build summary data ─────────────────────────────────────
+
+  // Top 3 finishers
+  const top3 = [1,2,3].map(pos => {
+    const short = result[pos];
+    const driver = DRIVERS.find(d => d.short === short);
+    return { pos, short: short || '?', driver };
+  });
+
+  // GM picks for this race
+  const picks = STATE.draftPicks?.[raceId] || {};
+  const gmPicks = STATE.players.map(p => {
+    const short = picks[p.id] || null;
+    if (!short) return null;
+    const finishPos = Object.entries(result).find(([,s]) => s === short)?.[0];
+    const pts = finishPos ? (POINTS_MAP[parseInt(finishPos)] || 0) : 0;
+    return { player: p, short, pos: finishPos ? parseInt(finishPos) : null, pts };
+  }).filter(Boolean);
+
+  const bestPick   = gmPicks.length ? [...gmPicks].sort((a,b) => (a.pos||99)-(b.pos||99))[0] : null;
+  const dnfPick    = gmPicks.find(r => r.pos === null) || null; // picked a driver who didn't score
+
+  // Top 5 current standings
+  const standings = _calcStandings().slice(0, 5);
+
+  // Weather (try to get from cached session data)
+  let weatherSummary = '';
+  try {
+    // Search cache keys for weather data matching this race
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(OF1_CACHE_PFX) && key.includes('weather')) {
+        const raw = JSON.parse(localStorage.getItem(key) || '{}');
+        if (Array.isArray(raw.data) && raw.data.length) {
+          const w = raw.data[raw.data.length - 1];
+          weatherSummary = `${w.rainfall ? '🌧 Wet' : '☀️ Dry'} · Track ${w.track_temperature ?? '?'}°C · Air ${w.air_temperature ?? '?'}°C`;
+          break;
+        }
+      }
+    }
+  } catch(e) {}
+
+  const medalFor = p => p===1?'🥇':p===2?'🥈':p===3?'🥉':'P'+p;
+
+  // Build card HTML ─────────────────────────────────────────
+  const cardHtml = `
+    <div id="of1-summary-card" style="
+      background:#0a0a14;color:#e0e0e0;
+      border:1px solid #1e1e2e;border-radius:12px;
+      padding:20px 24px;max-width:480px;
+      font-family:system-ui,-apple-system,sans-serif;
+    ">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:2px;color:#888;margin-bottom:2px">F1 GRID MASTERS</div>
+          <div style="font-weight:700;font-size:18px;letter-spacing:0.5px">${race.flag} ${race.name} GP</div>
+          <div style="font-size:12px;color:#888">${race.circuit}</div>
+        </div>
+        <div style="font-size:28px">${race.flag}</div>
+      </div>
+
+      <!-- Top 3 -->
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        ${top3.map(r => `
+          <div style="flex:1;padding:10px 8px;background:#12121e;border:1px solid #1e1e2e;border-top:3px solid ${r.driver?.teamColor || '#666'};border-radius:8px;text-align:center">
+            <div style="font-size:18px">${medalFor(r.pos)}</div>
+            <div style="font-weight:700;font-size:14px;margin-top:4px">${r.short}</div>
+            <div style="font-size:10px;color:#888">${r.driver?.team?.split(' ')[0] || ''}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- GM Highlights -->
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        ${bestPick ? `
+          <div style="flex:1;padding:10px;background:#12121e;border:1px solid #1e1e2e;border-radius:8px">
+            <div style="font-size:10px;color:#00c853;letter-spacing:1px;font-family:monospace">🏆 BEST PICK</div>
+            <div style="font-weight:700;font-size:14px;margin-top:2px">${bestPick.player.name.split(' ')[0]}</div>
+            <div style="font-size:12px;color:#888">${bestPick.short} · P${bestPick.pos || '?'} · ${bestPick.pts}pts</div>
+          </div>` : ''}
+        ${dnfPick ? `
+          <div style="flex:1;padding:10px;background:#12121e;border:1px solid #1e1e2e;border-radius:8px">
+            <div style="font-size:10px;color:#e10600;letter-spacing:1px;font-family:monospace">💔 BAD LUCK</div>
+            <div style="font-weight:700;font-size:14px;margin-top:2px">${dnfPick.player.name.split(' ')[0]}</div>
+            <div style="font-size:12px;color:#888">${dnfPick.short} · DNF</div>
+          </div>` : ''}
+      </div>
+
+      <!-- Standings top 5 -->
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;color:#888;letter-spacing:1px;font-family:monospace;margin-bottom:6px">STANDINGS TOP 5</div>
+        ${standings.map((s, i) => `
+          <div style="display:flex;align-items:center;gap:6px;padding:3px 0;${i < standings.length-1 ? 'border-bottom:1px solid #1e1e2e;' : ''}">
+            <span style="font-family:monospace;font-size:11px;color:#888;width:16px">${i+1}</span>
+            <span style="font-size:13px;flex:1">${s.name}</span>
+            <span style="font-family:monospace;font-size:12px;font-weight:700;color:#e10600">${s.total}pts</span>
+          </div>`).join('')}
+      </div>
+
+      ${weatherSummary ? `<div style="font-size:11px;color:#888;text-align:center;padding-top:8px;border-top:1px solid #1e1e2e">${weatherSummary}</div>` : ''}
+    </div>`;
+
+  // Build WhatsApp text ─────────────────────────────────────
+  const waLines = [
+    `🏎 F1 GRID MASTERS — ${race.flag} ${race.name} GP`,
+    '',
+    `🥇 P1: ${top3[0].short}  🥈 P2: ${top3[1].short}  🥉 P3: ${top3[2].short}`,
+    '',
+    bestPick ? `🏆 Best pick: ${bestPick.player.name} (${bestPick.short} · P${bestPick.pos} · ${bestPick.pts}pts)` : '',
+    dnfPick  ? `💔 Bad luck:  ${dnfPick.player.name} (${dnfPick.short} DNF)` : '',
+    '',
+    '📊 STANDINGS TOP 5',
+    ...standings.map((s, i) => `${i+1}. ${s.name} — ${s.total}pts`),
+    '',
+    weatherSummary || '',
+  ].filter(l => l !== undefined && l !== null);
+
+  const waText = waLines.filter(Boolean).join('\n').trim();
+
+  // Render modal ────────────────────────────────────────────
+  const modal = document.createElement('div');
+  modal.id = 'of1-summary-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'of1-summary-title');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
+  modal.innerHTML = `
+    <div style="background:#12121e;border:1px solid #1e1e2e;border-radius:12px;padding:20px;max-width:540px;width:100%;position:relative">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div id="of1-summary-title" style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1.5px;color:#888">RACE SUMMARY CARD</div>
+        <button onclick="document.getElementById('of1-summary-modal').remove()"
+          style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px"
+          aria-label="Close summary">✕</button>
+      </div>
+      ${cardHtml}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+        <button id="of1-copy-wa" class="btn btn-green btn-sm" aria-label="Copy WhatsApp message to clipboard">
+          📱 COPY TO WHATSAPP
+        </button>
+        <button id="of1-save-png" class="btn btn-outline btn-sm" aria-label="Save card as PNG image">
+          🖼 SAVE AS IMAGE
+        </button>
+      </div>
+      <div id="of1-summary-msg" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  modal.focus();
+
+  // Close on backdrop click
+  modal.addEventListener('click', e => {
+    if (e.target === modal) modal.remove();
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', function escHandler(e) {
+    if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escHandler); }
+  }, { once: true });
+
+  // Copy WhatsApp
+  document.getElementById('of1-copy-wa').addEventListener('click', () => {
+    navigator.clipboard.writeText(waText).then(() => {
+      document.getElementById('of1-summary-msg').textContent = '✅ Copied! Paste into WhatsApp.';
+    }).catch(() => {
+      // Fallback: prompt
+      const ta = document.createElement('textarea');
+      ta.value = waText;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+      document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+      document.getElementById('of1-summary-msg').textContent = '✅ Copied! Paste into WhatsApp.';
+    });
+  });
+
+  // Save as PNG
+  document.getElementById('of1-save-png').addEventListener('click', () => {
+    const msg = document.getElementById('of1-summary-msg');
+    msg.textContent = 'Generating image…';
+    _loadHtml2Canvas(() => {
+      const card = document.getElementById('of1-summary-card');
+      if (!card || !window.html2canvas) { msg.textContent = '❌ Image export not available'; return; }
+      html2canvas(card, { backgroundColor: '#0a0a14', scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `f1gm-${raceId}-summary.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        msg.textContent = '✅ Image saved!';
+      }).catch(() => { msg.textContent = '❌ Image export failed'; });
+    });
+  });
+}
+
+/**
+ * Calculate current standings for all players.
+ * Returns [{name, total}] sorted by total pts descending.
+ */
+function _calcStandings() {
+  if (!STATE.players || !STATE.raceResults) return [];
+  return STATE.players.map(p => {
+    let total = 0;
+    Object.entries(STATE.raceResults).forEach(([raceId, result]) => {
+      const picks = STATE.draftPicks?.[raceId] || {};
+      const short = picks[p.id];
+      if (!short) return;
+      const pos = Object.entries(result).find(([,s]) => s === short)?.[0];
+      total += pos ? (POINTS_MAP[parseInt(pos)] || 0) : 0;
+    });
+    return { name: p.name, total };
+  }).sort((a,b) => b.total - a.total);
 }
 
 // ============================================================
