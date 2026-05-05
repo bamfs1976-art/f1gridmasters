@@ -1541,7 +1541,7 @@ const DRIVERS = [
   { num:4,   name:'Oscar Piastri',      short:'PIA', team:'McLaren',       teamColor:'#FF8000' },
   { num:44,  name:'Lewis Hamilton',     short:'HAM', team:'Ferrari',       teamColor:'#DC0000' },
   { num:16,  name:'Charles Leclerc',    short:'LEC', team:'Ferrari',       teamColor:'#DC0000' },
-  { num:1,   name:'Max Verstappen',     short:'VER', team:'Red Bull',      teamColor:'#0600EF' },
+  { num:3,   name:'Max Verstappen',     short:'VER', team:'Red Bull',      teamColor:'#0600EF' },
   { num:6,   name:'Isack Hadjar',       short:'HAD', team:'Red Bull',      teamColor:'#0600EF' },
   { num:63,  name:'George Russell',     short:'RUS', team:'Mercedes',      teamColor:'#00D2BE' },
   { num:12,  name:'Kimi Antonelli',     short:'ANT', team:'Mercedes',      teamColor:'#00D2BE' },
@@ -3487,6 +3487,22 @@ function renderAdminDashboard() {
         </div>
       </div>
 
+      <!-- OPENF1 IMPORT -->
+      <div class="admin-card">
+        <div class="admin-card-title">🔴 IMPORT FROM OpenF1</div>
+        <div class="admin-card-desc">Fetch live or recent race results directly from the OpenF1 API. Select the race and click Fetch — you must confirm before anything is saved.</div>
+        <div style="margin-bottom:10px">
+          <label style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);letter-spacing:1px;display:block;margin-bottom:6px">RACE</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <select id="of1-race-select" aria-label="Select race for OpenF1 import" style="flex:1;padding:8px 12px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:13px">
+              ${RACES.map((r,i) => `<option value="${r.id}" data-country="${r.country}" data-circuit="${r.circuit}">${r.flag} R${i+1} · ${r.name}</option>`).join('')}
+            </select>
+            <button class="btn btn-red btn-sm" onclick="of1FetchResults()" aria-label="Fetch results from OpenF1">🔴 FETCH</button>
+          </div>
+          <div id="of1-import-status" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+
       <!-- RESULTS MANAGEMENT -->
       <div class="admin-card">
         <div class="admin-card-title">🏆 RESULTS MANAGEMENT</div>
@@ -3592,6 +3608,7 @@ function renderAdminDashboard() {
     </div>
   `;
   populateImportRoundSelect();
+  of1SetDefaultRace();
 }
 
 // ── Pick Share Card ──────────────────────────────────────────
@@ -4216,6 +4233,312 @@ function populateImportRoundSelect() {
   sel.innerHTML = RACES.map((r,i) => `<option value="${i+1}">${r.flag} R${i+1} · ${r.name}</option>`).join('');
   // Default to current race
   if (STATE.currentRaceIdx < RACES.length) sel.value = STATE.currentRaceIdx + 1;
+}
+
+function of1SetDefaultRace() {
+  const sel = document.getElementById('of1-race-select');
+  if (!sel) return;
+  if (STATE.currentRaceIdx < RACES.length) sel.value = RACES[STATE.currentRaceIdx].id;
+}
+
+// ============================================================
+//  OPENF1 API — UTILITY LAYER
+// ============================================================
+
+const OF1_BASE = 'https://api.openf1.org/v1';
+const OF1_CACHE_PFX = 'f1gm_of1_';
+
+// Token-bucket rate limiter: 3 tokens/second, refills every second
+const _of1Q = [];
+let _of1Tokens = 3;
+let _of1Timer = null;
+
+function _of1Drain() {
+  while (_of1Q.length > 0 && _of1Tokens > 0) {
+    const { resolve, fn } = _of1Q.shift();
+    _of1Tokens--;
+    resolve(fn());
+  }
+  if (_of1Q.length === 0 && _of1Timer) {
+    clearInterval(_of1Timer);
+    _of1Timer = null;
+  }
+}
+
+function _of1Enqueue(fn) {
+  return new Promise(resolve => {
+    _of1Q.push({ resolve, fn });
+    _of1Drain();
+    if (_of1Q.length > 0 && !_of1Timer) {
+      _of1Timer = setInterval(() => {
+        _of1Tokens = Math.min(3, _of1Tokens + 3);
+        _of1Drain();
+      }, 1000);
+    }
+  });
+}
+
+/**
+ * Fetch from OpenF1 API with rate-limiting and localStorage cache.
+ * ttlMs = 0 means "use indefinite cache" (for completed race data).
+ * ttlMs = -1 means "no cache".
+ */
+async function of1Fetch(endpoint, params = {}, ttlMs = 3600000) {
+  const qs = new URLSearchParams(params).toString();
+  const url = `${OF1_BASE}${endpoint}${qs ? '?' + qs : ''}`;
+  const cacheKey = OF1_CACHE_PFX + btoa(encodeURIComponent(url)).replace(/[^a-z0-9]/gi,'').slice(0, 80);
+
+  if (ttlMs !== -1) {
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const { data, expires } = JSON.parse(raw);
+        if (expires === 0 || Date.now() < expires) return data;
+      }
+    } catch(e) {}
+  }
+
+  const data = await _of1Enqueue(() =>
+    fetch(url, { signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined })
+      .then(r => { if (!r.ok) throw new Error(`OpenF1 HTTP ${r.status}`); return r.json(); })
+  );
+
+  if (ttlMs !== -1) {
+    try {
+      const expires = ttlMs === 0 ? 0 : Date.now() + ttlMs;
+      localStorage.setItem(cacheKey, JSON.stringify({ data, expires }));
+    } catch(e) {}
+  }
+  return data;
+}
+
+/**
+ * Build a lookup: OpenF1 driver_number → our DRIVERS short code.
+ * Falls back to name_acronym matching for unrecognised numbers.
+ */
+function of1BuildDriverMap() {
+  const map = {};
+  DRIVERS.forEach(d => { if (d.num) map[d.num] = d.short; });
+  return map;
+}
+
+/**
+ * Map an OpenF1 driver_number to our short code.
+ * nameAcronym is the 3-letter OpenF1 name_acronym as a fallback.
+ */
+function of1MapDriver(driverNumber, nameAcronym) {
+  const byNum = of1BuildDriverMap();
+  if (byNum[driverNumber]) return byNum[driverNumber];
+  // Fallback: match by acronym (OpenF1 and our shorts are usually the same)
+  if (nameAcronym) {
+    const upper = nameAcronym.toUpperCase();
+    const found = DRIVERS.find(d => d.short === upper);
+    if (found) return found.short;
+  }
+  return null;
+}
+
+/**
+ * Find the OpenF1 meeting_key for a given game race (by country + circuit fuzzy match).
+ * Returns { meeting_key, meeting_name, country_name } or null.
+ */
+async function of1FindMeeting(race) {
+  // Multiple races share the same country (3× USA). Use circuit name to disambiguate.
+  const meetings = await of1Fetch('/meetings', { year: 2026 }, 3600000);
+  if (!Array.isArray(meetings) || meetings.length === 0) return null;
+
+  const country = race.country.toLowerCase();
+  const circuitWords = race.circuit.toLowerCase().split(/[\s,\-]+/).filter(w => w.length > 3);
+
+  const candidates = meetings.filter(m =>
+    (m.country_name || '').toLowerCase().includes(country) ||
+    country.includes((m.country_name || '').toLowerCase())
+  );
+
+  if (candidates.length === 1) return candidates[0];
+  if (candidates.length === 0) {
+    // Broader search by circuit short name
+    return meetings.find(m =>
+      circuitWords.some(w => (m.circuit_short_name || '').toLowerCase().includes(w))
+    ) || null;
+  }
+  // Multiple matches (e.g. 3 USA races): tiebreak by circuit
+  return candidates.find(m =>
+    circuitWords.some(w => (m.circuit_short_name || '').toLowerCase().includes(w))
+  ) || candidates[0];
+}
+
+// ============================================================
+//  OPENF1 — PHASE 1: IMPORT RACE RESULTS
+// ============================================================
+
+async function of1FetchResults() {
+  const sel = document.getElementById('of1-race-select');
+  const statusEl = document.getElementById('of1-import-status');
+  if (!sel || !statusEl) return;
+
+  const raceId = sel.value;
+  const race = RACES.find(r => r.id === raceId);
+  if (!race) return;
+
+  // Guard: already have a manual result for this race
+  const existing = STATE.raceResults?.[raceId];
+  if (existing && Object.keys(existing).length > 0) {
+    statusEl.innerHTML = `<div class="import-status" style="background:rgba(255,165,0,0.1);border-color:rgba(255,165,0,0.4);color:#ffa500;padding:10px;border-radius:6px;border:1px solid;font-size:13px">
+      ⚠ A result already exists for this race. Importing will <strong>not</strong> overwrite it without your explicit confirmation below.
+    </div>`;
+  }
+
+  statusEl.innerHTML = `<div class="import-status loading" style="color:var(--muted);font-size:13px;padding:10px 0;display:flex;align-items:center;gap:8px">
+    <span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Searching OpenF1 for ${race.flag} ${race.name}...
+  </div>`;
+
+  try {
+    // Step 1: find meeting
+    const meeting = await of1FindMeeting(race);
+    if (!meeting) throw new Error(`No OpenF1 meeting found for ${race.name}. It may not exist in the 2026 data yet.`);
+
+    statusEl.innerHTML = `<div class="import-status loading" style="color:var(--muted);font-size:13px;padding:10px 0;display:flex;align-items:center;gap:8px">
+      <span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Found: ${meeting.meeting_name}. Fetching race session...
+    </div>`;
+
+    // Step 2: get race session_key (handle sprint weekends too)
+    const sessions = await of1Fetch('/sessions', { meeting_key: meeting.meeting_key, session_type: 'Race' }, 3600000);
+    if (!Array.isArray(sessions) || sessions.length === 0) {
+      throw new Error(`Race session not found yet for ${meeting.meeting_name}. Check back after the race weekend.`);
+    }
+    const raceSession = sessions[0];
+
+    // Check if race is in the future
+    const raceEnd = raceSession.date_end ? new Date(raceSession.date_end) : null;
+    if (raceEnd && raceEnd > new Date()) {
+      statusEl.innerHTML = `<div class="import-status" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.4);color:#60a5fa;padding:10px;border-radius:6px;font-size:13px">
+        🕐 ${meeting.meeting_name} hasn't happened yet (scheduled ${raceSession.date_start?.split('T')[0] || ''}). Come back after the race.
+      </div>`;
+      return;
+    }
+
+    statusEl.innerHTML = `<div class="import-status loading" style="color:var(--muted);font-size:13px;padding:10px 0;display:flex;align-items:center;gap:8px">
+      <span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Fetching results for session ${raceSession.session_key}...
+    </div>`;
+
+    // Step 3: get final classification
+    const sessionResults = await of1Fetch('/session_result', { session_key: raceSession.session_key }, 0);
+    // TTL=0 = cache forever (completed race data doesn't change)
+
+    if (!Array.isArray(sessionResults) || sessionResults.length === 0) {
+      throw new Error('No classification data yet. Results are usually available 30–60 minutes after the race ends.');
+    }
+
+    // Step 4: map to our format — top 10 only (scoring positions)
+    const driverInfoCache = {};
+    const resultMap = {};
+    const previewRows = [];
+
+    // Fetch driver info to get name_acronym for fallback mapping
+    // (session_result only has driver_number + position + status)
+    let driverList = [];
+    try {
+      driverList = await of1Fetch('/drivers', { session_key: raceSession.session_key }, 0);
+    } catch(e) {}
+    driverList.forEach(d => { driverInfoCache[d.driver_number] = d; });
+
+    // Sort by position (some may be null for DNFs)
+    const sorted = [...sessionResults].sort((a, b) => {
+      if (a.position == null) return 1;
+      if (b.position == null) return -1;
+      return a.position - b.position;
+    });
+
+    sorted.forEach(r => {
+      const pos = r.position;
+      const dInfo = driverInfoCache[r.driver_number] || {};
+      const short = of1MapDriver(r.driver_number, dInfo.name_acronym);
+      const driver = DRIVERS.find(d => d.short === short);
+      const status = r.status || 'Finished';
+      const isDNF = status && !status.toLowerCase().includes('finish') && !status.match(/^\+\d+ lap/i);
+
+      if (!isDNF && pos >= 1 && pos <= 10 && short) {
+        resultMap[pos] = short;
+      }
+
+      previewRows.push({ pos, short, driver, status, isDNF });
+    });
+
+    // Step 5: render preview
+    const medalFor = p => p==1?'🥇':p==2?'🥈':p==3?'🥉':`P${p}`;
+    const previewHtml = previewRows.slice(0, 20).map(r => {
+      const bg = r.isDNF ? 'rgba(239,68,68,0.08)' : (r.pos <= 3 ? 'rgba(34,197,94,0.06)' : 'transparent');
+      const teamColor = r.driver?.teamColor || '#666';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:4px;background:${bg}">
+        <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);width:28px">${r.pos != null ? medalFor(r.pos) : '—'}</span>
+        <span style="width:4px;height:16px;border-radius:2px;background:${teamColor};flex-shrink:0"></span>
+        <span style="font-weight:700;font-size:13px;flex:1">${r.short || '?'}</span>
+        <span style="font-size:11px;color:var(--muted)">${r.driver?.team || ''}</span>
+        <span style="font-size:11px;color:${r.isDNF ? '#ef4444' : 'var(--muted)'}">${r.isDNF ? r.status : ''}</span>
+      </div>`;
+    }).join('');
+
+    const hasConflict = existing && Object.keys(existing).length > 0;
+    const conflictWarning = hasConflict ? `
+      <div style="padding:8px;background:rgba(255,165,0,0.1);border:1px solid rgba(255,165,0,0.3);border-radius:6px;margin-bottom:10px;font-size:12px;color:#ffa500">
+        ⚠ A result already exists for this race. Saving will <strong>replace</strong> the existing result.
+      </div>` : '';
+
+    const encodedMap = encodeURIComponent(JSON.stringify(resultMap));
+    statusEl.innerHTML = `
+      <div style="margin-top:10px">
+        <div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">
+          📋 ${meeting.meeting_name} · session ${raceSession.session_key} · ${sorted.length} drivers
+        </div>
+        <div style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:10px;max-height:300px;overflow-y:auto">
+          ${previewHtml}
+        </div>
+        ${conflictWarning}
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-green btn-sm" onclick="of1ConfirmImport(decodeURIComponent('${encodedMap.replace(/'/g,"\\'")}'), '${raceId}')"
+            aria-label="Save these results to Grid Masters">
+            ✔ SAVE THESE RESULTS
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('of1-import-status').innerHTML=''"
+            aria-label="Cancel import">
+            CANCEL
+          </button>
+        </div>
+        ${race.sprint ? `<p style="margin-top:8px;font-size:12px;color:var(--muted)">🔀 Sprint weekend — this imports Race results only. Sprint results are not used for scoring.</p>` : ''}
+      </div>`;
+
+  } catch(e) {
+    statusEl.innerHTML = `<div style="padding:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:6px;font-size:13px;color:#ef4444">
+      ❌ ${e.message || 'OpenF1 request failed. Check your connection or try the Jolpica import above.'}
+    </div>`;
+  }
+}
+
+function of1ConfirmImport(resultMapJson, raceId) {
+  let resultMap;
+  try { resultMap = JSON.parse(resultMapJson); } catch(e) { showToast('❌ Invalid result data', 'error'); return; }
+
+  const race = RACES.find(r => r.id === raceId);
+  if (!race) { showToast('❌ Race not found', 'error'); return; }
+  if (!resultMap || Object.keys(resultMap).length === 0) {
+    showToast('❌ No scoreable finishes found in this data', 'error'); return;
+  }
+
+  // Safety: only write to raceResults — never touch players, baseOrder, draftPrefs, etc.
+  if (!STATE.raceResults) STATE.raceResults = {};
+  STATE.raceResults[raceId] = resultMap;
+  saveState();
+
+  addLog(`Results imported from OpenF1 — ${race.name} · P1: ${resultMap[1] || '?'}`, 'good');
+  showToast(`✅ Results saved for ${race.name}!`, 'success');
+
+  const statusEl = document.getElementById('of1-import-status');
+  if (statusEl) statusEl.innerHTML = `<div style="padding:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:6px;font-size:13px;color:#22c55e">
+    ✅ Results saved for ${race.name}. P1: ${resultMap[1] || '?'}
+  </div>`;
+
+  setTimeout(() => renderAdminDashboard(), 2000);
 }
 
 // ============================================================
