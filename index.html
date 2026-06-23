@@ -2213,6 +2213,7 @@ function renderDraft() {
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
       <button class="share-standings-btn" onclick="sharePickOrderImage(${raceIdx})" title="Download pick order as shareable image" style="background:var(--gold);color:#000;font-weight:700;">📸 SHARE PICK ORDER</button>
+      <button class="share-standings-btn" onclick="sharePickOrderWhatsApp(${raceIdx})" title="Share pick order text via WhatsApp" style="background:#25D366;color:#fff;font-weight:700;">💬 WHATSAPP</button>
     </div>
   `;
 
@@ -6530,7 +6531,7 @@ function sharePickOrderImage(raceIdx) {
   ctx.scale(SCALE, SCALE);
 
   // Background + top stripe
-  ctx.fillStyle = '#090910'; ctx.fillRect(0, 0, W, totalH);
+  ctx.fillStyle = '#f8f9fa'; ctx.fillRect(0, 0, W, totalH);
   ctx.fillStyle = '#E10600'; ctx.fillRect(0, 0, W, 6);
 
   // App title
@@ -6545,20 +6546,20 @@ function sharePickOrderImage(raceIdx) {
   ctx.fillText(race.flag, W / 2, y + 2);
   y += 30;
   ctx.font = '900 21px Orbitron, sans-serif';
-  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#111111'; ctx.textAlign = 'center';
   ctx.fillText(`${race.name} GRAND PRIX`, W / 2, y);
   y += 18;
   ctx.font = '500 11px Rajdhani, sans-serif';
-  ctx.fillStyle = '#666677'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#555566'; ctx.textAlign = 'center';
   ctx.fillText(`${race.circuit}  ·  ${race.date} 2026${race.sprint ? '  ·  SPRINT WEEKEND' : ''}`, W / 2, y);
 
   // Deadline banner
   y += 16;
-  ctx.fillStyle = 'rgba(255,200,0,0.12)';
-  ctx.strokeStyle = 'rgba(255,200,0,0.5)'; ctx.lineWidth = 1.5;
+  ctx.fillStyle = 'rgba(200,150,0,0.10)';
+  ctx.strokeStyle = 'rgba(180,130,0,0.55)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.roundRect(PAD, y, W - PAD * 2, DEADLINE_H, 8); ctx.fill(); ctx.stroke();
   ctx.font = '700 10px Orbitron, sans-serif';
-  ctx.fillStyle = '#FFD700'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#9a7000'; ctx.textAlign = 'center';
   ctx.fillText('⏰  PICKS DUE', W / 2, y + 16);
   ctx.font = '900 17px Orbitron, sans-serif';
   ctx.fillText(deadlineLabel, W / 2, y + 36);
@@ -6566,12 +6567,12 @@ function sharePickOrderImage(raceIdx) {
   // Column headers
   y += DEADLINE_H + 14;
   ctx.font = '700 10px Orbitron, sans-serif';
-  ctx.fillStyle = '#444455'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#888899'; ctx.textAlign = 'left';
   ctx.fillText('PICK ORDER', PAD + 46, y);
   ctx.textAlign = 'right';
   ctx.fillText('PLAYER', W - PAD, y);
   y += 6;
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke();
 
   // Player rows
@@ -6582,17 +6583,17 @@ function sharePickOrderImage(raceIdx) {
     const rowY = y + i * ROW_H, midY = rowY + ROW_H / 2;
 
     if (i % 2 === 0) {
-      ctx.fillStyle = 'rgba(255,255,255,0.02)';
+      ctx.fillStyle = 'rgba(0,0,0,0.03)';
       ctx.fillRect(PAD, rowY + 2, W - PAD * 2, ROW_H - 4);
     }
 
     // Medal / position number
     if (i < 3) {
-      ctx.font = '22px serif'; ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+      ctx.font = '22px serif'; ctx.fillStyle = '#111111'; ctx.textAlign = 'center';
       ctx.fillText(medals[i], PAD + 16, midY + 8);
     } else {
       ctx.font = '900 18px Orbitron, sans-serif';
-      ctx.fillStyle = '#334455'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#aaaabc'; ctx.textAlign = 'center';
       ctx.fillText(`${i+1}`, PAD + 16, midY + 6);
     }
 
@@ -6602,7 +6603,7 @@ function sharePickOrderImage(raceIdx) {
 
     // Player name
     ctx.font = '700 17px Rajdhani, sans-serif';
-    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#111111'; ctx.textAlign = 'left';
     ctx.fillText(player.name.toUpperCase(), PAD + 46, midY + 6);
 
     // "PICK P1" label (right)
@@ -6612,7 +6613,7 @@ function sharePickOrderImage(raceIdx) {
     ctx.fillText(`PICK P${i+1}`, W - PAD, midY + 5);
 
     // Row divider
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(PAD + 34, rowY + ROW_H - 1); ctx.lineTo(W - PAD, rowY + ROW_H - 1); ctx.stroke();
   });
@@ -6634,6 +6635,33 @@ function sharePickOrderImage(raceIdx) {
   } catch(e) {
     showToast('Image generation failed: ' + e.message, 'error');
   }
+}
+
+function sharePickOrderWhatsApp(raceIdx) {
+  const race = RACES[raceIdx];
+  if (!race) return;
+  const draftOrder = getDraftOrderForRace(raceIdx);
+  if (draftOrder.length === 0) { showToast('No players in draft order', 'info'); return; }
+
+  const medals = ['🥇','🥈','🥉'];
+  const lines = [
+    '🏎 F1 GRID MASTERS 2026',
+    '',
+    `${race.flag} ${race.name} GRAND PRIX — PICK ORDER`,
+    `${race.circuit} · ${race.date} 2026${race.sprint ? ' · 🏃 SPRINT WEEKEND' : ''}`,
+    ''
+  ];
+
+  draftOrder.forEach((pid, i) => {
+    const player = STATE.players.find(p => p.id === pid);
+    if (!player) return;
+    lines.push(`${medals[i] || `${i+1}.`} ${player.name} — PICK P${i+1}`);
+  });
+
+  lines.push('');
+  lines.push('🔗 f1gridmasters.netlify.app');
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
 }
 
 async function initApp() {
