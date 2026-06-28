@@ -667,6 +667,48 @@ nav {
 .si-status.upcoming { background: rgba(225,6,0,0.1); color: var(--red); border: 1px solid rgba(225,6,0,0.2); }
 .si-status.future { color: var(--muted); }
 
+/* TV GUIDE */
+.tv-guide-banner { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:14px 18px; background:linear-gradient(135deg,rgba(0,100,180,0.15),rgba(193,25,33,0.1)); border:1px solid rgba(0,140,220,0.25); border-radius:10px; margin-bottom:18px; }
+.tv-brand { display:flex; align-items:center; gap:10px; }
+.tv-brand-logo { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:900; letter-spacing:2px; }
+.tv-brand-sky { color:#008CDB; }
+.tv-brand-sports { color:#c11921; }
+.tv-brand-f1 { color:var(--gold); }
+.tv-brand-note { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--muted); }
+.tv-sky-link { font-family:'Share Tech Mono',monospace; font-size:10px; padding:5px 12px; border:1px solid rgba(0,140,220,0.35); border-radius:4px; color:#008CDB; text-decoration:none; white-space:nowrap; }
+.tv-sky-link:hover { background:rgba(0,140,220,0.1); }
+.tv-race-card { background:var(--panel2); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; overflow:hidden; }
+.tv-race-card.tv-current { border-color:rgba(255,215,0,0.4); }
+.tv-race-card.tv-next { border-color:rgba(225,6,0,0.45); }
+.tv-card-header { display:flex; align-items:center; gap:12px; padding:13px 16px; cursor:pointer; user-select:none; transition:background 0.15s; }
+.tv-card-header:hover { background:rgba(255,255,255,0.025); }
+.tv-flag-img { width:44px; height:24px; border-radius:2px; object-fit:cover; flex-shrink:0; border:1px solid rgba(255,255,255,0.1); }
+.tv-race-info { flex:1; min-width:0; }
+.tv-race-name { font-weight:700; font-size:14px; letter-spacing:0.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tv-race-meta { font-size:11px; color:var(--muted); margin-top:2px; }
+.tv-badges { display:flex; gap:6px; align-items:center; flex-shrink:0; }
+.tv-status-badge { font-family:'Share Tech Mono',monospace; font-size:9px; padding:3px 8px; border-radius:3px; }
+.tv-badge-live { background:rgba(255,215,0,0.12); color:var(--gold); border:1px solid rgba(255,215,0,0.3); }
+.tv-badge-next { background:rgba(225,6,0,0.12); color:var(--red); border:1px solid rgba(225,6,0,0.3); }
+.tv-badge-upcoming { color:var(--muted); border:1px solid var(--border); }
+.tv-badge-sprint { background:rgba(255,215,0,0.08); color:var(--gold); border:1px solid rgba(255,215,0,0.2); }
+.tv-chevron { color:var(--muted); font-size:11px; transition:transform 0.2s; flex-shrink:0; }
+.tv-race-card.open .tv-chevron { transform:rotate(180deg); }
+.tv-sessions { display:none; padding:2px 16px 12px; border-top:1px solid var(--border); }
+.tv-race-card.open .tv-sessions { display:block; }
+.tv-session-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.tv-session-row:last-of-type { border-bottom:none; }
+.tv-session-day { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--muted); width:28px; flex-shrink:0; text-align:center; }
+.tv-session-label { flex:1; font-size:12px; color:var(--text); }
+.tv-session-time { font-family:'Share Tech Mono',monospace; font-size:13px; font-weight:600; color:var(--accent); }
+.tv-session-tz { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--muted); margin-left:2px; }
+.tv-session-race .tv-session-time { color:var(--red); }
+.tv-session-race .tv-session-label { font-weight:700; }
+.tv-approx-note { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--muted); padding:8px 0 2px; opacity:0.75; }
+.tv-watch-row { display:flex; justify-content:flex-end; padding-top:8px; }
+.tv-watch-btn { font-family:'Share Tech Mono',monospace; font-size:10px; padding:4px 12px; border:1px solid rgba(0,140,220,0.3); border-radius:4px; color:#008CDB; text-decoration:none; cursor:pointer; background:none; }
+.tv-watch-btn:hover { background:rgba(0,140,220,0.1); }
+
 /* MODAL */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.85);
@@ -1188,6 +1230,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       <button class="nav-tab" onclick="showPage('results')" id="nav-results">🏁 RESULTS</button>
       <button class="nav-tab" onclick="showPage('leaderboard')" id="nav-lb">🏆 STANDINGS</button>
       <button class="nav-tab" onclick="showPage('schedule')">📅 CALENDAR</button>
+      <button class="nav-tab" onclick="showPage('tv')">📺 TV GUIDE</button>
       <button class="nav-tab" onclick="showPage('drivers')">👤 DRIVERS</button>
       <button class="nav-tab" onclick="showPage('stats')">📈 STATS</button>
       <button class="nav-tab" onclick="showPage('admin')" id="nav-admin" style="color:#ffa500;">🔐 ADMIN</button>
@@ -1233,6 +1276,9 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   </button>
   <button class="mobile-nav-tab" id="mob-schedule" onclick="mobileNav('schedule')">
     <span class="mob-icon">📅</span> CALENDAR
+  </button>
+  <button class="mobile-nav-tab" id="mob-tv" onclick="mobileNav('tv')">
+    <span class="mob-icon">📺</span> TV GUIDE
   </button>
   <button class="mobile-nav-tab" id="mob-drivers" onclick="mobileNav('drivers')">
     <span class="mob-icon">👤</span> DRIVERS
@@ -1423,6 +1469,23 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   <div class="z1 animate-in">
     <div class="section-head">2026 F1 CALENDAR · 24 ROUNDS</div>
     <div class="schedule-list" id="schedule-list"></div>
+  </div>
+</div>
+
+<!-- ===================== TV GUIDE PAGE ===================== -->
+<div class="page" id="page-tv">
+  <div class="z1 animate-in">
+    <div class="section-head">📺 SKY SPORTS F1 · 2026 TV GUIDE</div>
+    <div class="tv-guide-banner">
+      <div class="tv-brand">
+        <div class="tv-brand-logo">
+          <span class="tv-brand-sky">SKY</span> <span class="tv-brand-sports">SPORTS</span> <span class="tv-brand-f1">F1</span>
+        </div>
+        <div class="tv-brand-note">ALL TIMES BST/GMT · GREAT BRITAIN CONFIRMED · OTHERS APPROXIMATE</div>
+      </div>
+      <a class="tv-sky-link" href="https://www.skysports.com/f1/schedule" target="_blank" rel="noopener">VIEW ON SKY SPORTS →</a>
+    </div>
+    <div id="tv-schedule-list"></div>
   </div>
 </div>
 
@@ -1945,6 +2008,7 @@ function showPage(id) {
   if (id === 'results') { selectedResultRace = null; renderResults(); }
   if (id === 'leaderboard') renderLeaderboard();
   if (id === 'schedule') renderSchedule();
+  if (id === 'tv') renderTVSchedule();
   if (id === 'drivers') renderDrivers();
   if (id === 'stats') renderStats();
   if (id === '2026gp') render2026GP();
@@ -6662,6 +6726,205 @@ function sharePickOrderWhatsApp(raceIdx) {
   lines.push('🔗 f1gridmasters.netlify.app');
 
   window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+}
+
+// ============================================================
+//  TV GUIDE
+// ============================================================
+function renderTVSchedule() {
+  const SKY_FLAGS = {
+    'Australia':'aus','China':'chn','Japan':'jpn','USA':'usa','Canada':'can',
+    'Monaco':'mco','Spain':'esp','Austria':'aut','UK':'gbr','Belgium':'bel',
+    'Hungary':'hun','Netherlands':'nld','Italy':'ita','Azerbaijan':'aze',
+    'Singapore':'sgp','Mexico':'mex','Brazil':'bra','Qatar':'qat','UAE':'are'
+  };
+
+  const WEEKENDS = {
+    'r10':{ dates:'26–28 Jun 2026' },
+    'r11':{ dates:'3–5 Jul 2026' },
+    'r12':{ dates:'17–19 Jul 2026' },
+    'r13':{ dates:'24–26 Jul 2026' },
+    'r14':{ dates:'21–23 Aug 2026' },
+    'r15':{ dates:'4–6 Sep 2026' },
+    'r16':{ dates:'11–13 Sep 2026' },
+    'r17':{ dates:'25–27 Sep 2026' },
+    'r18':{ dates:'9–11 Oct 2026' },
+    'r19':{ dates:'23–25 Oct 2026' },
+    'r20':{ dates:'30 Oct–1 Nov 2026' },
+    'r21':{ dates:'13–15 Nov 2026' },
+    'r22':{ dates:'19–22 Nov 2026' },
+    'r23':{ dates:'27–29 Nov 2026' },
+    'r24':{ dates:'4–6 Dec 2026' },
+  };
+
+  const TV_SESSIONS = {
+    'r10': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'12:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'16:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'11:30'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'15:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'14:00'},
+    ]},
+    'r11': { confirmed:true, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',       race:false, time:'12:30'},
+      {day:'FRI', label:'Sprint Qualifying', race:false, time:'16:30'},
+      {day:'SAT', label:'Sprint',            race:false, time:'12:00'},
+      {day:'SAT', label:'Qualifying',        race:false, time:'16:00'},
+      {day:'SUN', label:'Race',              race:true,  time:'15:00'},
+    ]},
+    'r12': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'12:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'16:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'12:00'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'15:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'14:00'},
+    ]},
+    'r13': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'12:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'16:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'12:00'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'15:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'14:00'},
+    ]},
+    'r14': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',       race:false, time:'11:30'},
+      {day:'FRI', label:'Sprint Qualifying', race:false, time:'15:30'},
+      {day:'SAT', label:'Sprint',            race:false, time:'11:30'},
+      {day:'SAT', label:'Qualifying',        race:false, time:'15:00'},
+      {day:'SUN', label:'Race',              race:true,  time:'14:00'},
+    ]},
+    'r15': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'12:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'16:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'12:00'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'15:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'14:00'},
+    ]},
+    'r16': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'12:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'16:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'12:00'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'15:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'14:00'},
+    ]},
+    'r17': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'11:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'15:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'11:30'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'14:30'},
+      {day:'SUN', label:'Race',        race:true,  time:'13:00'},
+    ]},
+    'r18': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',       race:false, time:'10:30'},
+      {day:'FRI', label:'Sprint Qualifying', race:false, time:'14:30'},
+      {day:'SAT', label:'Sprint',            race:false, time:'10:00'},
+      {day:'SAT', label:'Qualifying',        race:false, time:'14:00'},
+      {day:'SUN', label:'Race',              race:true,  time:'13:00'},
+    ]},
+    'r19': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'19:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'23:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'19:30'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'23:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'20:00'},
+    ]},
+    'r20': { confirmed:false, tz:'GMT', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'18:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'22:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'18:30'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'22:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'20:00'},
+    ]},
+    'r21': { confirmed:false, tz:'GMT', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'14:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'18:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'13:30'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'17:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'17:00'},
+    ]},
+    'r22': { confirmed:false, tz:'GMT', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'06:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'10:30'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'06:30'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'10:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'06:00'},
+    ]},
+    'r23': { confirmed:false, tz:'GMT', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'13:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'17:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'13:30'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'16:30'},
+      {day:'SUN', label:'Race',        race:true,  time:'15:00'},
+    ]},
+    'r24': { confirmed:false, tz:'GMT', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'10:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'14:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'11:30'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'14:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'13:00'},
+    ]},
+  };
+
+  const currentIdx = STATE.currentRaceIdx;
+  const remainingRaces = RACES.slice(currentIdx);
+
+  const html = remainingRaces.map((race, i) => {
+    const isCurrent = i === 0;
+    const isNext = i === 1;
+    const tvData = TV_SESSIONS[race.id];
+    const weekend = WEEKENDS[race.id] || {};
+    const flagCode = SKY_FLAGS[race.country] || 'gbr';
+    const flagUrl = `https://e0.365dm.com/flags/rect/60x32/${flagCode}.png`;
+
+    const cardClass = isCurrent ? 'tv-race-card tv-current' : isNext ? 'tv-race-card tv-next' : 'tv-race-card';
+    const openClass = (isCurrent || isNext) ? ' open' : '';
+
+    const badgeHtml = isCurrent
+      ? '<span class="tv-status-badge tv-badge-live">LIVE WEEKEND</span>'
+      : isNext
+        ? '<span class="tv-status-badge tv-badge-next">NEXT RACE</span>'
+        : `<span class="tv-status-badge tv-badge-upcoming">${race.date} 2026</span>`;
+
+    const sprintBadge = race.sprint ? '<span class="tv-status-badge tv-badge-sprint">SPRINT</span>' : '';
+
+    let sessionsHtml = '';
+    if (tvData) {
+      const rows = tvData.sessions.map(s =>
+        `<div class="tv-session-row${s.race ? ' tv-session-race' : ''}">
+          <span class="tv-session-day">${s.day}</span>
+          <span class="tv-session-label">${s.label}</span>
+          <span class="tv-session-time">${s.time}</span>
+          <span class="tv-session-tz">${tvData.tz}</span>
+        </div>`
+      ).join('');
+      const noteHtml = tvData.confirmed
+        ? '<div class="tv-approx-note">✓ CONFIRMED BY SKY SPORTS</div>'
+        : '<div class="tv-approx-note">~ APPROXIMATE — CHECK SKY SPORTS FOR CONFIRMED TIMES</div>';
+      sessionsHtml = rows + noteHtml;
+    } else {
+      sessionsHtml = '<div class="tv-approx-note">Session times TBC — check Sky Sports</div>';
+    }
+
+    return `<div class="${cardClass}${openClass}" id="tv-card-${race.id}">
+      <div class="tv-card-header" onclick="document.getElementById('tv-card-${race.id}').classList.toggle('open')" aria-expanded="false">
+        <img class="tv-flag-img" src="${flagUrl}" alt="${race.country} flag" onerror="this.style.display='none'">
+        <div class="tv-race-info">
+          <div class="tv-race-name">${race.name} GRAND PRIX</div>
+          <div class="tv-race-meta">${race.circuit} · ${weekend.dates || race.date + ' 2026'}</div>
+        </div>
+        <div class="tv-badges">${sprintBadge}${badgeHtml}</div>
+        <span class="tv-chevron">▼</span>
+      </div>
+      <div class="tv-sessions">
+        ${sessionsHtml}
+        <div class="tv-watch-row">
+          <a class="tv-watch-btn" href="https://www.skysports.com/f1/schedule" target="_blank" rel="noopener">WATCH ON SKY SPORTS F1 →</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('tv-schedule-list').innerHTML = html || '<div class="empty-state"><div class="icon">📺</div><h3>SEASON COMPLETE</h3><p>No remaining races this season.</p></div>';
 }
 
 async function initApp() {
