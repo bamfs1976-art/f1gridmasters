@@ -3378,7 +3378,7 @@ function renderAdminDashboard() {
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <input type="datetime-local" id="deadline-input" style="padding:6px 10px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px"
-                value="${dlDate ? dlDate.toISOString().slice(0,16) : ''}">
+                value="${dlDate ? new Date(dlDate.getTime() - dlDate.getTimezoneOffset() * 60000).toISOString().slice(0,16) : ''}">
               <button class="btn btn-orange btn-sm" onclick="adminSetDeadline('${currentRace.id}')">SET</button>
               ${dl ? `<button class="btn btn-outline btn-sm" onclick="adminClearDeadline('${currentRace.id}')">CLEAR</button>` : ''}
             </div>`;
