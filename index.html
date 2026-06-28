@@ -2015,6 +2015,7 @@ function showPage(id) {
   if (id === '2025') render2025();
   if (id === 'admin') renderAdmin();
   syncMobileNav(id);
+  logPageView(id);
 }
 
 // ============================================================
@@ -3613,6 +3614,14 @@ function renderAdminDashboard() {
             : '<button class="btn btn-orange btn-sm" onclick="requestNotifications()">🔔 ENABLE REMINDERS</button>'
           }
         </div>
+      </div>
+
+      <!-- USAGE ANALYTICS -->
+      <div class="admin-card" style="grid-column:1/-1">
+        <div class="admin-card-title">📊 USAGE ANALYTICS</div>
+        <div class="admin-card-desc">Page views from all users, last 30 days. Logged to Supabase per player.</div>
+        <button class="btn btn-outline btn-sm" onclick="loadAnalytics()">📊 LOAD ANALYTICS</button>
+        <div id="analytics-content" style="margin-top:16px"></div>
       </div>
 
       <!-- ACTIVITY LOG -->
@@ -5964,6 +5973,11 @@ function render2025Trends(el) {
 
 // Current session identity — null = spectator/not set, string = playerId
 let SESSION_PLAYER_ID = sessionStorage.getItem('f1gm2026_pid') || null;
+const SESSION_ID = (() => {
+  let sid = sessionStorage.getItem('f1gm2026_sid');
+  if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now().toString(36); sessionStorage.setItem('f1gm2026_sid', sid); }
+  return sid;
+})();
 
 function getSessionPlayer() {
   if (!SESSION_PLAYER_ID) return null;
@@ -6111,6 +6125,122 @@ function syncMobileNav(id) {
   if (draftBadge && mobDraftBadge) {
     mobDraftBadge.style.display = draftBadge.style.display;
   }
+}
+
+// ============================================================
+//  ANALYTICS
+// ============================================================
+const PAGE_LABELS = {
+  setup:'SETUP', draft:'DRAFT', results:'RESULTS', leaderboard:'STANDINGS',
+  schedule:'CALENDAR', tv:'TV GUIDE', drivers:'DRIVERS', stats:'STATS',
+  admin:'ADMIN', '2026gp':'2026 GP', '2025':'2025 SEASON'
+};
+
+async function logPageView(page) {
+  const sb = getSupabase();
+  if (!sb) return;
+  const player = getSessionPlayer();
+  try {
+    await sb.from('f1_analytics').insert({
+      player_id: player?.id || null,
+      player_name: player?.name || null,
+      page,
+      session_id: SESSION_ID,
+    });
+  } catch(e) {}
+}
+
+async function loadAnalytics() {
+  const sb = getSupabase();
+  const el = document.getElementById('analytics-content');
+  if (!sb || !el) return;
+  el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">Loading…</div>';
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await sb.from('f1_analytics')
+    .select('page,player_name,player_id,ts')
+    .gte('ts', since)
+    .order('ts', { ascending: false })
+    .limit(5000);
+  if (error || !data) {
+    el.innerHTML = `<div style="color:var(--red);font-size:13px">Error: ${error?.message || 'Unknown'}</div>`;
+    return;
+  }
+  if (data.length === 0) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px">No data yet — navigate around to start logging.</div>';
+    return;
+  }
+
+  // Aggregate
+  const pageCounts = {};
+  const playerMap = {};
+  data.forEach(row => {
+    pageCounts[row.page] = (pageCounts[row.page] || 0) + 1;
+    const pName = row.player_name || '(anonymous)';
+    if (!playerMap[pName]) playerMap[pName] = { total: 0, pages: {} };
+    playerMap[pName].total++;
+    playerMap[pName].pages[row.page] = (playerMap[pName].pages[row.page] || 0) + 1;
+  });
+  const sortedPages = Object.entries(pageCounts).sort((a,b) => b[1]-a[1]);
+  const sortedPlayers = Object.entries(playerMap).sort((a,b) => b[1].total - a[1].total);
+  const maxCount = sortedPages[0]?.[1] || 1;
+
+  // Bar chart (CSS)
+  const barsHtml = sortedPages.map(([page, count]) => {
+    const pct = Math.round((count / maxCount) * 100);
+    const label = PAGE_LABELS[page] || page.toUpperCase();
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
+      <div style="width:90px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0;font-family:Share Tech Mono,monospace">${label}</div>
+      <div style="flex:1;background:var(--panel3);border-radius:3px;height:16px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:3px"></div>
+      </div>
+      <div style="width:28px;font-family:Share Tech Mono,monospace;font-size:11px;color:var(--text);text-align:right">${count}</div>
+    </div>`;
+  }).join('');
+
+  // Player table
+  const playerRows = sortedPlayers.map(([name, d]) => {
+    const top = Object.entries(d.pages).sort((a,b)=>b[1]-a[1])[0];
+    const topLabel = PAGE_LABELS[top[0]] || top[0].toUpperCase();
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:6px 0;font-size:13px">${name}</td>
+      <td style="padding:6px 8px;text-align:center;font-family:Share Tech Mono,monospace;font-size:13px;color:var(--accent)">${d.total}</td>
+      <td style="padding:6px 0;font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted)">${topLabel} <span style="color:var(--text)">(${top[1]})</span></td>
+    </tr>`;
+  }).join('');
+
+  // Recent activity
+  const recentRows = data.slice(0, 25).map(r => {
+    const t = new Date(r.ts);
+    const timeStr = t.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' ' + t.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    return `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
+      <span style="font-family:Share Tech Mono,monospace;color:var(--muted);font-size:10px;width:96px;flex-shrink:0">${timeStr}</span>
+      <span style="flex:1;color:var(--text)">${r.player_name || '<span style="color:var(--muted)">–</span>'}</span>
+      <span style="font-family:Share Tech Mono,monospace;color:var(--accent);font-size:11px">${PAGE_LABELS[r.page] || r.page}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="margin-bottom:20px">
+      <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:1px">
+        PAGE VIEWS · LAST 30 DAYS · ${data.length.toLocaleString()} TOTAL
+      </div>
+      ${barsHtml}
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px">BY PLAYER</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted)">
+          <th style="padding:4px 0 6px;border-bottom:1px solid var(--border);text-align:left">PLAYER</th>
+          <th style="padding:4px 8px 6px;border-bottom:1px solid var(--border);text-align:center">VIEWS</th>
+          <th style="padding:4px 0 6px;border-bottom:1px solid var(--border);text-align:left">TOP SECTION</th>
+        </tr></thead>
+        <tbody>${playerRows}</tbody>
+      </table>
+    </div>
+    <div>
+      <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:1px">RECENT ACTIVITY</div>
+      ${recentRows}
+    </div>`;
 }
 
 // Wire up hamburger — single pointerdown handler works reliably for both mouse and touch.
