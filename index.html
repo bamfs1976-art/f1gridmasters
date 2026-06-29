@@ -731,6 +731,43 @@ nav {
 .modal p { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
+/* SHARE PREVIEW MODAL */
+.share-preview-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 600; padding: 16px;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.share-preview-overlay.open { opacity: 1; pointer-events: all; }
+.share-preview-modal {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 24px; max-width: 600px; width: 100%;
+  transform: translateY(12px); transition: transform 0.25s;
+  max-height: 92vh; overflow-y: auto;
+}
+.share-preview-overlay.open .share-preview-modal { transform: none; }
+.share-preview-title {
+  font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 900;
+  letter-spacing: 2px; margin-bottom: 18px; color: var(--text);
+}
+.share-preview-section-label {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; margin-top: 16px;
+}
+.share-preview-img {
+  width: 100%; border-radius: 8px; display: block;
+  border: 1px solid var(--border);
+}
+.share-preview-textarea {
+  width: 100%; background: var(--panel2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px; color: var(--text);
+  font-family: 'Share Tech Mono', monospace; font-size: 12px; line-height: 1.8;
+  resize: vertical; box-sizing: border-box; min-height: 140px;
+}
+.share-preview-actions {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 20px;
+}
+
 /* TOAST */
 .toast {
   position: fixed; bottom: 30px; right: 30px;
@@ -1567,6 +1604,22 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   </div>
 </div>
 
+<!-- SHARE PREVIEW MODAL -->
+<div class="share-preview-overlay" id="share-preview-overlay" onclick="if(event.target===this)closeSharePreview()">
+  <div class="share-preview-modal">
+    <div class="share-preview-title">📸 PICK ORDER PREVIEW</div>
+    <div class="share-preview-section-label">IMAGE PREVIEW</div>
+    <img id="share-preview-img" class="share-preview-img" alt="Pick order image preview" />
+    <div class="share-preview-section-label">WHATSAPP MESSAGE PREVIEW</div>
+    <textarea id="share-preview-textarea" class="share-preview-textarea" readonly></textarea>
+    <div class="share-preview-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeSharePreview()">CANCEL</button>
+      <button class="btn btn-sm" onclick="sharePreviewWhatsApp()" style="background:#25D366;color:#fff;border:none;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:1px;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;">💬 OPEN WHATSAPP</button>
+      <button class="btn btn-sm" onclick="sharePreviewDownload()" style="background:var(--gold);color:#000;border:none;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:1px;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;">📸 DOWNLOAD IMAGE</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -2277,8 +2330,8 @@ function renderDraft() {
       ${headerStatus}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-      <button class="share-standings-btn" onclick="sharePickOrderImage(${raceIdx})" title="Download pick order as shareable image" style="background:var(--gold);color:#000;font-weight:700;">📸 SHARE PICK ORDER</button>
-      <button class="share-standings-btn" onclick="sharePickOrderWhatsApp(${raceIdx})" title="Share pick order text via WhatsApp" style="background:#25D366;color:#fff;font-weight:700;">💬 WHATSAPP</button>
+      <button class="share-standings-btn" onclick="previewPickOrder(${raceIdx})" title="Preview and share pick order image or WhatsApp message" style="background:var(--gold);color:#000;font-weight:700;">📸 SHARE PICK ORDER</button>
+      <button class="share-standings-btn" onclick="previewPickOrder(${raceIdx})" title="Preview pick order before sharing via WhatsApp" style="background:#25D366;color:#fff;font-weight:700;">💬 WHATSAPP</button>
     </div>
   `;
 
@@ -6690,14 +6743,12 @@ async function shareStandingsImage() {
 }
 
 // ── PICK ORDER SHARE IMAGE ────────────────────────────────────
-function sharePickOrderImage(raceIdx) {
+// ── PICK ORDER CANVAS BUILDER ─────────────────────────────────────────────────
+
+function _buildPickOrderCanvas(raceIdx) {
   const race = RACES[raceIdx];
-  if (!race) return;
-
   const draftOrder = getDraftOrderForRace(raceIdx);
-  if (draftOrder.length === 0) { showToast('No players in draft order', 'info'); return; }
 
-  // Calculate "9pm Thursday before race" deadline
   function getDeadlineLabel(raceDateStr) {
     const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
     const parts = raceDateStr.trim().split(' ');
@@ -6713,8 +6764,6 @@ function sharePickOrderImage(raceIdx) {
   }
   const deadlineLabel = getDeadlineLabel(race.date);
 
-  showToast('Generating pick order image...', 'info');
-
   const SCALE = 2, W = 540, PAD = 28;
   const HEADER_H = 130, DEADLINE_H = 64, ROW_H = 58, FOOTER_H = 54, LABEL_H = 22;
   const totalH = HEADER_H + DEADLINE_H + LABEL_H + 8 + draftOrder.length * ROW_H + FOOTER_H + 16;
@@ -6724,17 +6773,14 @@ function sharePickOrderImage(raceIdx) {
   const ctx = canvas.getContext('2d');
   ctx.scale(SCALE, SCALE);
 
-  // Background + top stripe
   ctx.fillStyle = '#f8f9fa'; ctx.fillRect(0, 0, W, totalH);
   ctx.fillStyle = '#E10600'; ctx.fillRect(0, 0, W, 6);
 
-  // App title
   let y = 24;
   ctx.font = '900 13px Orbitron, sans-serif';
   ctx.fillStyle = '#E10600'; ctx.textAlign = 'center';
   ctx.fillText('F1 GRID MASTERS 2026', W / 2, y);
 
-  // Race flag + name
   y += 24;
   ctx.font = '32px serif'; ctx.textAlign = 'center';
   ctx.fillText(race.flag, W / 2, y + 2);
@@ -6747,7 +6793,6 @@ function sharePickOrderImage(raceIdx) {
   ctx.fillStyle = '#555566'; ctx.textAlign = 'center';
   ctx.fillText(`${race.circuit}  ·  ${race.date} 2026${race.sprint ? '  ·  SPRINT WEEKEND' : ''}`, W / 2, y);
 
-  // Deadline banner
   y += 16;
   ctx.fillStyle = 'rgba(200,150,0,0.10)';
   ctx.strokeStyle = 'rgba(180,130,0,0.55)'; ctx.lineWidth = 1.5;
@@ -6758,7 +6803,6 @@ function sharePickOrderImage(raceIdx) {
   ctx.font = '900 17px Orbitron, sans-serif';
   ctx.fillText(deadlineLabel, W / 2, y + 36);
 
-  // Column headers
   y += DEADLINE_H + 14;
   ctx.font = '700 10px Orbitron, sans-serif';
   ctx.fillStyle = '#888899'; ctx.textAlign = 'left';
@@ -6769,7 +6813,6 @@ function sharePickOrderImage(raceIdx) {
   ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke();
 
-  // Player rows
   const medals = ['🥇','🥈','🥉'];
   draftOrder.forEach((pid, i) => {
     const player = STATE.players.find(p => p.id === pid);
@@ -6781,7 +6824,6 @@ function sharePickOrderImage(raceIdx) {
       ctx.fillRect(PAD, rowY + 2, W - PAD * 2, ROW_H - 4);
     }
 
-    // Medal / position number
     if (i < 3) {
       ctx.font = '22px serif'; ctx.fillStyle = '#111111'; ctx.textAlign = 'center';
       ctx.fillText(medals[i], PAD + 16, midY + 8);
@@ -6791,35 +6833,104 @@ function sharePickOrderImage(raceIdx) {
       ctx.fillText(`${i+1}`, PAD + 16, midY + 6);
     }
 
-    // Player colour accent bar
     ctx.fillStyle = player.color || '#E10600';
     ctx.fillRect(PAD + 34, rowY + 10, 4, ROW_H - 20);
 
-    // Player name
     ctx.font = '700 17px Rajdhani, sans-serif';
     ctx.fillStyle = '#111111'; ctx.textAlign = 'left';
     ctx.fillText(player.name.toUpperCase(), PAD + 46, midY + 6);
 
-    // "PICK P1" label (right)
     ctx.font = '700 11px Orbitron, sans-serif';
     ctx.fillStyle = player.color || '#E10600';
     ctx.textAlign = 'right';
     ctx.fillText(`PICK P${i+1}`, W - PAD, midY + 5);
 
-    // Row divider
     ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(PAD + 34, rowY + ROW_H - 1); ctx.lineTo(W - PAD, rowY + ROW_H - 1); ctx.stroke();
   });
 
-  // Footer
   const footerY = y + draftOrder.length * ROW_H + 8;
   ctx.fillStyle = '#E10600'; ctx.fillRect(0, footerY, W, FOOTER_H);
   ctx.font = 'bold 13px Orbitron, sans-serif';
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
   ctx.fillText('F1 GRID MASTERS 2026  ·  f1gridmasters.netlify.app', W / 2, footerY + FOOTER_H / 2 + 5);
 
-  // Download
+  return canvas;
+}
+
+// ── SHARE PREVIEW MODAL ───────────────────────────────────────────────────────
+
+let _previewCanvas = null;
+let _previewRaceIdx = null;
+let _previewWAText = '';
+
+function previewPickOrder(raceIdx) {
+  const race = RACES[raceIdx];
+  if (!race) return;
+  const draftOrder = getDraftOrderForRace(raceIdx);
+  if (draftOrder.length === 0) { showToast('No players in draft order', 'info'); return; }
+
+  const medals = ['🥇','🥈','🥉'];
+  const lines = [
+    '🏎 F1 GRID MASTERS 2026',
+    '',
+    `${race.flag} ${race.name} GRAND PRIX — PICK ORDER`,
+    `${race.circuit} · ${race.date} 2026${race.sprint ? ' · 🏃 SPRINT WEEKEND' : ''}`,
+    ''
+  ];
+  draftOrder.forEach((pid, i) => {
+    const player = STATE.players.find(p => p.id === pid);
+    if (player) lines.push(`${medals[i] || `${i+1}.`} ${player.name} — PICK P${i+1}`);
+  });
+  lines.push('');
+  lines.push('🔗 f1gridmasters.netlify.app');
+  _previewWAText = lines.join('\n');
+
+  const canvas = _buildPickOrderCanvas(raceIdx);
+  _previewCanvas = canvas;
+  _previewRaceIdx = raceIdx;
+
+  document.getElementById('share-preview-img').src = canvas.toDataURL('image/png');
+  document.getElementById('share-preview-textarea').value = _previewWAText;
+  document.getElementById('share-preview-overlay').classList.add('open');
+}
+
+function closeSharePreview() {
+  document.getElementById('share-preview-overlay').classList.remove('open');
+  _previewCanvas = null;
+  _previewRaceIdx = null;
+  _previewWAText = '';
+}
+
+function sharePreviewDownload() {
+  if (!_previewCanvas || _previewRaceIdx === null) return;
+  const race = RACES[_previewRaceIdx];
+  try {
+    const link = document.createElement('a');
+    link.download = `f1-gridmasters-picks-${race.name.toLowerCase().replace(/\s+/g,'-')}.png`;
+    link.href = _previewCanvas.toDataURL('image/png');
+    link.click();
+    showToast('Pick order image downloaded!', 'success');
+    closeSharePreview();
+  } catch(e) {
+    showToast('Image download failed: ' + e.message, 'error');
+  }
+}
+
+function sharePreviewWhatsApp() {
+  if (!_previewWAText) return;
+  window.open(`https://wa.me/?text=${encodeURIComponent(_previewWAText)}`, '_blank');
+  closeSharePreview();
+}
+
+function sharePickOrderImage(raceIdx) {
+  const race = RACES[raceIdx];
+  if (!race) return;
+  const draftOrder = getDraftOrderForRace(raceIdx);
+  if (draftOrder.length === 0) { showToast('No players in draft order', 'info'); return; }
+  showToast('Generating pick order image...', 'info');
+  const canvas = _buildPickOrderCanvas(raceIdx);
   try {
     const link = document.createElement('a');
     link.download = `f1-gridmasters-picks-${race.name.toLowerCase().replace(/\s+/g,'-')}.png`;
