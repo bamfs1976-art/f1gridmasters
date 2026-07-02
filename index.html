@@ -3510,6 +3510,29 @@ function renderAdminDashboard() {
         <div class="draft-review-list">${reviewRows}</div>
       </div>
 
+      <!-- SHARE CARDS -->
+      <div class="admin-card" style="grid-column: 1/-1; border-color:rgba(37,211,102,0.35); background:rgba(37,211,102,0.03)">
+        <div class="admin-card-title" style="color:var(--green)">📸 SHARE CARDS · RACE PICKS</div>
+        <div class="admin-card-desc">Pick a race to generate its shareable card. Screenshot to share as an image, or click <strong>💬 COPY FOR WHATSAPP</strong> to copy a ready-to-paste message with team emoji and stats.</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+          ${(() => {
+            const drafted = RACES.filter(r => STATE.draftPicks[r.id] && Object.keys(STATE.draftPicks[r.id]).length > 0);
+            if (!drafted.length) return '<p style="color:var(--muted);font-size:13px">No drafted races yet</p>';
+            const currentRaceId = RACES[STATE.currentRaceIdx]?.id;
+            const autoId = (drafted.find(r => r.id === currentRaceId) || drafted[drafted.length - 1])?.id || '';
+            return `<select id="share-race-select" onchange="renderPickCard(this.value)"
+              style="padding:8px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;
+                     color:var(--text);font-size:14px;cursor:pointer;font-family:Rajdhani,sans-serif">
+              <option value="">— Select a race —</option>
+              ${drafted.map(r => `<option value="${r.id}" ${r.id === autoId ? 'selected' : ''}>${r.flag} ${r.name} · ${r.date}</option>`).join('')}
+            </select>
+            <span style="font-size:12px;color:var(--muted);font-family:Share Tech Mono,monospace">📸 Screenshot &nbsp;·&nbsp; or &nbsp;·&nbsp; 💬 Copy text below</span>`;
+          })()}
+        </div>
+        <div id="pick-card-preview"></div>
+        <div id="pick-card-wa-btn"></div>
+      </div>
+
       <!-- AMEND PLAYER PICK -->
       <div class="admin-card" style="border-color:rgba(255,165,0,0.4);background:rgba(255,165,0,0.03)">
         <div class="admin-card-title">✏ AMEND PLAYER PICK</div>
@@ -3638,25 +3661,6 @@ function renderAdminDashboard() {
       </div>
 
       <!-- SHARE CARDS -->
-      <div class="admin-card" style="grid-column: 1/-1">
-        <div class="admin-card-title">📸 SHARE CARDS · RACE PICKS</div>
-        <div class="admin-card-desc">Select a race to generate its pick card. Screenshot it and share via WhatsApp. Completed races show final positions and points.</div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
-          ${(() => {
-            const drafted = RACES.filter(r => STATE.draftPicks[r.id] && Object.keys(STATE.draftPicks[r.id]).length > 0);
-            if (!drafted.length) return '<p style="color:var(--muted);font-size:13px">No drafted races yet</p>';
-            return `<select id="share-race-select" onchange="renderPickCard(this.value)"
-              style="padding:8px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;
-                     color:var(--text);font-size:14px;cursor:pointer;font-family:Rajdhani,sans-serif">
-              <option value="">— Select a race —</option>
-              ${drafted.map(r => `<option value="${r.id}">${r.flag} ${r.name} · ${r.date}</option>`).join('')}
-            </select>
-            <span style="font-size:12px;color:var(--muted);font-family:Share Tech Mono,monospace">💡 Screenshot the card below to share</span>`;
-          })()}
-        </div>
-        <div id="pick-card-preview"></div>
-      </div>
-
       <!-- NOTIFICATIONS -->
       <div class="admin-card">
         <div class="admin-card-title">🔔 DRAFT REMINDERS</div>
@@ -3719,6 +3723,9 @@ function renderAdminDashboard() {
     </div>
   `;
   populateImportRoundSelect();
+  // Auto-render pick card for the pre-selected race
+  const _shareSel = document.getElementById('share-race-select');
+  if (_shareSel?.value) setTimeout(() => renderPickCard(_shareSel.value), 0);
 }
 
 // ── Pick Share Card ──────────────────────────────────────────
@@ -3810,13 +3817,16 @@ function renderPickCard(raceId) {
       ${rows.map((row,idx)=>{
         const drv=DRIVERS.find(d=>d.short===row.driver);
         const tc=drv?.teamColor||'#555';
+        const surname=drv?.name?.split(' ').slice(-1)[0]||row.driver;
         return `<div style="display:flex;align-items:center;padding:7px 20px;gap:10px;border-bottom:1px solid #141414;
           background:${row.pts>0?'rgba(255,255,255,0.02)':'transparent'};opacity:${row.pts===0?'0.5':'1'}">
           <span style="font-size:12px;color:${rankClr(idx)};font-weight:700;width:20px;text-align:right;font-family:Share Tech Mono,monospace">${upcoming?'':idx+1}</span>
           <div style="width:4px;height:28px;border-radius:2px;background:${tc};flex-shrink:0"></div>
           <span style="font-size:18px;font-weight:700;color:#e8e8e8;flex:1">${row.name}</span>
-          <span style="font-family:Share Tech Mono,monospace;font-size:14px;font-weight:700;letter-spacing:1px;
-            padding:3px 8px;border-radius:4px;background:#1a1a1a;border:1px solid #2a2a2a;color:${tc}">${row.driver}</span>
+          <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:700;letter-spacing:1px;
+            padding:3px 8px;border-radius:4px;background:#1a1a1a;border:1px solid #2a2a2a;color:${tc};text-align:center;min-width:70px">
+            <span style="font-size:11px;opacity:0.65">${row.driver}</span><br>${surname}
+          </span>
           ${!upcoming?`<span style="font-size:12px;color:${row.pos?'#aaa':'#444'};font-weight:600;width:32px;text-align:center;font-family:Share Tech Mono,monospace">${row.pos?'P'+row.pos:'—'}</span>
             <span style="font-size:18px;font-weight:800;width:44px;text-align:right;font-family:Share Tech Mono,monospace;color:${ptsClr(row.pts)}">${row.pts>0?row.pts:row.pts===0?'0':'—'}</span>`:''}
         </div>`;
@@ -3828,6 +3838,114 @@ function renderPickCard(raceId) {
       </div>
     </div>
   `;
+
+  const waBtn = document.getElementById('pick-card-wa-btn');
+  if (waBtn) {
+    waBtn.innerHTML = `<button onclick="sharePickCardWhatsApp('${raceId}')"
+      style="margin-top:14px;background:#25D366;color:#fff;border:none;border-radius:6px;
+             padding:9px 20px;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;
+             font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
+      💬 COPY FOR WHATSAPP
+    </button>`;
+  }
+}
+
+function sharePickCardWhatsApp(raceId) {
+  const race = RACES.find(r => r.id === raceId);
+  if (!race) return;
+
+  const TEAM_EMOJI = {
+    'McLaren':'🟠', 'Ferrari':'🔴', 'Red Bull':'🔵', 'Mercedes':'⭐',
+    'Williams':'💙', 'Aston Martin':'💚', 'Alpine':'🏔️',
+    'Haas':'⚪', 'Audi':'🔘', 'RB':'🟣', 'Racing Bulls':'🟣'
+  };
+
+  const raceResult = STATE.raceResults[raceId] || null;
+  const racePicks  = STATE.draftPicks[raceId]  || {};
+  const PM = {1:10,2:9,3:8,4:7,5:6,6:5,7:4,8:3,9:2,10:1};
+
+  function getPts(drv) {
+    if (!raceResult || !drv) return null;
+    for (const [p,d] of Object.entries(raceResult)) if (d === drv) return PM[+p] || 0;
+    return 0;
+  }
+  function getPos(drv) {
+    if (!raceResult || !drv) return null;
+    for (const [p,d] of Object.entries(raceResult)) if (d === drv) return +p;
+    return null;
+  }
+
+  const rows = STATE.players.map(p => ({
+    name: p.name, id: p.id,
+    driver: racePicks[p.id],
+    pts: getPts(racePicks[p.id]),
+    pos: getPos(racePicks[p.id]),
+  })).filter(r => r.driver);
+
+  const upcoming = !raceResult;
+  if (!upcoming) rows.sort((a,b) => (b.pts||0) - (a.pts||0) || a.name.localeCompare(b.name));
+
+  const medals = ['🥇','🥈','🥉'];
+  const sprintTag = race.sprint ? ' · 🏃 Sprint' : '';
+
+  const lines = [
+    '🏎 F1 GRID MASTERS 2026',
+    '',
+    `${race.flag} ${race.name} GRAND PRIX — ${upcoming ? 'RACE PICKS' : 'RESULTS'}`,
+    `${race.circuit} · ${race.date} 2026${sprintTag}`,
+    '',
+  ];
+
+  if (!upcoming) {
+    const podium = [1,2,3].map(p => raceResult[p]).filter(Boolean);
+    if (podium.length) {
+      lines.push(`🏁 ${podium.map((d,i) => `P${i+1} ${d}`).join(' · ')}`);
+      lines.push('');
+    }
+    rows.forEach((row, i) => {
+      const drv = DRIVERS.find(d => d.short === row.driver);
+      const te  = TEAM_EMOJI[drv?.team] || '🔲';
+      const surname = drv?.name?.split(' ').slice(-1)[0] || row.driver;
+      const posLabel = row.pos ? `P${row.pos}` : '—';
+      const ptsLabel = row.pts > 0 ? `${row.pts}pts ✨` : row.pts === 0 ? '0pts 💤' : '—';
+      lines.push(`${medals[i] || `${i+1}.`} ${row.name} · ${te} ${surname} · ${posLabel} · ${ptsLabel}`);
+    });
+    const top = rows[0];
+    if (top && top.pts > 0) {
+      lines.push('');
+      lines.push(`⭐ Top scorer: ${top.name} — ${top.pts}pts`);
+    }
+  } else {
+    lines.push('⏳ PICKS LOCKED — RACE UPCOMING');
+    lines.push('');
+    rows.forEach(row => {
+      const drv = DRIVERS.find(d => d.short === row.driver);
+      const te  = TEAM_EMOJI[drv?.team] || '🔲';
+      const surname = drv?.name?.split(' ').slice(-1)[0] || row.driver;
+      lines.push(`${te} ${surname} — ${row.name}`);
+    });
+    const standings = STATE.players
+      .map(p => { const { total } = calcPlayerPoints(p.id); return { ...p, total }; })
+      .sort((a,b) => b.total - a.total);
+    const leader = standings[0];
+    if (leader && leader.total > 0) {
+      lines.push('');
+      lines.push(`📊 Season leader: ${leader.name} · ${leader.total}pts`);
+    }
+  }
+
+  lines.push('');
+  lines.push('🔗 f1gridmasters.netlify.app');
+
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('💬 WhatsApp message copied!', 'success');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('💬 Copied to clipboard!', 'success');
+  });
 }
 
 // ── Admin Actions ──────────────────────────────────────────
