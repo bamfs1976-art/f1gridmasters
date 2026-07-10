@@ -2884,8 +2884,8 @@ function renderResultEntry(raceId) {
     `;
   }).join('');
 
-  area.innerHTML = `
-    <div class="grid-2">
+  // Entering or clearing a result changes everyone's points — admin only.
+  const entryCard = adminUnlocked ? `
       <div class="card card-accent">
         <div class="section-head">${race.flag} ${race.name} — FINISHING ORDER (P1–P10)</div>
         <div class="finishing-grid">${finishSlots}</div>
@@ -2894,7 +2894,21 @@ function renderResultEntry(raceId) {
           <button class="btn btn-outline btn-sm" onclick="clearResult('${raceId}')">CLEAR</button>
         </div>
         <p style="font-size:12px;color:var(--muted);margin-top:10px;">Enter only the top 10 from the <strong style="color:var(--text)">main race</strong>. Sprint race results do not count. Drivers outside P10 score 0 pts.</p>
-      </div>
+      </div>` : `
+      <div class="card">
+        <div class="section-head">${race.flag} ${race.name} — RESULT</div>
+        ${Object.keys(existingResult).length > 0
+          ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${Object.entries(existingResult).sort((a,b)=>a[0]-b[0]).map(([pos,short]) => {
+              const d = DRIVERS.find(dr => dr.short === short);
+              return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:4px;background:var(--panel2);border:1px solid var(--border);font-family:Share Tech Mono,monospace;font-size:12px"><span style="color:${pos<=3?'var(--gold)':'var(--muted)'};font-weight:700">P${pos}</span><span style="color:${d?.teamColor||'var(--text)'};font-weight:700">${short}</span></span>`;
+            }).join('')}</div>`
+          : '<p style="color:var(--muted);font-size:13px">No result yet.</p>'}
+        <p style="font-size:12px;color:var(--muted);margin-top:12px;">🔐 Results are entered by the admin after each race.</p>
+      </div>`;
+
+  area.innerHTML = `
+    <div class="grid-2">
+      ${entryCard}
       <div class="card">
         <div class="section-head">PLAYER PICKS · POINTS</div>
         ${picksDisplay || '<p style="color:var(--muted);font-size:13px">No picks for this race</p>'}
@@ -2915,6 +2929,7 @@ function saveResult(raceId) {
     }
   }
   if (Object.keys(result).length === 0) return showToast('Enter at least P1 before saving', 'error');
+  pushUndo(`Save result ${raceId}`);
   STATE.raceResults[raceId] = result;
   // Auto-reveal picks when a result is saved — picks are always revealed once race is done
   if (!STATE.draftRevealed) STATE.draftRevealed = {};
@@ -2942,6 +2957,7 @@ function saveResult(raceId) {
 
 function clearResult(raceId) {
   openModal('Clear Result', 'Clear the result for this race? This will reset points.', () => {
+    pushUndo(`Clear result ${raceId}`);
     delete STATE.raceResults[raceId];
     saveStateCritical();
     renderResults();
