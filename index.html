@@ -4437,7 +4437,9 @@ async function importResultsFromJolpica() {
     }
 
     // Map to our format: {1: 'NOR', 2: 'VER', ...}
-    const race = RACES[parseInt(round) - 1];
+    // Race ids encode the official round number (r6 = round 6); the RACES
+    // array skips rounds, so array position must never be used as the round.
+    const race = RACES.find(r => parseInt(r.id.slice(1)) === parseInt(round));
     if (!race) throw new Error('Race not found');
 
     const resultMap = {};
@@ -4504,9 +4506,10 @@ function confirmImportResults(resultMap, raceId) {
 function populateImportRoundSelect() {
   const sel = document.getElementById('import-round-select');
   if (!sel) return;
-  sel.innerHTML = RACES.map((r,i) => `<option value="${i+1}">${r.flag} R${i+1} · ${r.name}</option>`).join('');
+  sel.innerHTML = RACES.map((r,i) => `<option value="${parseInt(r.id.slice(1))}">${r.flag} R${i+1} · ${r.name}</option>`).join('');
   // Default to current race
-  if (STATE.currentRaceIdx < RACES.length) sel.value = STATE.currentRaceIdx + 1;
+  const cur = RACES[STATE.currentRaceIdx];
+  if (cur) sel.value = parseInt(cur.id.slice(1));
 }
 
 // ============================================================
