@@ -1947,6 +1947,33 @@ function saveState() {
   }, 400);
 }
 
+// Immediate save with retries for critical actions (submitting picks, saving
+// results, admin amendments). Ported from v2.0-upgrade, with the upsert
+// response error actually checked — supabase-js reports API failures via the
+// returned error, it does not throw. Returns true only on a confirmed write.
+async function saveStateCritical() {
+  try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
+  clearTimeout(_saveTimer); // supersede any pending debounced save
+  if (!_canWriteToSupabase()) return false;
+  const sb = getSupabase();
+  if (!sb) return false;
+  let lastErr = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const { error } = await sb.from('f1_game_state').upsert({ id: 'main', state: STATE, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      return true;
+    } catch(e) {
+      lastErr = e;
+      console.warn(`Supabase saveStateCritical attempt ${attempt} failed:`, e);
+      if (attempt < 3) await new Promise(r => setTimeout(r, attempt * 1000));
+    }
+  }
+  console.error('Supabase saveStateCritical failed after 3 attempts:', lastErr);
+  showToast('⚠ Save failed — check your connection and re-submit', 'error');
+  return false;
+}
+
 async function loadState() {
   const sb = getSupabase();
   if (sb) {
@@ -2216,7 +2243,7 @@ function resolveDraft(raceId, draftOrder) {
 
   if (!STATE.draftPicks[raceId]) STATE.draftPicks[raceId] = {};
   Object.assign(STATE.draftPicks[raceId], resolved);
-  saveState();
+  saveStateCritical();
   return resolved;
 }
 
@@ -2232,11 +2259,11 @@ function submitMyPrefs(raceId, rankedShorts) {
   if (!STATE.draftSubmitted[raceId]) STATE.draftSubmitted[raceId] = {};
   STATE.draftSubmitted[raceId][SESSION_PLAYER_ID] = true;
   // Lock out realtime updates during save so another browser cannot
-  // overwrite the submitted flag before it reaches Supabase
+  // overwrite the submitted flag before it reaches Supabase; the lock
+  // holds until the retrying save has actually finished.
   _localEditLock = true;
-  saveState();
+  saveStateCritical().finally(() => { _localEditLock = false; });
   updateRaceStatusBanner();
-  setTimeout(() => { _localEditLock = false; }, 700);
 
   const submittedCount = Object.keys(STATE.draftPrefs[raceId]).length;
   const totalPlayers = STATE.players.length;
@@ -2890,7 +2917,7 @@ function saveResult(raceId) {
   // Auto-reveal picks when a result is saved — picks are always revealed once race is done
   if (!STATE.draftRevealed) STATE.draftRevealed = {};
   STATE.draftRevealed[raceId] = true;
-  saveState();
+  saveStateCritical();
   // In-page confirmation banner
   const raceSaved = RACES.find(r => r.id === raceId);
   const p1Driver = DRIVERS.find(d => d.short === result[1]);
@@ -2914,7 +2941,7 @@ function saveResult(raceId) {
 function clearResult(raceId) {
   openModal('Clear Result', 'Clear the result for this race? This will reset points.', () => {
     delete STATE.raceResults[raceId];
-    saveState();
+    saveStateCritical();
     renderResults();
     showToast('Result cleared', 'info');
   });
@@ -4175,7 +4202,7 @@ function adminAmendPickSave(playerId, raceId, picksResolved) {
     }
   }
 
-  saveState();
+  saveStateCritical();
   addLog(`Admin amended pick for ${player?.name} in ${raceId}`, 'warn');
   showToast(`Pick amended for ${player?.name}`, 'success');
   document.getElementById('admin-amend-modal').remove();
@@ -4465,7 +4492,7 @@ function confirmImportResults(resultMap, raceId) {
   // Auto-reveal picks when results are imported
   if (!STATE.draftRevealed) STATE.draftRevealed = {};
   STATE.draftRevealed[raceId] = true;
-  saveState();
+  saveStateCritical();
   const race = RACES.find(r => r.id === raceId);
   addLog(`Auto-imported results for ${race?.name} via Jolpica API`, 'good');
   showToast(`✅ Results imported for ${race?.name}!`, 'success');
