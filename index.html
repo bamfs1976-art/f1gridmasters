@@ -1373,7 +1373,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <!-- OFFLINE BANNER -->
 <div class="offline-banner hidden" id="offline-banner">
   <span style="font-size:14px">⚠</span>
-  <span>OFFLINE MODE — changes saved locally, will sync when reconnected</span>
+  <span>OFFLINE — reconnecting… changes made now may not reach other players; reload once you're back online</span>
 </div>
 
 <!-- PLAYER PROFILE MODAL -->
@@ -1504,7 +1504,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <!-- ===================== SCHEDULE PAGE ===================== -->
 <div class="page" id="page-schedule">
   <div class="z1 animate-in">
-    <div class="section-head">2026 F1 CALENDAR · 24 ROUNDS</div>
+    <div class="section-head">2026 F1 CALENDAR · 22 ROUNDS</div>
     <div class="schedule-list" id="schedule-list"></div>
   </div>
 </div>
@@ -3928,7 +3928,7 @@ function sharePickCardWhatsApp(raceId) {
   const TEAM_EMOJI = {
     'McLaren':'🟠', 'Ferrari':'🔴', 'Red Bull':'🔵', 'Mercedes':'⭐',
     'Williams':'💙', 'Aston Martin':'💚', 'Alpine':'🏔️',
-    'Haas':'⚪', 'Audi':'🔘', 'RB':'🟣', 'Racing Bulls':'🟣'
+    'Haas':'⚪', 'Audi':'🔘', 'Racing Bulls':'🟣', 'Cadillac':'🟥'
   };
 
   const raceResult = STATE.raceResults[raceId] || null;
@@ -5214,6 +5214,7 @@ function exportToPrint() {
     </body></html>`;
 
   const win = window.open('', '_blank');
+  if (!win) { showToast('Popup blocked — allow popups to print standings', 'error'); return; }
   win.document.write(printHtml);
   win.document.close();
   win.print();
