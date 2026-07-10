@@ -3734,7 +3734,7 @@ function renderAdminDashboard() {
       <!-- JOLPICA IMPORT -->
       <div class="admin-card">
         <div class="admin-card-title">🌐 AUTO-IMPORT RESULTS · JOLPICA API</div>
-        <div class="admin-card-desc">Fetch official race results automatically from the Jolpica F1 API. Only works once official results are published after the race.</div>
+        <div class="admin-card-desc">Fetch official race results automatically from the Jolpica F1 API. Only works once official results are published after the race. If the API is down, use <strong>Manual Results Entry</strong> below.</div>
         <div style="margin-bottom:10px">
           <label style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);letter-spacing:1px;display:block;margin-bottom:6px">RACE ROUND</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -3745,6 +3745,20 @@ function renderAdminDashboard() {
           </div>
           <div id="import-status"></div>
         </div>
+      </div>
+
+      <!-- MANUAL RESULTS ENTRY -->
+      <div class="admin-card" style="grid-column: 1/-1">
+        <div class="admin-card-title">📝 MANUAL RESULTS ENTRY</div>
+        <div class="admin-card-desc">Backup for when the Jolpica API is unavailable or hasn't published yet. Pick any race and enter the top 10 finishers by hand — saving reveals that race's picks and updates the standings, exactly like an import.</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <label style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);letter-spacing:1px">RACE</label>
+          <select id="admin-result-race" onchange="renderAdminResultEntry(this.value)"
+            style="padding:8px 12px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:13px;cursor:pointer">
+            ${RACES.map((r,i) => `<option value="${r.id}" ${i===raceIdx?'selected':''}>${r.flag} R${i+1} · ${r.name}${STATE.raceResults[r.id] ? ' ✓' : ''}</option>`).join('')}
+          </select>
+        </div>
+        <div id="admin-result-entry"></div>
       </div>
 
       <!-- RESULTS MANAGEMENT -->
@@ -3841,9 +3855,70 @@ function renderAdminDashboard() {
     </div>
   `;
   populateImportRoundSelect();
+  // Auto-render the manual result entry for the pre-selected race
+  const _resSel = document.getElementById('admin-result-race');
+  if (_resSel?.value) renderAdminResultEntry(_resSel.value);
   // Auto-render pick card for the pre-selected race
   const _shareSel = document.getElementById('share-race-select');
   if (_shareSel?.value) setTimeout(() => renderPickCard(_shareSel.value), 0);
+}
+
+// ── MANUAL RESULTS ENTRY (fallback for when Jolpica is unavailable) ──
+function renderAdminResultEntry(raceId) {
+  const el = document.getElementById('admin-result-entry');
+  if (!el) return;
+  const race = RACES.find(r => r.id === raceId);
+  if (!race) { el.innerHTML = ''; return; }
+  const existing = STATE.raceResults[raceId] || {};
+  let slots = '';
+  for (let pos = 1; pos <= 10; pos++) {
+    const cls = pos === 1 ? 'p1' : pos === 2 ? 'p2' : pos === 3 ? 'p3' : '';
+    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '';
+    const selected = existing[pos] || '';
+    slots += `
+      <div class="finish-slot">
+        <div class="finish-pos ${cls}">${medal || 'P'+pos}</div>
+        <select class="finish-select" id="adm-res-${pos}">
+          <option value="">— Driver —</option>
+          ${DRIVERS.map(d => `<option value="${d.short}" ${d.short === selected ? 'selected' : ''}>${d.short} · ${d.name.split(' ').pop()}</option>`).join('')}
+        </select>
+      </div>`;
+  }
+  el.innerHTML = `
+    <div class="finishing-grid">${slots}</div>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-orange btn-sm" onclick="adminSaveManualResult('${raceId}')">💾 SAVE RESULT</button>
+      ${Object.keys(existing).length > 0 ? `<button class="btn btn-outline btn-sm" onclick="adminClearResult('${raceId}')">CLEAR RESULT</button>` : ''}
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:8px;">Main race only — sprint results don't count. Drivers outside P10 score 0. Saving reveals this race's picks to all players.</p>`;
+}
+
+function adminSaveManualResult(raceId) {
+  const result = {};
+  const used = new Set();
+  for (let pos = 1; pos <= 10; pos++) {
+    const sel = document.getElementById(`adm-res-${pos}`);
+    if (sel && sel.value) {
+      if (used.has(sel.value)) return showToast(`${sel.value} appears more than once!`, 'error');
+      used.add(sel.value);
+      result[pos] = sel.value;
+    }
+  }
+  if (Object.keys(result).length === 0) return showToast('Enter at least P1 before saving', 'error');
+  pushUndo(`Manual result ${raceId}`);
+  STATE.raceResults[raceId] = result;
+  // Reveal picks once a result exists, same as saveResult/import
+  if (!STATE.draftRevealed) STATE.draftRevealed = {};
+  STATE.draftRevealed[raceId] = true;
+  saveStateCritical();
+  const race = RACES.find(r => r.id === raceId);
+  addLog(`Manually entered result for ${race?.name}`, 'good');
+  showToast(`✅ Result saved for ${race?.name} — picks revealed, standings updated`, 'success');
+  renderAdminDashboard();
+  renderLeaderboard();
+  // Keep the same race selected after the dashboard re-render
+  const sel = document.getElementById('admin-result-race');
+  if (sel) { sel.value = raceId; renderAdminResultEntry(raceId); }
 }
 
 // ── Pick Share Card ──────────────────────────────────────────
