@@ -4405,7 +4405,8 @@ function adminClearLog() {
 }
 
 function adminResetSeason() {
-  openModal('⚠ FULL RESET', 'This will permanently delete ALL season data — players, picks, results, everything. Cannot be undone!', () => {
+  openModal('⚠ FULL RESET', 'This will permanently delete ALL season data — players, picks, results, everything. A JSON backup will download first. Cannot be undone!', () => {
+    exportJSON(); // last-chance backup before wiping everything
     STATE = { players:[], started:false, currentRaceIdx:0, draftOrder:[], draftPicks:{}, raceResults:{}, baseOrder:[], draftRevealed:{}, activityLog:[], predictions:{}, notifEnabled:false, draftPrefs:{}, draftSubmitted:{} };
     saveState();
     localStorage.removeItem('f1gm2026');
@@ -4417,7 +4418,8 @@ function adminResetSeason() {
 }
 
 function adminClearAllResults() {
-  openModal('Clear All Results', 'Delete all race results? Picks are kept but all points reset to 0.', () => {
+  openModal('Clear All Results', 'Delete all race results? Picks are kept but all points reset to 0. A JSON backup will download first.', () => {
+    exportJSON();
     pushUndo('Clear all results');
     STATE.raceResults = {};
     saveState();
@@ -4428,7 +4430,8 @@ function adminClearAllResults() {
 }
 
 function adminClearAllDrafts() {
-  openModal('Clear All Drafts', 'Delete all draft picks and reveal states for all races?', () => {
+  openModal('Clear All Drafts', 'Delete all draft picks and reveal states for all races? A JSON backup will download first.', () => {
+    exportJSON();
     pushUndo('Clear all drafts');
     STATE.draftPicks = {};
     STATE.draftRevealed = {};
@@ -5228,7 +5231,8 @@ function adminRestoreJSON() {
     reader.onload = (ev) => {
       try {
         const restored = JSON.parse(ev.target.result);
-        openModal('Restore Backup', 'This will overwrite all current data with the backup. Are you sure?', () => {
+        openModal('Restore Backup', 'This will overwrite all current data with the backup. A JSON backup of the current state will download first. Are you sure?', () => {
+          exportJSON(); // keep what we're about to overwrite
           STATE = restored;
           saveState();
           addLog('Restored from JSON backup', 'warn');
