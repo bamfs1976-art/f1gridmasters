@@ -1855,6 +1855,13 @@ DRIVERS[4].num = 33; // VER uses 1 (champion) or 33
 
 const POINTS_MAP = {1:10, 2:9, 3:8, 4:7, 5:6, 6:5, 7:4, 8:3, 9:2, 10:1};
 
+// Escape user-supplied strings (player names) before innerHTML interpolation.
+// State is writable via the shared Supabase row, so names cannot be trusted.
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
 // Official F1 driver headshot images from formula1.com CDN
 const DRIVER_IMAGES = {
   'ALB': 'https://media.formula1.com/image/upload/f_auto,c_limit,q_auto,w_1320/content/dam/fom-website/drivers/A/ALEALB01_Alexander_Albon/alealb01.png',
@@ -2158,7 +2165,7 @@ function renderPlayerList() {
     <div class="player-list-item">
       <div class="player-name-display">
         <div class="player-num-badge">${i+1}</div>
-        ${p.name}
+        ${esc(p.name)}
       </div>
       ${!STATE.started ? `<button class="remove-btn" onclick="removePlayer('${p.id}')">✕</button>` : ''}
     </div>
@@ -2400,7 +2407,7 @@ function renderDraft() {
       const takenByMe = isMyPick;
       if (resolvedTaken) {
         cardClass += ' taken';
-        const showName = picksRevealed ? (takenByPlayer?.name?.split(' ')[0]?.toUpperCase() || 'TAKEN') : (takenByMe ? 'YOUR PICK' : 'TAKEN');
+        const showName = picksRevealed ? esc(takenByPlayer?.name?.split(' ')[0]?.toUpperCase() || 'TAKEN') : (takenByMe ? 'YOUR PICK' : 'TAKEN');
         label = `<div class="taken-label" style="${takenByMe ? 'background:var(--green);color:#000' : ''}">${showName}</div>`;
       }
     } else if (!iHaveSubmitted) {
@@ -2451,7 +2458,7 @@ function renderDraft() {
     return `
       <div class="pick-order-item ${hasSubmitted && !picksResolved ? 'done' : ''} ${picksResolved && resolvedDriver ? 'done' : ''}">
         <div class="poi-slot">P${i+1}</div>
-        <div class="poi-name">${player ? player.name : '?'}${isMe ? ' <span style="font-size:11px;color:var(--green)">YOU</span>' : ''}</div>
+        <div class="poi-name">${player ? esc(player.name) : '?'}${isMe ? ' <span style="font-size:11px;color:var(--green)">YOU</span>' : ''}</div>
         <div class="poi-pick">${
           showResolved ? (resolvedDriver?.short || '?') :
           picksResolved ? '🔒' :
@@ -2469,7 +2476,7 @@ function renderDraft() {
       const p = STATE.players.find(pl => pl.id === pid);
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
         <div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:${i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)'};width:36px;flex-shrink:0">P${i+1}</div>
-        <div style="font-size:14px;font-weight:600">${p ? p.name : '?'}</div>
+        <div style="font-size:14px;font-weight:600">${p ? esc(p.name) : '?'}</div>
       </div>`;
     }).join('');
     myPickPanel = `
@@ -2595,7 +2602,7 @@ function renderDraft() {
             : '<span style="color:var(--muted);font-size:11px">AUTO</span>';
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
             <div>
-              <span style="font-weight:600;font-size:13px">${player?.name}</span>
+              <span style="font-weight:600;font-size:13px">${esc(player?.name)}</span>
               <span style="margin-left:8px">${choiceLabel}</span>
             </div>
             <span style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--accent)">${driver?.short} · ${driver?.team}</span>
@@ -2864,14 +2871,14 @@ function renderResultEntry(raceId) {
     if (!raceRevealed) {
       return `
         <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px">
-          <div style="font-weight:700;font-size:14px;flex:1">${player.name}</div>
+          <div style="font-weight:700;font-size:14px;flex:1">${esc(player.name)}</div>
           <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">🔒 SEALED</span>
         </div>
       `;
     }
     return `
       <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px">
-        <div style="font-weight:700;font-size:14px;flex:1">${player.name}</div>
+        <div style="font-weight:700;font-size:14px;flex:1">${esc(player.name)}</div>
         <div style="display:flex;align-items:center;gap:6px">
           <div style="width:3px;height:20px;border-radius:2px;background:${driver?.teamColor}"></div>
           <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--accent)">${driver?.short}</span>
@@ -3055,9 +3062,9 @@ function renderLeaderboard() {
       gapHtml = `<div class="lb-gap-bar-wrap"><div class="lb-gap-track"><div class="lb-gap-fill" style="width:${pct}%"></div></div><div class="lb-gap-num">-${gap}</div></div>`;
     }
     return `
-      <tr style="cursor:pointer" onclick="openPlayerProfile('${player.id}')" title="View ${player.name}'s race history">
+      <tr style="cursor:pointer" onclick="openPlayerProfile('${player.id}')" title="View ${esc(player.name)}'s race history">
         <td><div class="lb-rank ${rankClass}">${rank}</div></td>
-        <td><div class="lb-name">${player.name}${player.predictionBonus > 0 ? ' <span title="Prediction bonus" style="font-size:11px;color:var(--gold)">+5🎯</span>' : ''}${player.trend > 0 ? ` <span class="trend up" title="Up ${player.trend}">▲${player.trend}</span>` : player.trend < 0 ? ` <span class="trend down" title="Down ${Math.abs(player.trend)}">▼${Math.abs(player.trend)}</span>` : completedRaces.length >= 2 ? ' <span class="trend same">—</span>' : ''}</div></td>
+        <td><div class="lb-name">${esc(player.name)}${player.predictionBonus > 0 ? ' <span title="Prediction bonus" style="font-size:11px;color:var(--gold)">+5🎯</span>' : ''}${player.trend > 0 ? ` <span class="trend up" title="Up ${player.trend}">▲${player.trend}</span>` : player.trend < 0 ? ` <span class="trend down" title="Down ${Math.abs(player.trend)}">▼${Math.abs(player.trend)}</span>` : completedRaces.length >= 2 ? ' <span class="trend same">—</span>' : ''}</div></td>
         <td><div class="race-pts-row">${raceChips}</div></td>
         <td>${gapHtml}</td>
         <td><div class="lb-total ${rank===1?'leader':''}">${player.total}</div></td>
@@ -3068,7 +3075,7 @@ function renderLeaderboard() {
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
       <div class="card" style="flex:1;min-width:200px;padding:16px 24px;">
         <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;">
-          ${playerData[0]?.name || '—'}<span style="color:var(--gold);margin-left:8px;">🏆</span>
+          ${esc(playerData[0]?.name || '—')}<span style="color:var(--gold);margin-left:8px;">🏆</span>
         </div>
         <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);margin-top:4px;">CURRENT LEADER · ${leaderTotal} PTS</div>
       </div>
@@ -3290,7 +3297,7 @@ function driverPickedBy(short) {
   const pickedByNames = [...new Set(history.map(h => h.player?.name).filter(Boolean))];
   const chips = history.slice(-5).map(h => {
     const col = h.pts === null ? 'var(--muted)' : h.pts >= 6 ? 'var(--green)' : h.pts > 0 ? 'var(--gold)' : 'var(--muted)';
-    return `<span title="R${h.raceNum} ${h.race.name}: ${h.player?.name} · ${h.pts ?? '?'}pts" style="display:inline-block;width:18px;height:18px;border-radius:3px;background:${col}22;color:${col};font-size:9px;text-align:center;line-height:18px;font-family:Share Tech Mono,monospace">${h.pts ?? '?'}</span>`;
+    return `<span title="R${h.raceNum} ${h.race.name}: ${esc(h.player?.name)} · ${h.pts ?? '?'}pts" style="display:inline-block;width:18px;height:18px;border-radius:3px;background:${col}22;color:${col};font-size:9px;text-align:center;line-height:18px;font-family:Share Tech Mono,monospace">${h.pts ?? '?'}</span>`;
   }).join('');
   return `
     <div style="margin-top:8px;padding:6px 8px;background:var(--panel2);border:1px solid var(--border);border-radius:6px">
@@ -3298,7 +3305,7 @@ function driverPickedBy(short) {
         <span style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:1px">PICKED ${totalPicks}x · ${totalPts} PTS</span>
       </div>
       <div style="display:flex;gap:3px;align-items:center">${chips}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px">By: ${pickedByNames.join(', ')}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">By: ${esc(pickedByNames.join(', '))}</div>
     </div>`;
 }
 
@@ -3416,7 +3423,7 @@ function renderAdminDashboard() {
     return `
       <div class="draft-review-item" style="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:10px 0">
         <div class="dri-slot" style="flex-shrink:0">P${i+1}</div>
-        <div class="dri-player" style="flex-shrink:0;min-width:80px">${player?.name || '?'}</div>
+        <div class="dri-player" style="flex-shrink:0;min-width:80px">${esc(player?.name || '?')}</div>
         ${hasPick
           ? `<div class="dri-driver" style="flex:1">
                <span class="driver-tag" style="color:${driver?.teamColor};border-color:${driver?.teamColor}44;background:${driver?.teamColor}11">
@@ -3447,7 +3454,7 @@ function renderAdminDashboard() {
 
   // Log entries
   const logHtml = (STATE.activityLog || []).map(e =>
-    `<div class="log-entry"><div class="log-time">${e.time}</div><div class="log-msg ${e.type}">${e.msg}</div></div>`
+    `<div class="log-entry"><div class="log-time">${e.time}</div><div class="log-msg ${e.type}">${esc(e.msg)}</div></div>`
   ).join('') || '<p style="color:var(--muted);font-size:13px;padding:8px 0">No activity yet</p>';
 
   // All picks summary across all races
@@ -3458,7 +3465,7 @@ function renderAdminDashboard() {
         const short = rPicks[player.id];
         const driver = DRIVERS.find(d => d.short === short);
         return `<tr>
-          <td style="padding:6px 10px;font-weight:600">${player.name}</td>
+          <td style="padding:6px 10px;font-weight:600">${esc(player.name)}</td>
           <td style="padding:6px 10px">
             ${short ? `<span class="driver-tag" style="color:${driver?.teamColor};border-color:${driver?.teamColor}44;background:${driver?.teamColor}11">${short}</span>` : '<span style="color:var(--muted)">—</span>'}
           </td>
@@ -3500,7 +3507,7 @@ function renderAdminDashboard() {
           const totalPts = pd.reduce((s,p)=>s+p.total,0);
           return leader ? `
             <div style="text-align:center">
-              <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--gold)">${leader.name}</div>
+              <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--gold)">${esc(leader.name)}</div>
               <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">LEADING · ${leader.total}pts</div>
             </div>
             <div style="text-align:center">
@@ -3615,7 +3622,7 @@ function renderAdminDashboard() {
                     font-weight:600;cursor:pointer;transition:all 0.15s;"
                     onmouseover="this.style.borderColor='#ffa500';this.style.color='#ffa500'"
                     onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
-                    ✏ ${player.name}
+                    ✏ ${esc(player.name)}
                   </button>
                 `).join('')}
               </div>
@@ -3660,7 +3667,7 @@ function renderAdminDashboard() {
         <div style="margin-bottom:12px;">
           ${STATE.players.map(p => `
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-              <span style="font-weight:600">${p.name}</span>
+              <span style="font-weight:600">${esc(p.name)}</span>
               <div style="display:flex;gap:6px;align-items:center">
                 <span style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted)">
                   ${calcPlayerPoints(p.id).total} pts
@@ -3886,7 +3893,7 @@ function renderPickCard(raceId) {
           background:${row.pts>0?'rgba(255,255,255,0.02)':'transparent'};opacity:${row.pts===0?'0.5':'1'}">
           <span style="font-size:12px;color:${rankClr(idx)};font-weight:700;width:20px;text-align:right;font-family:Share Tech Mono,monospace">${upcoming?'':idx+1}</span>
           <div style="width:4px;height:28px;border-radius:2px;background:${tc};flex-shrink:0"></div>
-          <span style="font-size:18px;font-weight:700;color:#e8e8e8;flex:1">${row.name}</span>
+          <span style="font-size:18px;font-weight:700;color:#e8e8e8;flex:1">${esc(row.name)}</span>
           <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:700;letter-spacing:1px;
             padding:3px 8px;border-radius:4px;background:#1a1a1a;border:1px solid #2a2a2a;color:${tc};text-align:center;min-width:70px">
             <span style="font-size:11px;opacity:0.65">${row.driver}</span><br>${surname}
@@ -4136,7 +4143,7 @@ function adminAmendPickOpen(playerId, raceId) {
             ✏ AMEND PICK
           </div>
           <div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);margin-top:3px">
-            ${player.name} · ${race.name} GP
+            ${esc(player.name)} · ${race.name} GP
           </div>
         </div>
         <button onclick="document.getElementById('admin-amend-modal').remove()"
@@ -4610,7 +4617,7 @@ function renderFormGuide(el) {
     return `
       <div class="form-row">
         <div class="form-rank" style="color:${rankColor}">${i+1}</div>
-        <div class="form-name">${p.name}</div>
+        <div class="form-name">${esc(p.name)}</div>
         <div class="form-bars" style="align-items:flex-end;height:44px;border-bottom:1px solid var(--border);">${bars || '<span style="color:var(--muted);font-size:12px">No data</span>'}</div>
         <div class="form-recent">${dots}</div>
         <div style="text-align:right">
@@ -4638,11 +4645,11 @@ function renderH2H(el) {
     <div class="section-head">HEAD-TO-HEAD COMPARISON</div>
     <div class="h2h-select-row">
       <select class="h2h-select" id="h2h-a" onchange="updateH2H()">
-        ${players.map(p => `<option value="${p.id}" ${p.id===pA?'selected':''}>${p.name}</option>`).join('')}
+        ${players.map(p => `<option value="${p.id}" ${p.id===pA?'selected':''}>${esc(p.name)}</option>`).join('')}
       </select>
       <div class="h2h-vs">VS</div>
       <select class="h2h-select" id="h2h-b" onchange="updateH2H()">
-        ${players.map(p => `<option value="${p.id}" ${p.id===pB?'selected':''}>${p.name}</option>`).join('')}
+        ${players.map(p => `<option value="${p.id}" ${p.id===pB?'selected':''}>${esc(p.name)}</option>`).join('')}
       </select>
     </div>
     <div id="h2h-results"></div>`;
@@ -4705,7 +4712,7 @@ function updateH2H() {
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <div style="text-align:center;flex:1">
           <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:var(--red)">${totalA}</div>
-          <div style="font-size:12px;color:var(--muted)">${pA?.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${esc(pA?.name)}</div>
           <div style="font-family:Orbitron,sans-serif;font-size:14px;margin-top:4px">${winsA} <span style="font-size:12px;color:var(--muted)">WINS</span></div>
         </div>
         <div style="text-align:center;padding:0 16px">
@@ -4714,7 +4721,7 @@ function updateH2H() {
         </div>
         <div style="text-align:center;flex:1">
           <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:var(--accent)">${totalB}</div>
-          <div style="font-size:12px;color:var(--muted)">${pB?.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${esc(pB?.name)}</div>
           <div style="font-family:Orbitron,sans-serif;font-size:14px;margin-top:4px">${winsB} <span style="font-size:12px;color:var(--muted)">WINS</span></div>
         </div>
       </div>
@@ -4726,9 +4733,9 @@ function updateH2H() {
     </div>
     <div class="card" style="padding:0;overflow:hidden;margin-top:12px">
       <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;gap:8px">
-        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--red);text-align:right">${pA?.name}</div>
+        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--red);text-align:right">${esc(pA?.name)}</div>
         <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--muted);text-align:center">RACE</div>
-        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--accent)">${pB?.name}</div>
+        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--accent)">${esc(pB?.name)}</div>
       </div>
       ${rows}
     </div>`;
@@ -4940,7 +4947,7 @@ function renderStreaks(el) {
       <div class="streak-card" style="margin-bottom:8px">
         <div class="streak-fire">${fire}</div>
         <div style="flex:1">
-          <div style="font-weight:700;font-size:16px">${p.name}</div>
+          <div style="font-weight:700;font-size:16px">${esc(p.name)}</div>
           <div style="font-size:12px;color:var(--muted);margin-top:2px">Hit rate: ${hitRate}% · Best: ${p.maxStreak} race run</div>
         </div>
         <div style="text-align:right">
@@ -5010,7 +5017,7 @@ function renderPredictions(el) {
 
   // Show prediction entry form
   const playerOptions = STATE.players.map(p =>
-    `<option value="${p.id}">${p.name}</option>`
+    `<option value="${p.id}">${esc(p.name)}</option>`
   ).join('');
 
   const champOptions = DRIVERS.map(d =>
@@ -5027,7 +5034,7 @@ function renderPredictions(el) {
     const pred = myPreds[p.id];
     if (!pred) return `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="flex:1;font-weight:700">${p.name}</div>
+        <div style="flex:1;font-weight:700">${esc(p.name)}</div>
         <span style="font-size:12px;color:var(--muted);font-style:italic">No prediction yet</span>
       </div>`;
     const d = DRIVERS.find(dr => dr.short === pred.champion);
@@ -5036,7 +5043,7 @@ function renderPredictions(el) {
     return `
       <div style="padding:10px 0;border-bottom:1px solid var(--border)">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <div style="flex:1;font-weight:700">${p.name}</div>
+          <div style="flex:1;font-weight:700">${esc(p.name)}</div>
           ${correct ? '<span class="pred-bonus">+5 PTS</span>' : ''}
           ${actualChamp && !correct ? '<span style="font-size:12px;color:var(--muted)">✗</span>' : ''}
         </div>
@@ -5174,7 +5181,7 @@ function exportToPrint() {
   let rows = playerData.map((p,i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="font-weight:bold">${p.name}</td>
+      <td style="font-weight:bold">${esc(p.name)}</td>
       ${revealedRaces.map(r => `<td style="text-align:center">${p.racePoints[r.id] ?? '—'}</td>`).join('')}
       <td style="font-weight:bold;text-align:right">${p.total}</td>
     </tr>`).join('');
@@ -6248,7 +6255,7 @@ function showIdentityOverlay() {
     const isMe = p.id === SESSION_PLAYER_ID;
     return `<button class="identity-btn" onclick="setIdentity('${p.id}')"
       style="${isMe ? 'border-color:var(--red);color:var(--red)' : ''}">
-      ${isMe ? '✓ ' : ''}${p.name}
+      ${isMe ? '✓ ' : ''}${esc(p.name)}
     </button>`;
   }).join('');
 
@@ -6440,7 +6447,7 @@ async function loadAnalytics() {
     const top = Object.entries(d.pages).sort((a,b)=>b[1]-a[1])[0];
     const topLabel = PAGE_LABELS[top[0]] || top[0].toUpperCase();
     return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:6px 0;font-size:13px">${name}</td>
+      <td style="padding:6px 0;font-size:13px">${esc(name)}</td>
       <td style="padding:6px 8px;text-align:center;font-family:Share Tech Mono,monospace;font-size:13px;color:var(--accent)">${d.total}</td>
       <td style="padding:6px 0;font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted)">${topLabel} <span style="color:var(--text)">(${top[1]})</span></td>
     </tr>`;
@@ -6452,7 +6459,7 @@ async function loadAnalytics() {
     const timeStr = t.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' ' + t.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     return `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
       <span style="font-family:Share Tech Mono,monospace;color:var(--muted);font-size:10px;width:96px;flex-shrink:0">${timeStr}</span>
-      <span style="flex:1;color:var(--text)">${r.player_name || '<span style="color:var(--muted)">–</span>'}</span>
+      <span style="flex:1;color:var(--text)">${r.player_name ? esc(r.player_name) : '<span style="color:var(--muted)">–</span>'}</span>
       <span style="font-family:Share Tech Mono,monospace;color:var(--accent);font-size:11px">${PAGE_LABELS[r.page] || r.page}</span>
     </div>`;
   }).join('');
