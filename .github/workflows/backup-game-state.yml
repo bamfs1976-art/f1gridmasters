@@ -1,0 +1,53 @@
+# Nightly snapshot of the live Supabase game-state row.
+# Writes to the `backups` branch (created on first run) so main stays clean
+# and Netlify doesn't redeploy. Keeps the latest snapshot plus 30 dated ones.
+# Note: scheduled workflows only run once this file is on the default branch.
+name: Nightly game-state backup
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # 03:17 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch game state from Supabase
+        run: |
+          # The anon key is already public in the app source; read it from
+          # there so a key rotation only needs the one change in index.html.
+          URL=$(grep -o "SUPABASE_URL = '[^']*'" index.html | cut -d"'" -f2)
+          KEY=$(grep -o "SUPABASE_KEY = '[^']*'" index.html | cut -d"'" -f2)
+          curl -fsS "$URL/rest/v1/f1_game_state?id=eq.main&select=*" \
+            -H "apikey: $KEY" -o /tmp/state.raw.json
+          python3 -m json.tool /tmp/state.raw.json > /tmp/state.json
+          # Refuse to store an empty or row-less response — that's exactly
+          # the failure a backup exists to protect against.
+          python3 - <<'EOF'
+          import json
+          rows = json.load(open('/tmp/state.json'))
+          assert rows and rows[0].get('state', {}).get('players'), 'empty state — aborting backup'
+          EOF
+
+      - name: Commit to backups branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch backups 2>/dev/null || git switch -c backups
+          mkdir -p backups
+          DATE=$(date -u +%F)
+          cp /tmp/state.json backups/f1_game_state-latest.json
+          cp /tmp/state.json "backups/f1_game_state-$DATE.json"
+          # Keep only the 30 most recent dated snapshots
+          ls backups/f1_game_state-2*.json 2>/dev/null | head -n -30 | xargs -r git rm -q -f --ignore-unmatch
+          git add backups
+          git diff --cached --quiet || git commit -m "Game-state backup $DATE"
+          git push origin backups
