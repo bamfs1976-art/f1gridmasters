@@ -1921,11 +1921,24 @@ function getSupabase() {
   return _supabaseClient;
 }
 
+// Guards Supabase writes: server state must have been seen at least once
+// (successful load, confirmed-fresh game, or realtime update) before this
+// client may upsert. Prevents a failed load on a device with empty
+// localStorage from overwriting the live game with a blank default STATE.
+let _stateLoaded = false;
+
+function _canWriteToSupabase() {
+  if (_stateLoaded) return true;
+  showToast('⚠ Not synced with the server — reload the app before making changes', 'error');
+  return false;
+}
+
 let _saveTimer = null;
 function saveState() {
   try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
+    if (!_canWriteToSupabase()) return;
     const sb = getSupabase();
     if (!sb) return;
     try {
@@ -1941,9 +1954,13 @@ async function loadState() {
       const { data, error } = await sb.from('f1_game_state').select('state').eq('id','main').single();
       if (!error && data && data.state && Object.keys(data.state).length > 0) {
         STATE = data.state;
+        _stateLoaded = true;
         _normaliseState();
         return;
       }
+      // PGRST116 = no row exists yet: a genuinely fresh install, safe to
+      // allow writes so the first game can be bootstrapped.
+      if (error && error.code === 'PGRST116') _stateLoaded = true;
     } catch(e) { console.warn('Supabase load failed, using localStorage:', e); }
   }
   try {
@@ -1991,6 +2008,8 @@ function subscribeToRealtime() {
   sb.channel('f1_game_state_changes')
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'f1_game_state', filter: 'id=eq.main' }, (payload) => {
       if (!payload.new || !payload.new.state) return;
+      // A realtime payload IS current server state — safe to write from here on
+      _stateLoaded = true;
       // Skip realtime update if a local in-flight edit (e.g. editMyPrefs) is in progress
       if (_localEditLock) return;
       STATE = payload.new.state;
