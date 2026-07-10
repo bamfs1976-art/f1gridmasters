@@ -2004,7 +2004,9 @@ function _normaliseState() {
   if (!STATE.draftPrefs) STATE.draftPrefs = {};
   if (!STATE.draftSubmitted) STATE.draftSubmitted = {};
   if (!STATE.draftDeadlines) STATE.draftDeadlines = {}; // {raceId: ISO string}
-  if (!STATE.adminUndoStack) STATE.adminUndoStack = [];
+  // Undo snapshots now live in _adminUndoStack (this browser only); shed the
+  // legacy copies that used to bloat the synced row.
+  delete STATE.adminUndoStack;
   // Self-heal: if prefs exist but submitted flag is missing, backfill it —
   // BUT ONLY for races that are already fully resolved (all picks assigned).
   // Never auto-mark a player as submitted on the live/upcoming race, as that
@@ -3491,7 +3493,7 @@ function renderAdminDashboard() {
             </div>` : '';
         })()}
       </div>
-      ${STATE.adminUndoStack && STATE.adminUndoStack.length > 0 ? `<button class="btn btn-outline btn-sm" onclick="adminUndo()" style="border-color:rgba(0,200,255,0.3);color:var(--accent)">↩ UNDO (${STATE.adminUndoStack.length})</button>` : ''}
+      ${_adminUndoStack.length > 0 ? `<button class="btn btn-outline btn-sm" onclick="adminUndo()" style="border-color:rgba(0,200,255,0.3);color:var(--accent)">↩ UNDO (${_adminUndoStack.length})</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="adminLogout()">LOCK 🔒</button>
     </div>
 
@@ -4223,26 +4225,26 @@ function adminAmendPickClearPrefs(playerId, raceId) {
 }
 
 // ── ADMIN UNDO BUFFER ────────────────────────────────────────
+// Kept in this browser only, NOT in STATE: full state snapshots inside the
+// synced row multiplied its size ~4x and were rebroadcast to every player
+// on each save. Undo is only ever used from the admin's own session.
+let _adminUndoStack = [];
+
 function pushUndo(label) {
-  if (!STATE.adminUndoStack) STATE.adminUndoStack = [];
-  // Deep-clone state (excluding the undo stack itself to avoid recursion)
   const snapshot = JSON.parse(JSON.stringify(STATE));
-  delete snapshot.adminUndoStack;
-  STATE.adminUndoStack.push({ label, snapshot, time: new Date().toISOString() });
+  _adminUndoStack.push({ label, snapshot, time: new Date().toISOString() });
   // Keep max 3 undo entries
-  if (STATE.adminUndoStack.length > 3) STATE.adminUndoStack.shift();
+  if (_adminUndoStack.length > 3) _adminUndoStack.shift();
 }
 
 function adminUndo() {
-  if (!STATE.adminUndoStack || STATE.adminUndoStack.length === 0) {
+  if (_adminUndoStack.length === 0) {
     showToast('Nothing to undo', 'info');
     return;
   }
-  const entry = STATE.adminUndoStack.pop();
+  const entry = _adminUndoStack.pop();
   openModal('Undo Action', `Restore state from before: "${entry.label}" (${new Date(entry.time).toLocaleTimeString()})?`, () => {
-    const undoStack = STATE.adminUndoStack; // preserve remaining stack
     Object.assign(STATE, entry.snapshot);
-    STATE.adminUndoStack = undoStack;
     _normaliseState();
     saveState();
     addLog(`Undo: ${entry.label}`, 'warn');
