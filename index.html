@@ -4176,7 +4176,8 @@ function adminAmendPickOpen(playerId, raceId) {
           ${prefRows}
         </select>
         <p style="font-size:11px;color:var(--muted);margin-top:6px;">
-          Hold Ctrl/Cmd to select multiple. Order in the list = preference ranking.
+          Hold Ctrl/Cmd to select multiple. The player's existing ranking is kept;
+          newly selected drivers are appended at the end.
           Currently ${existingPrefs.length} driver${existingPrefs.length !== 1 ? 's' : ''} ranked.
         </p>
       </div>
@@ -4200,9 +4201,14 @@ function adminAmendPickOpen(playerId, raceId) {
 function adminAmendPickSave(playerId, raceId, picksResolved) {
   const player = STATE.players.find(p => p.id === playerId);
 
-  // Get selected preferences from the multi-select (order preserved by DOM)
+  // selectedOptions come back in DOM order, not click order — keep the
+  // player's existing ranking for drivers that stay selected and append
+  // newly added ones after, so amending never scrambles their order.
   const sel = document.getElementById('amend-prefs-select');
-  const newPrefs = sel ? Array.from(sel.selectedOptions).map(o => o.value) : [];
+  const selected = sel ? Array.from(sel.selectedOptions).map(o => o.value) : [];
+  const prevPrefs = (STATE.draftPrefs[raceId] || {})[playerId] || [];
+  const kept = prevPrefs.filter(s => selected.includes(s));
+  const newPrefs = [...kept, ...selected.filter(s => !kept.includes(s))];
 
   if (!STATE.draftPrefs[raceId]) STATE.draftPrefs[raceId] = {};
   STATE.draftPrefs[raceId][playerId] = newPrefs;
