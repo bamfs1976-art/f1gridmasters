@@ -1373,7 +1373,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <!-- OFFLINE BANNER -->
 <div class="offline-banner hidden" id="offline-banner">
   <span style="font-size:14px">⚠</span>
-  <span>OFFLINE MODE — changes saved locally, will sync when reconnected</span>
+  <span>OFFLINE — reconnecting… changes made now may not reach other players; reload once you're back online</span>
 </div>
 
 <!-- PLAYER PROFILE MODAL -->
@@ -1504,7 +1504,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <!-- ===================== SCHEDULE PAGE ===================== -->
 <div class="page" id="page-schedule">
   <div class="z1 animate-in">
-    <div class="section-head">2026 F1 CALENDAR · 24 ROUNDS</div>
+    <div class="section-head">2026 F1 CALENDAR · 22 ROUNDS</div>
     <div class="schedule-list" id="schedule-list"></div>
   </div>
 </div>
@@ -1855,6 +1855,13 @@ DRIVERS[4].num = 33; // VER uses 1 (champion) or 33
 
 const POINTS_MAP = {1:10, 2:9, 3:8, 4:7, 5:6, 6:5, 7:4, 8:3, 9:2, 10:1};
 
+// Escape user-supplied strings (player names) before innerHTML interpolation.
+// State is writable via the shared Supabase row, so names cannot be trusted.
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
 // Official F1 driver headshot images from formula1.com CDN
 const DRIVER_IMAGES = {
   'ALB': 'https://media.formula1.com/image/upload/f_auto,c_limit,q_auto,w_1320/content/dam/fom-website/drivers/A/ALEALB01_Alexander_Albon/alealb01.png',
@@ -1921,17 +1928,103 @@ function getSupabase() {
   return _supabaseClient;
 }
 
+// Guards Supabase writes: server state must have been seen at least once
+// (successful load, confirmed-fresh game, or realtime update) before this
+// client may upsert. Prevents a failed load on a device with empty
+// localStorage from overwriting the live game with a blank default STATE.
+let _stateLoaded = false;
+
+function _canWriteToSupabase() {
+  if (_stateLoaded) return true;
+  showToast('⚠ Not synced with the server — reload the app before making changes', 'error');
+  return false;
+}
+
+// ── MERGE-ON-WRITE ───────────────────────────────────────────
+// The whole STATE is one last-write-wins row, so two players saving within
+// the same window used to erase each other's submissions. Before upserting,
+// pull the current row and fold in entries other clients added to the
+// player-keyed maps (local values always win). Intentional deletions are
+// remembered briefly so the merge doesn't resurrect them, and wholesale
+// overwrites (reset, restore, undo) skip the merge via _skipMergeOnce.
+const _recentDeletes = new Set(); // 'field:raceId:playerId'
+function _noteDelete(field, raceId, pid) {
+  const key = field + ':' + raceId + ':' + pid;
+  _recentDeletes.add(key);
+  setTimeout(() => _recentDeletes.delete(key), 60000);
+}
+let _skipMergeOnce = false;
+
+async function _mergeRemoteState(sb) {
+  try {
+    const { data, error } = await sb.from('f1_game_state').select('state').eq('id','main').single();
+    if (error || !data || !data.state) return;
+    const remote = data.state;
+    ['draftPrefs', 'draftSubmitted', 'draftPicks'].forEach(field => {
+      const rem = remote[field];
+      if (!rem) return;
+      if (!STATE[field]) STATE[field] = {};
+      Object.keys(rem).forEach(raceId => {
+        if (!STATE[field][raceId]) STATE[field][raceId] = {};
+        Object.keys(rem[raceId]).forEach(pid => {
+          if (pid in STATE[field][raceId]) return; // local change wins
+          if (_recentDeletes.has(field + ':' + raceId + ':' + pid)) return; // deleted here on purpose
+          STATE[field][raceId][pid] = rem[raceId][pid];
+        });
+      });
+    });
+    if (remote.predictions) {
+      if (!STATE.predictions) STATE.predictions = {};
+      Object.keys(remote.predictions).forEach(pid => {
+        if (!(pid in STATE.predictions)) STATE.predictions[pid] = remote.predictions[pid];
+      });
+    }
+  } catch(e) { /* merge is best-effort; fall back to plain last-write-wins */ }
+}
+
 let _saveTimer = null;
 function saveState() {
   try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
+    if (!_canWriteToSupabase()) return;
     const sb = getSupabase();
     if (!sb) return;
     try {
+      if (_skipMergeOnce) _skipMergeOnce = false;
+      else await _mergeRemoteState(sb);
       await sb.from('f1_game_state').upsert({ id: 'main', state: STATE, updated_at: new Date().toISOString() });
     } catch(e) { console.warn('Supabase save failed:', e); }
   }, 400);
+}
+
+// Immediate save with retries for critical actions (submitting picks, saving
+// results, admin amendments). Ported from v2.0-upgrade, with the upsert
+// response error actually checked — supabase-js reports API failures via the
+// returned error, it does not throw. Returns true only on a confirmed write.
+async function saveStateCritical() {
+  try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
+  clearTimeout(_saveTimer); // supersede any pending debounced save
+  if (!_canWriteToSupabase()) return false;
+  const sb = getSupabase();
+  if (!sb) return false;
+  if (_skipMergeOnce) _skipMergeOnce = false;
+  else await _mergeRemoteState(sb);
+  let lastErr = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const { error } = await sb.from('f1_game_state').upsert({ id: 'main', state: STATE, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      return true;
+    } catch(e) {
+      lastErr = e;
+      console.warn(`Supabase saveStateCritical attempt ${attempt} failed:`, e);
+      if (attempt < 3) await new Promise(r => setTimeout(r, attempt * 1000));
+    }
+  }
+  console.error('Supabase saveStateCritical failed after 3 attempts:', lastErr);
+  showToast('⚠ Save failed — check your connection and re-submit', 'error');
+  return false;
 }
 
 async function loadState() {
@@ -1941,9 +2034,13 @@ async function loadState() {
       const { data, error } = await sb.from('f1_game_state').select('state').eq('id','main').single();
       if (!error && data && data.state && Object.keys(data.state).length > 0) {
         STATE = data.state;
+        _stateLoaded = true;
         _normaliseState();
         return;
       }
+      // PGRST116 = no row exists yet: a genuinely fresh install, safe to
+      // allow writes so the first game can be bootstrapped.
+      if (error && error.code === 'PGRST116') _stateLoaded = true;
     } catch(e) { console.warn('Supabase load failed, using localStorage:', e); }
   }
   try {
@@ -1960,7 +2057,9 @@ function _normaliseState() {
   if (!STATE.draftPrefs) STATE.draftPrefs = {};
   if (!STATE.draftSubmitted) STATE.draftSubmitted = {};
   if (!STATE.draftDeadlines) STATE.draftDeadlines = {}; // {raceId: ISO string}
-  if (!STATE.adminUndoStack) STATE.adminUndoStack = [];
+  // Undo snapshots now live in _adminUndoStack (this browser only); shed the
+  // legacy copies that used to bloat the synced row.
+  delete STATE.adminUndoStack;
   // Self-heal: if prefs exist but submitted flag is missing, backfill it —
   // BUT ONLY for races that are already fully resolved (all picks assigned).
   // Never auto-mark a player as submitted on the live/upcoming race, as that
@@ -1991,6 +2090,8 @@ function subscribeToRealtime() {
   sb.channel('f1_game_state_changes')
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'f1_game_state', filter: 'id=eq.main' }, (payload) => {
       if (!payload.new || !payload.new.state) return;
+      // A realtime payload IS current server state — safe to write from here on
+      _stateLoaded = true;
       // Skip realtime update if a local in-flight edit (e.g. editMyPrefs) is in progress
       if (_localEditLock) return;
       STATE = payload.new.state;
@@ -2110,7 +2211,7 @@ function renderPlayerList() {
     <div class="player-list-item">
       <div class="player-name-display">
         <div class="player-num-badge">${i+1}</div>
-        ${p.name}
+        ${esc(p.name)}
       </div>
       ${!STATE.started ? `<button class="remove-btn" onclick="removePlayer('${p.id}')">✕</button>` : ''}
     </div>
@@ -2197,7 +2298,7 @@ function resolveDraft(raceId, draftOrder) {
 
   if (!STATE.draftPicks[raceId]) STATE.draftPicks[raceId] = {};
   Object.assign(STATE.draftPicks[raceId], resolved);
-  saveState();
+  saveStateCritical();
   return resolved;
 }
 
@@ -2213,11 +2314,11 @@ function submitMyPrefs(raceId, rankedShorts) {
   if (!STATE.draftSubmitted[raceId]) STATE.draftSubmitted[raceId] = {};
   STATE.draftSubmitted[raceId][SESSION_PLAYER_ID] = true;
   // Lock out realtime updates during save so another browser cannot
-  // overwrite the submitted flag before it reaches Supabase
+  // overwrite the submitted flag before it reaches Supabase; the lock
+  // holds until the retrying save has actually finished.
   _localEditLock = true;
-  saveState();
+  saveStateCritical().finally(() => { _localEditLock = false; });
   updateRaceStatusBanner();
-  setTimeout(() => { _localEditLock = false; }, 700);
 
   const submittedCount = Object.keys(STATE.draftPrefs[raceId]).length;
   const totalPlayers = STATE.players.length;
@@ -2352,7 +2453,7 @@ function renderDraft() {
       const takenByMe = isMyPick;
       if (resolvedTaken) {
         cardClass += ' taken';
-        const showName = picksRevealed ? (takenByPlayer?.name?.split(' ')[0]?.toUpperCase() || 'TAKEN') : (takenByMe ? 'YOUR PICK' : 'TAKEN');
+        const showName = picksRevealed ? esc(takenByPlayer?.name?.split(' ')[0]?.toUpperCase() || 'TAKEN') : (takenByMe ? 'YOUR PICK' : 'TAKEN');
         label = `<div class="taken-label" style="${takenByMe ? 'background:var(--green);color:#000' : ''}">${showName}</div>`;
       }
     } else if (!iHaveSubmitted) {
@@ -2403,7 +2504,7 @@ function renderDraft() {
     return `
       <div class="pick-order-item ${hasSubmitted && !picksResolved ? 'done' : ''} ${picksResolved && resolvedDriver ? 'done' : ''}">
         <div class="poi-slot">P${i+1}</div>
-        <div class="poi-name">${player ? player.name : '?'}${isMe ? ' <span style="font-size:11px;color:var(--green)">YOU</span>' : ''}</div>
+        <div class="poi-name">${player ? esc(player.name) : '?'}${isMe ? ' <span style="font-size:11px;color:var(--green)">YOU</span>' : ''}</div>
         <div class="poi-pick">${
           showResolved ? (resolvedDriver?.short || '?') :
           picksResolved ? '🔒' :
@@ -2421,7 +2522,7 @@ function renderDraft() {
       const p = STATE.players.find(pl => pl.id === pid);
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
         <div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:${i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)'};width:36px;flex-shrink:0">P${i+1}</div>
-        <div style="font-size:14px;font-weight:600">${p ? p.name : '?'}</div>
+        <div style="font-size:14px;font-weight:600">${p ? esc(p.name) : '?'}</div>
       </div>`;
     }).join('');
     myPickPanel = `
@@ -2547,7 +2648,7 @@ function renderDraft() {
             : '<span style="color:var(--muted);font-size:11px">AUTO</span>';
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
             <div>
-              <span style="font-weight:600;font-size:13px">${player?.name}</span>
+              <span style="font-weight:600;font-size:13px">${esc(player?.name)}</span>
               <span style="margin-left:8px">${choiceLabel}</span>
             </div>
             <span style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--accent)">${driver?.short} · ${driver?.team}</span>
@@ -2706,6 +2807,7 @@ function editMyPrefs() {
   if (!STATE.draftSubmitted) STATE.draftSubmitted = {};
   if (STATE.draftSubmitted[raceId]) {
     delete STATE.draftSubmitted[raceId][SESSION_PLAYER_ID];
+    _noteDelete('draftSubmitted', raceId, SESSION_PLAYER_ID);
   }
   // Set a local edit lock so the realtime handler does not overwrite
   // our cleared flag before the save completes
@@ -2816,14 +2918,14 @@ function renderResultEntry(raceId) {
     if (!raceRevealed) {
       return `
         <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px">
-          <div style="font-weight:700;font-size:14px;flex:1">${player.name}</div>
+          <div style="font-weight:700;font-size:14px;flex:1">${esc(player.name)}</div>
           <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">🔒 SEALED</span>
         </div>
       `;
     }
     return `
       <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px">
-        <div style="font-weight:700;font-size:14px;flex:1">${player.name}</div>
+        <div style="font-weight:700;font-size:14px;flex:1">${esc(player.name)}</div>
         <div style="display:flex;align-items:center;gap:6px">
           <div style="width:3px;height:20px;border-radius:2px;background:${driver?.teamColor}"></div>
           <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--accent)">${driver?.short}</span>
@@ -2836,8 +2938,8 @@ function renderResultEntry(raceId) {
     `;
   }).join('');
 
-  area.innerHTML = `
-    <div class="grid-2">
+  // Entering or clearing a result changes everyone's points — admin only.
+  const entryCard = adminUnlocked ? `
       <div class="card card-accent">
         <div class="section-head">${race.flag} ${race.name} — FINISHING ORDER (P1–P10)</div>
         <div class="finishing-grid">${finishSlots}</div>
@@ -2846,7 +2948,21 @@ function renderResultEntry(raceId) {
           <button class="btn btn-outline btn-sm" onclick="clearResult('${raceId}')">CLEAR</button>
         </div>
         <p style="font-size:12px;color:var(--muted);margin-top:10px;">Enter only the top 10 from the <strong style="color:var(--text)">main race</strong>. Sprint race results do not count. Drivers outside P10 score 0 pts.</p>
-      </div>
+      </div>` : `
+      <div class="card">
+        <div class="section-head">${race.flag} ${race.name} — RESULT</div>
+        ${Object.keys(existingResult).length > 0
+          ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${Object.entries(existingResult).sort((a,b)=>a[0]-b[0]).map(([pos,short]) => {
+              const d = DRIVERS.find(dr => dr.short === short);
+              return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:4px;background:var(--panel2);border:1px solid var(--border);font-family:Share Tech Mono,monospace;font-size:12px"><span style="color:${pos<=3?'var(--gold)':'var(--muted)'};font-weight:700">P${pos}</span><span style="color:${d?.teamColor||'var(--text)'};font-weight:700">${short}</span></span>`;
+            }).join('')}</div>`
+          : '<p style="color:var(--muted);font-size:13px">No result yet.</p>'}
+        <p style="font-size:12px;color:var(--muted);margin-top:12px;">🔐 Results are entered by the admin after each race.</p>
+      </div>`;
+
+  area.innerHTML = `
+    <div class="grid-2">
+      ${entryCard}
       <div class="card">
         <div class="section-head">PLAYER PICKS · POINTS</div>
         ${picksDisplay || '<p style="color:var(--muted);font-size:13px">No picks for this race</p>'}
@@ -2867,11 +2983,12 @@ function saveResult(raceId) {
     }
   }
   if (Object.keys(result).length === 0) return showToast('Enter at least P1 before saving', 'error');
+  pushUndo(`Save result ${raceId}`);
   STATE.raceResults[raceId] = result;
   // Auto-reveal picks when a result is saved — picks are always revealed once race is done
   if (!STATE.draftRevealed) STATE.draftRevealed = {};
   STATE.draftRevealed[raceId] = true;
-  saveState();
+  saveStateCritical();
   // In-page confirmation banner
   const raceSaved = RACES.find(r => r.id === raceId);
   const p1Driver = DRIVERS.find(d => d.short === result[1]);
@@ -2894,8 +3011,9 @@ function saveResult(raceId) {
 
 function clearResult(raceId) {
   openModal('Clear Result', 'Clear the result for this race? This will reset points.', () => {
+    pushUndo(`Clear result ${raceId}`);
     delete STATE.raceResults[raceId];
-    saveState();
+    saveStateCritical();
     renderResults();
     showToast('Result cleared', 'info');
   });
@@ -2991,9 +3109,9 @@ function renderLeaderboard() {
       gapHtml = `<div class="lb-gap-bar-wrap"><div class="lb-gap-track"><div class="lb-gap-fill" style="width:${pct}%"></div></div><div class="lb-gap-num">-${gap}</div></div>`;
     }
     return `
-      <tr style="cursor:pointer" onclick="openPlayerProfile('${player.id}')" title="View ${player.name}'s race history">
+      <tr style="cursor:pointer" onclick="openPlayerProfile('${player.id}')" title="View ${esc(player.name)}'s race history">
         <td><div class="lb-rank ${rankClass}">${rank}</div></td>
-        <td><div class="lb-name">${player.name}${player.predictionBonus > 0 ? ' <span title="Prediction bonus" style="font-size:11px;color:var(--gold)">+5🎯</span>' : ''}${player.trend > 0 ? ` <span class="trend up" title="Up ${player.trend}">▲${player.trend}</span>` : player.trend < 0 ? ` <span class="trend down" title="Down ${Math.abs(player.trend)}">▼${Math.abs(player.trend)}</span>` : completedRaces.length >= 2 ? ' <span class="trend same">—</span>' : ''}</div></td>
+        <td><div class="lb-name">${esc(player.name)}${player.predictionBonus > 0 ? ' <span title="Prediction bonus" style="font-size:11px;color:var(--gold)">+5🎯</span>' : ''}${player.trend > 0 ? ` <span class="trend up" title="Up ${player.trend}">▲${player.trend}</span>` : player.trend < 0 ? ` <span class="trend down" title="Down ${Math.abs(player.trend)}">▼${Math.abs(player.trend)}</span>` : completedRaces.length >= 2 ? ' <span class="trend same">—</span>' : ''}</div></td>
         <td><div class="race-pts-row">${raceChips}</div></td>
         <td>${gapHtml}</td>
         <td><div class="lb-total ${rank===1?'leader':''}">${player.total}</div></td>
@@ -3004,7 +3122,7 @@ function renderLeaderboard() {
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
       <div class="card" style="flex:1;min-width:200px;padding:16px 24px;">
         <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;">
-          ${playerData[0]?.name || '—'}<span style="color:var(--gold);margin-left:8px;">🏆</span>
+          ${esc(playerData[0]?.name || '—')}<span style="color:var(--gold);margin-left:8px;">🏆</span>
         </div>
         <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);margin-top:4px;">CURRENT LEADER · ${leaderTotal} PTS</div>
       </div>
@@ -3226,7 +3344,7 @@ function driverPickedBy(short) {
   const pickedByNames = [...new Set(history.map(h => h.player?.name).filter(Boolean))];
   const chips = history.slice(-5).map(h => {
     const col = h.pts === null ? 'var(--muted)' : h.pts >= 6 ? 'var(--green)' : h.pts > 0 ? 'var(--gold)' : 'var(--muted)';
-    return `<span title="R${h.raceNum} ${h.race.name}: ${h.player?.name} · ${h.pts ?? '?'}pts" style="display:inline-block;width:18px;height:18px;border-radius:3px;background:${col}22;color:${col};font-size:9px;text-align:center;line-height:18px;font-family:Share Tech Mono,monospace">${h.pts ?? '?'}</span>`;
+    return `<span title="R${h.raceNum} ${h.race.name}: ${esc(h.player?.name)} · ${h.pts ?? '?'}pts" style="display:inline-block;width:18px;height:18px;border-radius:3px;background:${col}22;color:${col};font-size:9px;text-align:center;line-height:18px;font-family:Share Tech Mono,monospace">${h.pts ?? '?'}</span>`;
   }).join('');
   return `
     <div style="margin-top:8px;padding:6px 8px;background:var(--panel2);border:1px solid var(--border);border-radius:6px">
@@ -3234,7 +3352,7 @@ function driverPickedBy(short) {
         <span style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:1px">PICKED ${totalPicks}x · ${totalPts} PTS</span>
       </div>
       <div style="display:flex;gap:3px;align-items:center">${chips}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px">By: ${pickedByNames.join(', ')}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">By: ${esc(pickedByNames.join(', '))}</div>
     </div>`;
 }
 
@@ -3352,7 +3470,7 @@ function renderAdminDashboard() {
     return `
       <div class="draft-review-item" style="flex-wrap:wrap;gap:6px;align-items:flex-start;padding:10px 0">
         <div class="dri-slot" style="flex-shrink:0">P${i+1}</div>
-        <div class="dri-player" style="flex-shrink:0;min-width:80px">${player?.name || '?'}</div>
+        <div class="dri-player" style="flex-shrink:0;min-width:80px">${esc(player?.name || '?')}</div>
         ${hasPick
           ? `<div class="dri-driver" style="flex:1">
                <span class="driver-tag" style="color:${driver?.teamColor};border-color:${driver?.teamColor}44;background:${driver?.teamColor}11">
@@ -3383,7 +3501,7 @@ function renderAdminDashboard() {
 
   // Log entries
   const logHtml = (STATE.activityLog || []).map(e =>
-    `<div class="log-entry"><div class="log-time">${e.time}</div><div class="log-msg ${e.type}">${e.msg}</div></div>`
+    `<div class="log-entry"><div class="log-time">${e.time}</div><div class="log-msg ${e.type}">${esc(e.msg)}</div></div>`
   ).join('') || '<p style="color:var(--muted);font-size:13px;padding:8px 0">No activity yet</p>';
 
   // All picks summary across all races
@@ -3394,7 +3512,7 @@ function renderAdminDashboard() {
         const short = rPicks[player.id];
         const driver = DRIVERS.find(d => d.short === short);
         return `<tr>
-          <td style="padding:6px 10px;font-weight:600">${player.name}</td>
+          <td style="padding:6px 10px;font-weight:600">${esc(player.name)}</td>
           <td style="padding:6px 10px">
             ${short ? `<span class="driver-tag" style="color:${driver?.teamColor};border-color:${driver?.teamColor}44;background:${driver?.teamColor}11">${short}</span>` : '<span style="color:var(--muted)">—</span>'}
           </td>
@@ -3436,7 +3554,7 @@ function renderAdminDashboard() {
           const totalPts = pd.reduce((s,p)=>s+p.total,0);
           return leader ? `
             <div style="text-align:center">
-              <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--gold)">${leader.name}</div>
+              <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--gold)">${esc(leader.name)}</div>
               <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">LEADING · ${leader.total}pts</div>
             </div>
             <div style="text-align:center">
@@ -3445,7 +3563,7 @@ function renderAdminDashboard() {
             </div>` : '';
         })()}
       </div>
-      ${STATE.adminUndoStack && STATE.adminUndoStack.length > 0 ? `<button class="btn btn-outline btn-sm" onclick="adminUndo()" style="border-color:rgba(0,200,255,0.3);color:var(--accent)">↩ UNDO (${STATE.adminUndoStack.length})</button>` : ''}
+      ${_adminUndoStack.length > 0 ? `<button class="btn btn-outline btn-sm" onclick="adminUndo()" style="border-color:rgba(0,200,255,0.3);color:var(--accent)">↩ UNDO (${_adminUndoStack.length})</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="adminLogout()">LOCK 🔒</button>
     </div>
 
@@ -3551,7 +3669,7 @@ function renderAdminDashboard() {
                     font-weight:600;cursor:pointer;transition:all 0.15s;"
                     onmouseover="this.style.borderColor='#ffa500';this.style.color='#ffa500'"
                     onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
-                    ✏ ${player.name}
+                    ✏ ${esc(player.name)}
                   </button>
                 `).join('')}
               </div>
@@ -3596,7 +3714,7 @@ function renderAdminDashboard() {
         <div style="margin-bottom:12px;">
           ${STATE.players.map(p => `
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-              <span style="font-weight:600">${p.name}</span>
+              <span style="font-weight:600">${esc(p.name)}</span>
               <div style="display:flex;gap:6px;align-items:center">
                 <span style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted)">
                   ${calcPlayerPoints(p.id).total} pts
@@ -3822,7 +3940,7 @@ function renderPickCard(raceId) {
           background:${row.pts>0?'rgba(255,255,255,0.02)':'transparent'};opacity:${row.pts===0?'0.5':'1'}">
           <span style="font-size:12px;color:${rankClr(idx)};font-weight:700;width:20px;text-align:right;font-family:Share Tech Mono,monospace">${upcoming?'':idx+1}</span>
           <div style="width:4px;height:28px;border-radius:2px;background:${tc};flex-shrink:0"></div>
-          <span style="font-size:18px;font-weight:700;color:#e8e8e8;flex:1">${row.name}</span>
+          <span style="font-size:18px;font-weight:700;color:#e8e8e8;flex:1">${esc(row.name)}</span>
           <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:700;letter-spacing:1px;
             padding:3px 8px;border-radius:4px;background:#1a1a1a;border:1px solid #2a2a2a;color:${tc};text-align:center;min-width:70px">
             <span style="font-size:11px;opacity:0.65">${row.driver}</span><br>${surname}
@@ -3857,7 +3975,7 @@ function sharePickCardWhatsApp(raceId) {
   const TEAM_EMOJI = {
     'McLaren':'🟠', 'Ferrari':'🔴', 'Red Bull':'🔵', 'Mercedes':'⭐',
     'Williams':'💙', 'Aston Martin':'💚', 'Alpine':'🏔️',
-    'Haas':'⚪', 'Audi':'🔘', 'RB':'🟣', 'Racing Bulls':'🟣'
+    'Haas':'⚪', 'Audi':'🔘', 'Racing Bulls':'🟣', 'Cadillac':'🟥'
   };
 
   const raceResult = STATE.raceResults[raceId] || null;
@@ -4013,6 +4131,7 @@ function adminRemovePick(playerId, raceId) {
   openModal('Remove Pick', `Remove ${player?.name}'s pick of ${short}? They can re-pick.`, () => {
     pushUndo(`Remove ${player?.name}'s pick`);
     delete STATE.draftPicks[raceId][playerId];
+    _noteDelete('draftPicks', raceId, playerId);
     // Recalculate picks count — need to re-order correctly
     saveState();
     addLog(`Removed ${player?.name}'s pick (${short})`, 'warn');
@@ -4072,7 +4191,7 @@ function adminAmendPickOpen(playerId, raceId) {
             ✏ AMEND PICK
           </div>
           <div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);margin-top:3px">
-            ${player.name} · ${race.name} GP
+            ${esc(player.name)} · ${race.name} GP
           </div>
         </div>
         <button onclick="document.getElementById('admin-amend-modal').remove()"
@@ -4105,7 +4224,8 @@ function adminAmendPickOpen(playerId, raceId) {
           ${prefRows}
         </select>
         <p style="font-size:11px;color:var(--muted);margin-top:6px;">
-          Hold Ctrl/Cmd to select multiple. Order in the list = preference ranking.
+          Hold Ctrl/Cmd to select multiple. The player's existing ranking is kept;
+          newly selected drivers are appended at the end.
           Currently ${existingPrefs.length} driver${existingPrefs.length !== 1 ? 's' : ''} ranked.
         </p>
       </div>
@@ -4129,9 +4249,14 @@ function adminAmendPickOpen(playerId, raceId) {
 function adminAmendPickSave(playerId, raceId, picksResolved) {
   const player = STATE.players.find(p => p.id === playerId);
 
-  // Get selected preferences from the multi-select (order preserved by DOM)
+  // selectedOptions come back in DOM order, not click order — keep the
+  // player's existing ranking for drivers that stay selected and append
+  // newly added ones after, so amending never scrambles their order.
   const sel = document.getElementById('amend-prefs-select');
-  const newPrefs = sel ? Array.from(sel.selectedOptions).map(o => o.value) : [];
+  const selected = sel ? Array.from(sel.selectedOptions).map(o => o.value) : [];
+  const prevPrefs = (STATE.draftPrefs[raceId] || {})[playerId] || [];
+  const kept = prevPrefs.filter(s => selected.includes(s));
+  const newPrefs = [...kept, ...selected.filter(s => !kept.includes(s))];
 
   if (!STATE.draftPrefs[raceId]) STATE.draftPrefs[raceId] = {};
   STATE.draftPrefs[raceId][playerId] = newPrefs;
@@ -4142,6 +4267,7 @@ function adminAmendPickSave(playerId, raceId, picksResolved) {
     STATE.draftSubmitted[raceId][playerId] = true;
   } else {
     delete STATE.draftSubmitted[raceId][playerId];
+    _noteDelete('draftSubmitted', raceId, playerId);
   }
 
   // If draft already resolved, also update the resolved pick
@@ -4153,10 +4279,11 @@ function adminAmendPickSave(playerId, raceId, picksResolved) {
       STATE.draftPicks[raceId][playerId] = newDriver;
     } else {
       delete STATE.draftPicks[raceId][playerId];
+      _noteDelete('draftPicks', raceId, playerId);
     }
   }
 
-  saveState();
+  saveStateCritical();
   addLog(`Admin amended pick for ${player?.name} in ${raceId}`, 'warn');
   showToast(`Pick amended for ${player?.name}`, 'success');
   document.getElementById('admin-amend-modal').remove();
@@ -4167,8 +4294,8 @@ function adminAmendPickSave(playerId, raceId, picksResolved) {
 function adminAmendPickClearPrefs(playerId, raceId) {
   const player = STATE.players.find(p => p.id === playerId);
   if (!confirm(`Clear ALL preferences for ${player?.name}? They will need to re-submit.`)) return;
-  if (STATE.draftPrefs[raceId]) delete STATE.draftPrefs[raceId][playerId];
-  if (STATE.draftSubmitted[raceId]) delete STATE.draftSubmitted[raceId][playerId];
+  if (STATE.draftPrefs[raceId]) { delete STATE.draftPrefs[raceId][playerId]; _noteDelete('draftPrefs', raceId, playerId); }
+  if (STATE.draftSubmitted[raceId]) { delete STATE.draftSubmitted[raceId][playerId]; _noteDelete('draftSubmitted', raceId, playerId); }
   saveState();
   addLog(`Admin cleared prefs for ${player?.name} in ${raceId}`, 'warn');
   showToast(`Preferences cleared for ${player?.name}`, 'info');
@@ -4177,27 +4304,28 @@ function adminAmendPickClearPrefs(playerId, raceId) {
 }
 
 // ── ADMIN UNDO BUFFER ────────────────────────────────────────
+// Kept in this browser only, NOT in STATE: full state snapshots inside the
+// synced row multiplied its size ~4x and were rebroadcast to every player
+// on each save. Undo is only ever used from the admin's own session.
+let _adminUndoStack = [];
+
 function pushUndo(label) {
-  if (!STATE.adminUndoStack) STATE.adminUndoStack = [];
-  // Deep-clone state (excluding the undo stack itself to avoid recursion)
   const snapshot = JSON.parse(JSON.stringify(STATE));
-  delete snapshot.adminUndoStack;
-  STATE.adminUndoStack.push({ label, snapshot, time: new Date().toISOString() });
+  _adminUndoStack.push({ label, snapshot, time: new Date().toISOString() });
   // Keep max 3 undo entries
-  if (STATE.adminUndoStack.length > 3) STATE.adminUndoStack.shift();
+  if (_adminUndoStack.length > 3) _adminUndoStack.shift();
 }
 
 function adminUndo() {
-  if (!STATE.adminUndoStack || STATE.adminUndoStack.length === 0) {
+  if (_adminUndoStack.length === 0) {
     showToast('Nothing to undo', 'info');
     return;
   }
-  const entry = STATE.adminUndoStack.pop();
+  const entry = _adminUndoStack.pop();
   openModal('Undo Action', `Restore state from before: "${entry.label}" (${new Date(entry.time).toLocaleTimeString()})?`, () => {
-    const undoStack = STATE.adminUndoStack; // preserve remaining stack
     Object.assign(STATE, entry.snapshot);
-    STATE.adminUndoStack = undoStack;
     _normaliseState();
+    _skipMergeOnce = true; // restoring a snapshot must overwrite, not merge
     saveState();
     addLog(`Undo: ${entry.label}`, 'warn');
     showToast(`Undone: ${entry.label}`, 'success');
@@ -4306,6 +4434,7 @@ function adminRemovePlayer(id) {
     // Remove their picks from all races
     Object.keys(STATE.draftPicks).forEach(raceId => {
       delete STATE.draftPicks[raceId][id];
+      _noteDelete('draftPicks', raceId, id);
     });
     saveState();
     addLog(`Removed player: ${player?.name}`, 'warn');
@@ -4334,8 +4463,10 @@ function adminClearLog() {
 }
 
 function adminResetSeason() {
-  openModal('⚠ FULL RESET', 'This will permanently delete ALL season data — players, picks, results, everything. Cannot be undone!', () => {
+  openModal('⚠ FULL RESET', 'This will permanently delete ALL season data — players, picks, results, everything. A JSON backup will download first. Cannot be undone!', () => {
+    exportJSON(); // last-chance backup before wiping everything
     STATE = { players:[], started:false, currentRaceIdx:0, draftOrder:[], draftPicks:{}, raceResults:{}, baseOrder:[], draftRevealed:{}, activityLog:[], predictions:{}, notifEnabled:false, draftPrefs:{}, draftSubmitted:{} };
+    _skipMergeOnce = true; // full reset must overwrite, not merge
     saveState();
     localStorage.removeItem('f1gm2026');
     adminUnlocked = false;
@@ -4346,7 +4477,8 @@ function adminResetSeason() {
 }
 
 function adminClearAllResults() {
-  openModal('Clear All Results', 'Delete all race results? Picks are kept but all points reset to 0.', () => {
+  openModal('Clear All Results', 'Delete all race results? Picks are kept but all points reset to 0. A JSON backup will download first.', () => {
+    exportJSON();
     pushUndo('Clear all results');
     STATE.raceResults = {};
     saveState();
@@ -4357,10 +4489,12 @@ function adminClearAllResults() {
 }
 
 function adminClearAllDrafts() {
-  openModal('Clear All Drafts', 'Delete all draft picks and reveal states for all races?', () => {
+  openModal('Clear All Drafts', 'Delete all draft picks and reveal states for all races? A JSON backup will download first.', () => {
+    exportJSON();
     pushUndo('Clear all drafts');
     STATE.draftPicks = {};
     STATE.draftRevealed = {};
+    _skipMergeOnce = true; // wholesale clear must not be refilled by the merge
     saveState();
     addLog('All drafts cleared', 'bad');
     showToast('All drafts cleared', 'info');
@@ -4391,7 +4525,9 @@ async function importResultsFromJolpica() {
     }
 
     // Map to our format: {1: 'NOR', 2: 'VER', ...}
-    const race = RACES[parseInt(round) - 1];
+    // Race ids encode the official round number (r6 = round 6); the RACES
+    // array skips rounds, so array position must never be used as the round.
+    const race = RACES.find(r => parseInt(r.id.slice(1)) === parseInt(round));
     if (!race) throw new Error('Race not found');
 
     const resultMap = {};
@@ -4446,7 +4582,7 @@ function confirmImportResults(resultMap, raceId) {
   // Auto-reveal picks when results are imported
   if (!STATE.draftRevealed) STATE.draftRevealed = {};
   STATE.draftRevealed[raceId] = true;
-  saveState();
+  saveStateCritical();
   const race = RACES.find(r => r.id === raceId);
   addLog(`Auto-imported results for ${race?.name} via Jolpica API`, 'good');
   showToast(`✅ Results imported for ${race?.name}!`, 'success');
@@ -4458,9 +4594,10 @@ function confirmImportResults(resultMap, raceId) {
 function populateImportRoundSelect() {
   const sel = document.getElementById('import-round-select');
   if (!sel) return;
-  sel.innerHTML = RACES.map((r,i) => `<option value="${i+1}">${r.flag} R${i+1} · ${r.name}</option>`).join('');
+  sel.innerHTML = RACES.map((r,i) => `<option value="${parseInt(r.id.slice(1))}">${r.flag} R${i+1} · ${r.name}</option>`).join('');
   // Default to current race
-  if (STATE.currentRaceIdx < RACES.length) sel.value = STATE.currentRaceIdx + 1;
+  const cur = RACES[STATE.currentRaceIdx];
+  if (cur) sel.value = parseInt(cur.id.slice(1));
 }
 
 // ============================================================
@@ -4543,7 +4680,7 @@ function renderFormGuide(el) {
     return `
       <div class="form-row">
         <div class="form-rank" style="color:${rankColor}">${i+1}</div>
-        <div class="form-name">${p.name}</div>
+        <div class="form-name">${esc(p.name)}</div>
         <div class="form-bars" style="align-items:flex-end;height:44px;border-bottom:1px solid var(--border);">${bars || '<span style="color:var(--muted);font-size:12px">No data</span>'}</div>
         <div class="form-recent">${dots}</div>
         <div style="text-align:right">
@@ -4571,11 +4708,11 @@ function renderH2H(el) {
     <div class="section-head">HEAD-TO-HEAD COMPARISON</div>
     <div class="h2h-select-row">
       <select class="h2h-select" id="h2h-a" onchange="updateH2H()">
-        ${players.map(p => `<option value="${p.id}" ${p.id===pA?'selected':''}>${p.name}</option>`).join('')}
+        ${players.map(p => `<option value="${p.id}" ${p.id===pA?'selected':''}>${esc(p.name)}</option>`).join('')}
       </select>
       <div class="h2h-vs">VS</div>
       <select class="h2h-select" id="h2h-b" onchange="updateH2H()">
-        ${players.map(p => `<option value="${p.id}" ${p.id===pB?'selected':''}>${p.name}</option>`).join('')}
+        ${players.map(p => `<option value="${p.id}" ${p.id===pB?'selected':''}>${esc(p.name)}</option>`).join('')}
       </select>
     </div>
     <div id="h2h-results"></div>`;
@@ -4638,7 +4775,7 @@ function updateH2H() {
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <div style="text-align:center;flex:1">
           <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:var(--red)">${totalA}</div>
-          <div style="font-size:12px;color:var(--muted)">${pA?.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${esc(pA?.name)}</div>
           <div style="font-family:Orbitron,sans-serif;font-size:14px;margin-top:4px">${winsA} <span style="font-size:12px;color:var(--muted)">WINS</span></div>
         </div>
         <div style="text-align:center;padding:0 16px">
@@ -4647,7 +4784,7 @@ function updateH2H() {
         </div>
         <div style="text-align:center;flex:1">
           <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:var(--accent)">${totalB}</div>
-          <div style="font-size:12px;color:var(--muted)">${pB?.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${esc(pB?.name)}</div>
           <div style="font-family:Orbitron,sans-serif;font-size:14px;margin-top:4px">${winsB} <span style="font-size:12px;color:var(--muted)">WINS</span></div>
         </div>
       </div>
@@ -4659,9 +4796,9 @@ function updateH2H() {
     </div>
     <div class="card" style="padding:0;overflow:hidden;margin-top:12px">
       <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;gap:8px">
-        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--red);text-align:right">${pA?.name}</div>
+        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--red);text-align:right">${esc(pA?.name)}</div>
         <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--muted);text-align:center">RACE</div>
-        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--accent)">${pB?.name}</div>
+        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--accent)">${esc(pB?.name)}</div>
       </div>
       ${rows}
     </div>`;
@@ -4873,7 +5010,7 @@ function renderStreaks(el) {
       <div class="streak-card" style="margin-bottom:8px">
         <div class="streak-fire">${fire}</div>
         <div style="flex:1">
-          <div style="font-weight:700;font-size:16px">${p.name}</div>
+          <div style="font-weight:700;font-size:16px">${esc(p.name)}</div>
           <div style="font-size:12px;color:var(--muted);margin-top:2px">Hit rate: ${hitRate}% · Best: ${p.maxStreak} race run</div>
         </div>
         <div style="text-align:right">
@@ -4943,7 +5080,7 @@ function renderPredictions(el) {
 
   // Show prediction entry form
   const playerOptions = STATE.players.map(p =>
-    `<option value="${p.id}">${p.name}</option>`
+    `<option value="${p.id}">${esc(p.name)}</option>`
   ).join('');
 
   const champOptions = DRIVERS.map(d =>
@@ -4960,7 +5097,7 @@ function renderPredictions(el) {
     const pred = myPreds[p.id];
     if (!pred) return `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="flex:1;font-weight:700">${p.name}</div>
+        <div style="flex:1;font-weight:700">${esc(p.name)}</div>
         <span style="font-size:12px;color:var(--muted);font-style:italic">No prediction yet</span>
       </div>`;
     const d = DRIVERS.find(dr => dr.short === pred.champion);
@@ -4969,7 +5106,7 @@ function renderPredictions(el) {
     return `
       <div style="padding:10px 0;border-bottom:1px solid var(--border)">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <div style="flex:1;font-weight:700">${p.name}</div>
+          <div style="flex:1;font-weight:700">${esc(p.name)}</div>
           ${correct ? '<span class="pred-bonus">+5 PTS</span>' : ''}
           ${actualChamp && !correct ? '<span style="font-size:12px;color:var(--muted)">✗</span>' : ''}
         </div>
@@ -5107,7 +5244,7 @@ function exportToPrint() {
   let rows = playerData.map((p,i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="font-weight:bold">${p.name}</td>
+      <td style="font-weight:bold">${esc(p.name)}</td>
       ${revealedRaces.map(r => `<td style="text-align:center">${p.racePoints[r.id] ?? '—'}</td>`).join('')}
       <td style="font-weight:bold;text-align:right">${p.total}</td>
     </tr>`).join('');
@@ -5131,6 +5268,7 @@ function exportToPrint() {
     </body></html>`;
 
   const win = window.open('', '_blank');
+  if (!win) { showToast('Popup blocked — allow popups to print standings', 'error'); return; }
   win.document.write(printHtml);
   win.document.close();
   win.print();
@@ -5154,8 +5292,10 @@ function adminRestoreJSON() {
     reader.onload = (ev) => {
       try {
         const restored = JSON.parse(ev.target.result);
-        openModal('Restore Backup', 'This will overwrite all current data with the backup. Are you sure?', () => {
+        openModal('Restore Backup', 'This will overwrite all current data with the backup. A JSON backup of the current state will download first. Are you sure?', () => {
+          exportJSON(); // keep what we're about to overwrite
           STATE = restored;
+          _skipMergeOnce = true; // a restore must overwrite, not merge
           saveState();
           addLog('Restored from JSON backup', 'warn');
           showToast('Backup restored!', 'success');
@@ -6181,7 +6321,7 @@ function showIdentityOverlay() {
     const isMe = p.id === SESSION_PLAYER_ID;
     return `<button class="identity-btn" onclick="setIdentity('${p.id}')"
       style="${isMe ? 'border-color:var(--red);color:var(--red)' : ''}">
-      ${isMe ? '✓ ' : ''}${p.name}
+      ${isMe ? '✓ ' : ''}${esc(p.name)}
     </button>`;
   }).join('');
 
@@ -6220,6 +6360,7 @@ function updateIdentityBadge() {
 function resetGame() {
   openModal('Reset Season', 'This will delete ALL data — players, picks, and results. Are you sure?', () => {
     STATE = { players:[], started:false, currentRaceIdx:0, draftOrder:[], draftPicks:{}, raceResults:{}, baseOrder:[], draftRevealed:{}, activityLog:[], predictions:{}, notifEnabled:false, draftPrefs:{}, draftSubmitted:{} };
+    _skipMergeOnce = true; // full reset must overwrite, not merge
     saveState();
     localStorage.removeItem('f1gm2026');
     renderPlayerList();
@@ -6373,7 +6514,7 @@ async function loadAnalytics() {
     const top = Object.entries(d.pages).sort((a,b)=>b[1]-a[1])[0];
     const topLabel = PAGE_LABELS[top[0]] || top[0].toUpperCase();
     return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:6px 0;font-size:13px">${name}</td>
+      <td style="padding:6px 0;font-size:13px">${esc(name)}</td>
       <td style="padding:6px 8px;text-align:center;font-family:Share Tech Mono,monospace;font-size:13px;color:var(--accent)">${d.total}</td>
       <td style="padding:6px 0;font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted)">${topLabel} <span style="color:var(--text)">(${top[1]})</span></td>
     </tr>`;
@@ -6385,7 +6526,7 @@ async function loadAnalytics() {
     const timeStr = t.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' ' + t.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     return `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
       <span style="font-family:Share Tech Mono,monospace;color:var(--muted);font-size:10px;width:96px;flex-shrink:0">${timeStr}</span>
-      <span style="flex:1;color:var(--text)">${r.player_name || '<span style="color:var(--muted)">–</span>'}</span>
+      <span style="flex:1;color:var(--text)">${r.player_name ? esc(r.player_name) : '<span style="color:var(--muted)">–</span>'}</span>
       <span style="font-family:Share Tech Mono,monospace;color:var(--accent);font-size:11px">${PAGE_LABELS[r.page] || r.page}</span>
     </div>`;
   }).join('');
