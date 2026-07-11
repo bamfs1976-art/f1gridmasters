@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1 GRID MASTERS · SEASON SIMULATOR</title>
+<meta name="description" content="Monte Carlo simulator for the 2026 F1 season and the Grid Masters fantasy league.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 95,27 95,73 50,98 5,73 5,27' fill='%23E10600'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-family='Arial Black' font-size='34' font-weight='900' fill='white'%3E🎲%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #E10600; --gold: #d4a000; --silver: #C0C0C0; --bronze: #CD7F32;
+  --carbon: #090910; --dark: #0e0e18; --panel: #13131f; --panel2: #1a1a2a; --panel3: #21213a;
+  --border: rgba(255,255,255,0.08); --text: #e8e8f2; --muted: #9090b8;
+  --accent: #00c8ff; --green: #00c853;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--carbon); color:var(--text); font-family:'Rajdhani',sans-serif; min-height:100vh; }
+body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:linear-gradient(rgba(225,6,0,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(225,6,0,0.025) 1px,transparent 1px);
+  background-size:50px 50px; }
+.wrap { position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:20px 16px 60px; }
+.top-stripe { position:fixed; top:0; left:0; right:0; height:3px; z-index:10;
+  background:linear-gradient(90deg,var(--red),var(--gold),var(--red)); }
+header { display:flex; align-items:center; gap:14px; padding:18px 0 6px; flex-wrap:wrap; }
+.hex { width:40px; height:44px; background:var(--red); display:flex; align-items:center; justify-content:center;
+  font-family:Orbitron,sans-serif; font-weight:900; font-size:15px; color:#fff;
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); }
+header h1 { font-family:Orbitron,sans-serif; font-size:19px; letter-spacing:2px; }
+header p { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; }
+.back-link { margin-left:auto; font-family:Orbitron,sans-serif; font-size:11px; letter-spacing:1px;
+  color:var(--muted); text-decoration:none; border:1px solid var(--border); border-radius:6px; padding:8px 14px; }
+.back-link:hover { color:var(--red); border-color:var(--red); }
+.card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px; margin-top:16px; }
+.section-head { font-family:Orbitron,sans-serif; font-size:12px; letter-spacing:2px; color:var(--muted); margin-bottom:12px; }
+.status-line { font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--muted); margin-top:8px; }
+.status-line.warn { color:#ffa500; }
+.controls { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-end; }
+.ctl { display:flex; flex-direction:column; gap:6px; min-width:150px; flex:1; }
+.ctl label { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--muted); }
+.ctl .val { color:var(--text); font-weight:600; }
+.ctl input[type=range] { accent-color:var(--red); width:100%; }
+.ctl select { padding:8px 10px; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+  border-radius:6px; font-size:13px; font-family:Rajdhani,sans-serif; }
+.run-btn { background:var(--red); color:#fff; border:none; border-radius:8px; padding:13px 30px; cursor:pointer;
+  font-family:Orbitron,sans-serif; font-size:13px; font-weight:700; letter-spacing:2px; }
+.run-btn:disabled { opacity:0.5; cursor:default; }
+.progress { height:4px; background:var(--panel3); border-radius:2px; overflow:hidden; margin-top:12px; display:none; }
+.progress .fill { height:100%; width:0%; background:var(--gold); transition:width 0.1s linear; }
+.tabs { display:flex; gap:6px; margin-top:22px; flex-wrap:wrap; }
+.tab-btn { padding:9px 18px; background:var(--panel2); border:1px solid var(--border); border-radius:20px;
+  color:var(--muted); font-family:Orbitron,sans-serif; font-size:11px; letter-spacing:1px; cursor:pointer; }
+.tab-btn.active { color:var(--red); border-color:var(--red); background:rgba(225,6,0,0.08); }
+.tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:16px; }
+.tile { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px 18px; }
+.tile .t-label { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); }
+.tile .t-value { font-family:Orbitron,sans-serif; font-size:22px; font-weight:900; margin-top:6px; }
+.tile .t-sub { font-size:12px; color:var(--muted); margin-top:3px; }
+.tbl-scroll { overflow-x:auto; }
+table.sim { width:100%; border-collapse:collapse; min-width:640px; }
+table.sim th { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--muted);
+  text-align:left; padding:8px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
+table.sim th.num, table.sim td.num { text-align:right; }
+table.sim td { padding:8px 8px; border-bottom:1px solid rgba(255,255,255,0.04); font-size:13px; white-space:nowrap; }
+tr.sim-row:hover td { background:rgba(255,255,255,0.03); }
+.ent { display:flex; align-items:center; gap:8px; }
+.ent .bar { width:4px; height:26px; border-radius:2px; flex-shrink:0; }
+.ent .nm { font-weight:700; }
+.ent .sub { font-size:11px; color:var(--muted); }
+.pbar-wrap { display:flex; align-items:center; gap:8px; min-width:130px; }
+.pbar-track { flex:1; height:6px; background:var(--panel3); border-radius:3px; overflow:hidden; }
+.pbar-fill { height:100%; background:var(--red); border-radius:3px; }
+.pbar-num { font-family:'Share Tech Mono',monospace; font-size:12px; min-width:46px; text-align:right; }
+.heat-row { display:flex; gap:2px; }
+.heat-cell { width:24px; height:22px; border-radius:3px; display:flex; align-items:center; justify-content:center;
+  font-family:'Share Tech Mono',monospace; font-size:9px; color:#fff; flex-shrink:0; }
+.legend { display:flex; gap:14px; align-items:center; font-size:11px; color:var(--muted); margin:10px 0 4px; flex-wrap:wrap; }
+.legend .sw { display:inline-block; width:14px; height:12px; border-radius:3px; vertical-align:-2px; margin-right:4px; }
+.note { font-size:12px; color:var(--muted); margin-top:14px; line-height:1.5; }
+.hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="top-stripe"></div>
+<div class="wrap">
+  <header>
+    <div class="hex">F1</div>
+    <div>
+      <h1>SEASON SIMULATOR</h1>
+      <p>MONTE CARLO · 2026 CHAMPIONSHIP + GRID MASTERS LEAGUE</p>
+    </div>
+    <a class="back-link" href="index.html">◀ BACK TO GRID MASTERS</a>
+  </header>
+
+  <div class="card">
+    <div class="section-head">⚙ SIMULATION SETTINGS</div>
+    <div class="controls">
+      <div class="ctl">
+        <label>SIMULATIONS</label>
+        <select id="ctl-sims">
+          <option value="1000">1,000 (fast)</option>
+          <option value="5000" selected>5,000</option>
+          <option value="20000">20,000 (precise)</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label>2026 FORM WEIGHT <span class="val" id="lbl-form">60%</span></label>
+        <input type="range" id="ctl-form" min="0" max="100" value="60">
+        <label>0% = 2025 ratings only · 100% = this season only</label>
+      </div>
+      <div class="ctl">
+        <label>RACE CHAOS <span class="val" id="lbl-chaos">55</span></label>
+        <input type="range" id="ctl-chaos" min="15" max="100" value="55">
+        <label>low = form always wins · high = anything can happen</label>
+      </div>
+      <div class="ctl">
+        <label>PICK DISCIPLINE <span class="val" id="lbl-pick">75</span></label>
+        <input type="range" id="ctl-pick" min="0" max="100" value="75">
+        <label>how rationally players pick the best driver left</label>
+      </div>
+      <div class="ctl" style="flex:0">
+        <button class="run-btn" id="run-btn" onclick="runSimulation()">🎲 RUN</button>
+      </div>
+    </div>
+    <div class="progress" id="progress"><div class="fill" id="progress-fill"></div></div>
+    <div class="status-line" id="data-status">Loading live game data…</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-btn-f1" onclick="showTab('f1')">🏆 F1 2026 CHAMPIONSHIP</button>
+    <button class="tab-btn" id="tab-btn-gm" onclick="showTab('gm')">🎮 GRID MASTERS LEAGUE</button>
+  </div>
+
+  <div id="tab-f1">
+    <div class="tiles" id="f1-tiles"></div>
+    <div class="card">
+      <div class="section-head">DRIVER CHAMPIONSHIP · FINISH-POSITION PROBABILITIES</div>
+      <div class="legend">
+        <span><span class="sw" style="background:#E10600"></span>high probability</span>
+        <span><span class="sw" style="background:rgba(225,6,0,0.35)"></span>possible</span>
+        <span><span class="sw" style="background:var(--panel3)"></span>unlikely</span>
+        <span>· cells show % when ≥ 5</span>
+      </div>
+      <div class="tbl-scroll"><table class="sim" id="f1-table"></table></div>
+    </div>
+    <div class="card">
+      <div class="section-head">CONSTRUCTORS' CHAMPIONSHIP</div>
+      <div class="tbl-scroll"><table class="sim" id="f1-teams-table"></table></div>
+    </div>
+  </div>
+
+  <div id="tab-gm" class="hidden">
+    <div class="tiles" id="gm-tiles"></div>
+    <div class="card">
+      <div class="section-head">GRID MASTERS LEAGUE · FINAL-POSITION PROBABILITIES</div>
+      <div class="legend">
+        <span><span class="sw" style="background:#E10600"></span>high probability</span>
+        <span><span class="sw" style="background:var(--panel3)"></span>unlikely</span>
+        <span>· future drafts simulated with the rotation + pick model</span>
+      </div>
+      <div class="tbl-scroll"><table class="sim" id="gm-table"></table></div>
+    </div>
+    <div class="note" id="gm-note"></div>
+  </div>
+
+  <div class="note">
+    <strong>Model:</strong> each remaining race is sampled as a full finishing order from driver strength ratings
+    (2025 season points blended with live 2026 form, per-race random form swings and a small DNF chance).
+    League simulations replay the real rotating draft order from the live game state; players pick from the
+    remaining drivers with a strategy model set by "pick discipline". Sprint points are not modelled
+    (the league only scores main races). This page only <em>reads</em> the game — it never writes anything.
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  STATIC DATA (mirrors index.html — update alongside it)
+// ============================================================
+const RACES = [
+  { id:'r1',  name:'AUSTRALIA',   flag:'🇦🇺', sprint:false }, { id:'r2',  name:'CHINA',     flag:'🇨🇳', sprint:true  },
+  { id:'r3',  name:'JAPAN',       flag:'🇯🇵', sprint:false }, { id:'r6',  name:'MIAMI',     flag:'🇺🇸', sprint:true  },
+  { id:'r7',  name:'CANADA',      flag:'🇨🇦', sprint:true  }, { id:'r8',  name:'MONACO',    flag:'🇲🇨', sprint:false },
+  { id:'r9',  name:'BARCELONA',   flag:'🇪🇸', sprint:false }, { id:'r10', name:'AUSTRIA',   flag:'🇦🇹', sprint:false },
+  { id:'r11', name:'BRITAIN',     flag:'🇬🇧', sprint:true  }, { id:'r12', name:'BELGIUM',   flag:'🇧🇪', sprint:false },
+  { id:'r13', name:'HUNGARY',     flag:'🇭🇺', sprint:false }, { id:'r14', name:'NETHERLANDS',flag:'🇳🇱', sprint:true },
+  { id:'r15', name:'ITALY',       flag:'🇮🇹', sprint:false }, { id:'r16', name:'MADRID',    flag:'🇪🇸', sprint:false },
+  { id:'r17', name:'AZERBAIJAN',  flag:'🇦🇿', sprint:false }, { id:'r18', name:'SINGAPORE', flag:'🇸🇬', sprint:true  },
+  { id:'r19', name:'USA',         flag:'🇺🇸', sprint:false }, { id:'r20', name:'MEXICO CITY',flag:'🇲🇽', sprint:false },
+  { id:'r21', name:'SAO PAULO',   flag:'🇧🇷', sprint:false }, { id:'r22', name:'LAS VEGAS', flag:'🇺🇸', sprint:false },
+  { id:'r23', name:'QATAR',       flag:'🇶🇦', sprint:false }, { id:'r24', name:'ABU DHABI', flag:'🇦🇪', sprint:false },
+];
+
+const DRIVERS = [
+  { short:'NOR', name:'Lando Norris',      team:'McLaren',      teamColor:'#FF8000', prior:389 },
+  { short:'PIA', name:'Oscar Piastri',     team:'McLaren',      teamColor:'#FF8000', prior:291 },
+  { short:'HAM', name:'Lewis Hamilton',    team:'Ferrari',      teamColor:'#DC0000', prior:143 },
+  { short:'LEC', name:'Charles Leclerc',   team:'Ferrari',      teamColor:'#DC0000', prior:158 },
+  { short:'VER', name:'Max Verstappen',    team:'Red Bull',     teamColor:'#0600EF', prior:342 },
+  { short:'HAD', name:'Isack Hadjar',      team:'Red Bull',     teamColor:'#0600EF', prior:20  },
+  { short:'RUS', name:'George Russell',    team:'Mercedes',     teamColor:'#00D2BE', prior:245 },
+  { short:'ANT', name:'Kimi Antonelli',    team:'Mercedes',     teamColor:'#00D2BE', prior:162 },
+  { short:'SAI', name:'Carlos Sainz',      team:'Williams',     teamColor:'#005AFF', prior:115 },
+  { short:'ALB', name:'Alex Albon',        team:'Williams',     teamColor:'#005AFF', prior:42  },
+  { short:'ALO', name:'Fernando Alonso',   team:'Aston Martin', teamColor:'#006F62', prior:95  },
+  { short:'STR', name:'Lance Stroll',      team:'Aston Martin', teamColor:'#006F62', prior:48  },
+  { short:'GAS', name:'Pierre Gasly',      team:'Alpine',       teamColor:'#0090FF', prior:62  },
+  { short:'COL', name:'Franco Colapinto',  team:'Alpine',       teamColor:'#0090FF', prior:14  },
+  { short:'OCO', name:'Esteban Ocon',      team:'Haas',         teamColor:'#B6BABD', prior:58  },
+  { short:'BEA', name:'Oliver Bearman',    team:'Haas',         teamColor:'#B6BABD', prior:54  },
+  { short:'HUL', name:'Nico Hülkenberg',   team:'Audi',         teamColor:'#999999', prior:37  },
+  { short:'BOR', name:'Gabriel Bortoleto', team:'Audi',         teamColor:'#999999', prior:8   },
+  { short:'LAW', name:'Liam Lawson',       team:'Racing Bulls', teamColor:'#1E41FF', prior:84  },
+  { short:'LIN', name:'Arvid Lindblad',    team:'Racing Bulls', teamColor:'#1E41FF', prior:12  }, // rookie: estimated prior
+  { short:'PER', name:'Sergio Pérez',      team:'Cadillac',     teamColor:'#CC0033', prior:55  }, // returning: estimated prior
+  { short:'BOT', name:'Valtteri Bottas',   team:'Cadillac',     teamColor:'#CC0033', prior:28  }, // returning: estimated prior
+];
+
+const F1_POINTS  = {1:25, 2:18, 3:15, 4:12, 5:10, 6:8, 7:6, 8:4, 9:2, 10:1}; // championship
+const GAME_POINTS = {1:10, 2:9, 3:8, 4:7, 5:6, 6:5, 7:4, 8:3, 9:2, 10:1};    // grid masters
+
+const SUPABASE_URL = 'https://knodunjnsxelmpziupwk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtub2R1bmpuc3hlbG1weml1cHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMjYxNDMsImV4cCI6MjA4NTcwMjE0M30.KxrWezv-S72P5x9mfkVc1gSY2i5yF5L0ylIg16yOQ1I';
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+// ============================================================
+//  LIVE GAME DATA (read-only — this page never writes)
+// ============================================================
+let GAME = null; // the live STATE, or null in prior-only mode
+
+async function loadGame() {
+  const el = document.getElementById('data-status');
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/f1_game_state?id=eq.main&select=state`, {
+      headers: { apikey: SUPABASE_KEY }
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const rows = await resp.json();
+    if (rows.length && rows[0].state && rows[0].state.players) {
+      GAME = rows[0].state;
+      const done = RACES.filter(r => GAME.raceResults?.[r.id]).length;
+      el.textContent = `✔ Live data loaded — ${GAME.players.length} players · ${done} of ${RACES.length} race results in`;
+      el.classList.remove('warn');
+      return;
+    }
+    throw new Error('empty state');
+  } catch (e) {
+    GAME = null;
+    el.textContent = '⚠ Live game data unavailable — simulating the full season from 2025 ratings only (league tab disabled)';
+    el.classList.add('warn');
+  }
+}
+
+// ============================================================
+//  RATINGS
+// ============================================================
+function buildRatings(formWeight) {
+  // 2026 championship points so far, from the recorded top-10s
+  const pts26 = {}; let racesDone = 0;
+  DRIVERS.forEach(d => pts26[d.short] = 0);
+  if (GAME) {
+    RACES.forEach(r => {
+      const res = GAME.raceResults?.[r.id];
+      if (!res) return;
+      racesDone++;
+      Object.entries(res).forEach(([pos, code]) => {
+        if (pts26[code] !== undefined) pts26[code] += F1_POINTS[parseInt(pos)] || 0;
+      });
+    });
+  }
+  const w = racesDone > 0 ? formWeight : 0; // no 2026 data → prior only
+  const ratings = {};
+  DRIVERS.forEach(d => {
+    const perRacePrior = d.prior / 24;
+    const perRaceNow   = racesDone > 0 ? pts26[d.short] / racesDone : 0;
+    const blended = (1 - w) * perRacePrior + w * perRaceNow;
+    ratings[d.short] = Math.max(blended, 0.15); // floor so backmarkers can still surprise
+  });
+  return { ratings, pts26, racesDone };
+}
+
+// ============================================================
+//  RACE SAMPLER — Plackett-Luce via Gumbel keys
+// ============================================================
+function gumbel() { return -Math.log(-Math.log(Math.random() + 1e-12) + 1e-12); }
+
+function sampleRaceOrder(ratings, chaos) {
+  // key = log(strength)·sharpness + Gumbel noise; sort desc = finishing order
+  const sharp = 1.6 * (1 - chaos * 0.7); // more chaos → flatter strengths
+  const keyed = DRIVERS.map(d => {
+    let key = Math.log(ratings[d.short]) * sharp + gumbel();
+    if (Math.random() < 0.08) key -= 6; // DNF / disaster race
+    return { short: d.short, key };
+  });
+  keyed.sort((a, b) => b.key - a.key);
+  return keyed.map(k => k.short); // index 0 = P1
+}
+
+// ============================================================
+//  DRAFT PICK MODEL (grid masters)
+// ============================================================
+function draftOrderForRace(baseOrder, raceIdx) {
+  const n = baseOrder.length;
+  if (!n) return [];
+  const shift = raceIdx % n;
+  return [...baseOrder.slice(shift), ...baseOrder.slice(0, shift)];
+}
+
+function simulatePicks(order, ratings, discipline) {
+  // Each player in draft order picks from the remaining drivers.
+  // discipline 1 → always best available; 0 → nearly random.
+  const temp = 0.05 + (1 - discipline) * 1.2;
+  const available = DRIVERS.map(d => d.short);
+  const picks = {};
+  order.forEach(pid => {
+    if (!available.length) return;
+    const weights = available.map(s => Math.exp(Math.log(ratings[s]) / temp));
+    let total = weights.reduce((a, b) => a + b, 0);
+    let roll = Math.random() * total, idx = 0;
+    for (; idx < weights.length - 1; idx++) { roll -= weights[idx]; if (roll <= 0) break; }
+    picks[pid] = available.splice(idx, 1)[0];
+  });
+  return picks;
+}
+
+// ============================================================
+//  MAIN SIMULATION
+// ============================================================
+let LAST = null;
+
+async function runSimulation() {
+  const btn = document.getElementById('run-btn');
+  const bar = document.getElementById('progress');
+  const fill = document.getElementById('progress-fill');
+  btn.disabled = true; bar.style.display = 'block'; fill.style.width = '0%';
+
+  const nSims = parseInt(document.getElementById('ctl-sims').value);
+  const formWeight = parseInt(document.getElementById('ctl-form').value) / 100;
+  const chaos = parseInt(document.getElementById('ctl-chaos').value) / 100;
+  const discipline = parseInt(document.getElementById('ctl-pick').value) / 100;
+
+  const { ratings, pts26, racesDone } = buildRatings(formWeight);
+
+  // Remaining races = those without a recorded result
+  const remaining = RACES.map((r, i) => ({ ...r, idx: i }))
+    .filter(r => !(GAME && GAME.raceResults?.[r.id]));
+
+  // League baseline: current fantasy totals from recorded, revealed races
+  const players = GAME ? GAME.players : [];
+  const baseOrder = GAME ? (GAME.baseOrder || []) : [];
+  const currentTotals = {};
+  players.forEach(p => currentTotals[p.id] = 0);
+  if (GAME) {
+    RACES.forEach(r => {
+      const res = GAME.raceResults?.[r.id];
+      if (!res || GAME.draftRevealed?.[r.id] !== true) return;
+      players.forEach(p => {
+        const pick = GAME.draftPicks?.[r.id]?.[p.id];
+        if (!pick) return;
+        const pos = Object.entries(res).find(([, s]) => s === pick)?.[0];
+        if (pos) currentTotals[p.id] += GAME_POINTS[parseInt(pos)] || 0;
+      });
+    });
+  }
+
+  // Tallies
+  const nDrv = DRIVERS.length, nPl = players.length;
+  const drvPosTally = {}, drvPtsSum = {}, drvTitles = {};
+  DRIVERS.forEach(d => { drvPosTally[d.short] = new Array(nDrv).fill(0); drvPtsSum[d.short] = 0; drvTitles[d.short] = 0; });
+  const plPosTally = {}, plPtsSum = {}, plTitles = {};
+  players.forEach(p => { plPosTally[p.id] = new Array(nPl).fill(0); plPtsSum[p.id] = 0; plTitles[p.id] = 0; });
+
+  const CHUNK = 250;
+  for (let start = 0; start < nSims; start += CHUNK) {
+    const end = Math.min(start + CHUNK, nSims);
+    for (let s = start; s < end; s++) {
+      // one simulated world
+      const drvPts = {}; DRIVERS.forEach(d => drvPts[d.short] = pts26[d.short]);
+      const plPts = {}; players.forEach(p => plPts[p.id] = currentTotals[p.id]);
+
+      remaining.forEach(race => {
+        const order = sampleRaceOrder(ratings, chaos);
+        order.forEach((short, i) => { drvPts[short] += F1_POINTS[i + 1] || 0; });
+
+        if (nPl > 0) {
+          // use the real picks when this race is already fully drafted
+          let picks = GAME.draftPicks?.[race.id];
+          if (!picks || Object.keys(picks).length < nPl) {
+            picks = simulatePicks(draftOrderForRace(baseOrder, race.idx), ratings, discipline);
+          }
+          players.forEach(p => {
+            const pick = picks[p.id];
+            const pos = pick ? order.indexOf(pick) + 1 : 0;
+            if (pos >= 1 && pos <= 10) plPts[p.id] += GAME_POINTS[pos];
+          });
+        }
+      });
+
+      // rank drivers (random tiebreak via jitter)
+      const drvRank = DRIVERS.map(d => ({ s: d.short, v: drvPts[d.short] + Math.random() * 0.01 }))
+        .sort((a, b) => b.v - a.v);
+      drvRank.forEach((e, i) => { drvPosTally[e.s][i]++; });
+      drvTitles[drvRank[0].s]++;
+      DRIVERS.forEach(d => drvPtsSum[d.short] += drvPts[d.short]);
+
+      if (nPl > 0) {
+        const plRank = players.map(p => ({ id: p.id, v: plPts[p.id] + Math.random() * 0.01 }))
+          .sort((a, b) => b.v - a.v);
+        plRank.forEach((e, i) => { plPosTally[e.id][i]++; });
+        plTitles[plRank[0].id]++;
+        players.forEach(p => plPtsSum[p.id] += plPts[p.id]);
+      }
+    }
+    fill.style.width = Math.round(end / nSims * 100) + '%';
+    await new Promise(r => requestAnimationFrame(r));
+  }
+
+  LAST = { nSims, racesDone, remaining: remaining.length, ratings, pts26,
+           drvPosTally, drvPtsSum, drvTitles, players, currentTotals, plPosTally, plPtsSum, plTitles };
+  renderF1();
+  renderGM();
+  btn.disabled = false;
+  setTimeout(() => { bar.style.display = 'none'; }, 400);
+}
+
+// ============================================================
+//  RENDERING
+// ============================================================
+function heatColor(p) {
+  if (p <= 0) return 'var(--panel3)';
+  const a = Math.min(1, 0.12 + p * 1.6); // single-hue sequential ramp on red
+  return `rgba(225,6,0,${a.toFixed(2)})`;
+}
+function pct(x, n) { const p = x / n * 100; return p === 0 ? '—' : p < 1 ? '<1' : Math.round(p); }
+// like pct but with the % suffix only when there is a number ("—", never "—%")
+function pctCell(x, n) { const p = x / n * 100; return p === 0 ? '—' : (p < 1 ? '<1' : Math.round(p)) + '%'; }
+
+function heatCells(tally, n, labelPrefix, name) {
+  return `<div class="heat-row">${tally.map((c, i) => {
+    const p = c / n;
+    const txt = p >= 0.05 ? Math.round(p * 100) : '';
+    return `<div class="heat-cell" style="background:${heatColor(p)}" title="${esc(name)} ${labelPrefix}${i+1}: ${(p*100).toFixed(1)}%">${txt}</div>`;
+  }).join('')}</div>`;
+}
+
+function renderF1() {
+  const { nSims, drvPosTally, drvPtsSum, drvTitles, pts26, racesDone, remaining } = LAST;
+  const rows = DRIVERS.map(d => ({
+    d, title: drvTitles[d.short], mean: drvPtsSum[d.short] / nSims,
+    top3: drvPosTally[d.short].slice(0, 3).reduce((a, b) => a + b, 0),
+    tally: drvPosTally[d.short],
+  })).sort((a, b) => b.title - a.title || b.mean - a.mean);
+
+  const fav = rows[0];
+  document.getElementById('f1-tiles').innerHTML = `
+    <div class="tile"><div class="t-label">TITLE FAVOURITE</div>
+      <div class="t-value" style="color:${fav.d.teamColor}">${esc(fav.d.name)}</div>
+      <div class="t-sub">${pct(fav.title, nSims)}% champion · projects ${Math.round(fav.mean)} pts</div></div>
+    <div class="tile"><div class="t-label">SEASON STATE</div>
+      <div class="t-value">${racesDone}<span style="font-size:13px;color:var(--muted)"> / ${RACES.length} raced</span></div>
+      <div class="t-sub">${remaining} races simulated per run</div></div>
+    <div class="tile"><div class="t-label">SIMULATIONS</div>
+      <div class="t-value">${nSims.toLocaleString()}</div>
+      <div class="t-sub">seasons played out</div></div>`;
+
+  document.getElementById('f1-table').innerHTML = `
+    <tr><th>DRIVER</th><th class="num">NOW</th><th class="num">PROJ</th><th>TITLE %</th><th class="num">TOP 3 %</th><th>FINISH POSITION P1 → P${DRIVERS.length}</th></tr>
+    ${rows.map(r => `
+      <tr class="sim-row">
+        <td><div class="ent"><div class="bar" style="background:${r.d.teamColor}"></div>
+          <div><div class="nm">${esc(r.d.name)}</div><div class="sub">${esc(r.d.team)}</div></div></div></td>
+        <td class="num" style="font-family:Share Tech Mono,monospace">${pts26[r.d.short]}</td>
+        <td class="num" style="font-family:Share Tech Mono,monospace">${Math.round(r.mean)}</td>
+        <td><div class="pbar-wrap"><div class="pbar-track"><div class="pbar-fill" style="width:${Math.min(100, r.title/nSims*100)}%"></div></div>
+          <div class="pbar-num">${pctCell(r.title, nSims)}</div></div></td>
+        <td class="num" style="font-family:Share Tech Mono,monospace">${pctCell(r.top3, nSims)}</td>
+        <td>${heatCells(r.tally, nSims, 'P', r.d.name)}</td>
+      </tr>`).join('')}`;
+
+  // constructors
+  const teams = {};
+  DRIVERS.forEach(d => {
+    if (!teams[d.team]) teams[d.team] = { name: d.team, color: d.teamColor, mean: 0, now: 0 };
+    teams[d.team].mean += drvPtsSum[d.short] / nSims;
+    teams[d.team].now += pts26[d.short];
+  });
+  const trows = Object.values(teams).sort((a, b) => b.mean - a.mean);
+  const maxMean = trows[0].mean || 1;
+  document.getElementById('f1-teams-table').innerHTML = `
+    <tr><th>#</th><th>TEAM</th><th class="num">NOW</th><th class="num">PROJECTED</th><th>SHARE</th></tr>
+    ${trows.map((t, i) => `
+      <tr class="sim-row">
+        <td style="font-family:Orbitron,sans-serif;font-weight:700;color:${i<3?t.color:'var(--muted)'}">${i+1}</td>
+        <td><div class="ent"><div class="bar" style="background:${t.color}"></div><div class="nm">${esc(t.name)}</div></div></td>
+        <td class="num" style="font-family:Share Tech Mono,monospace">${t.now}</td>
+        <td class="num" style="font-family:Share Tech Mono,monospace">${Math.round(t.mean)}</td>
+        <td><div class="pbar-wrap"><div class="pbar-track"><div class="pbar-fill" style="width:${Math.round(t.mean/maxMean*100)}%;background:${t.color}"></div></div></div></td>
+      </tr>`).join('')}`;
+}
+
+function renderGM() {
+  const el = document.getElementById('gm-table');
+  const tiles = document.getElementById('gm-tiles');
+  const note = document.getElementById('gm-note');
+  const { nSims, players, currentTotals, plPosTally, plPtsSum, plTitles, remaining } = LAST;
+  if (!players.length) {
+    tiles.innerHTML = '';
+    el.innerHTML = '<tr><td style="color:var(--muted);padding:16px">Live game data unavailable — the league simulation needs the real players, rotation and picks.</td></tr>';
+    note.textContent = '';
+    return;
+  }
+  const rows = players.map(p => ({
+    p, now: currentTotals[p.id], title: plTitles[p.id],
+    mean: plPtsSum[p.id] / nSims,
+    top3: plPosTally[p.id].slice(0, 3).reduce((a, b) => a + b, 0),
+    tally: plPosTally[p.id],
+  })).sort((a, b) => b.title - a.title || b.mean - a.mean);
+
+  const fav = rows[0];
+  const closest = rows.length > 1 ? (fav.title - rows[1].title) / nSims * 100 : 0;
+  tiles.innerHTML = `
+    <div class="tile"><div class="t-label">TITLE FAVOURITE</div>
+      <div class="t-value" style="color:var(--gold)">${esc(fav.p.name)}</div>
+      <div class="t-sub">${pct(fav.title, nSims)}% to win the league</div></div>
+    <div class="tile"><div class="t-label">EDGE OVER 2ND FAVOURITE</div>
+      <div class="t-value">${closest.toFixed(0)}<span style="font-size:14px">pp</span></div>
+      <div class="t-sub">${rows.length > 1 ? esc(rows[1].p.name) + ' next at ' + pct(rows[1].title, nSims) + '%' : ''}</div></div>
+    <div class="tile"><div class="t-label">RACES LEFT TO SIMULATE</div>
+      <div class="t-value">${remaining}</div>
+      <div class="t-sub">rotation + picks replayed each run</div></div>`;
+
+  el.innerHTML = `
+    <tr><th>PLAYER</th><th class="num">NOW</th><th class="num">PROJ</th><th>WIN %</th><th class="num">TOP 3 %</th><th>FINAL POSITION P1 → P${players.length}</th></tr>
+    ${rows.map(r => `
+      <tr class="sim-row">
+        <td><div class="ent"><div class="bar" style="background:var(--gold)"></div><div class="nm">${esc(r.p.name)}</div></div></td>
+        <td class="num" style="font-family:Share Tech Mono,monospace">${r.now}</td>
+        <td class="num" style="font-family:Share Tech Mono,monospace">${Math.round(r.mean)}</td>
+        <td><div class="pbar-wrap"><div class="pbar-track"><div class="pbar-fill" style="width:${Math.min(100, r.title/nSims*100)}%"></div></div>
+          <div class="pbar-num">${pctCell(r.title, nSims)}</div></div></td>
+        <td class="num" style="font-family:Share Tech Mono,monospace">${pctCell(r.top3, nSims)}</td>
+        <td>${heatCells(r.tally, nSims, 'P', r.p.name)}</td>
+      </tr>`).join('')}`;
+
+  note.textContent = 'Already-drafted races use the real picks; undrafted races simulate every player picking in rotation order. Current points count revealed races only, matching the app.';
+}
+
+// ============================================================
+//  UI
+// ============================================================
+function showTab(t) {
+  document.getElementById('tab-f1').classList.toggle('hidden', t !== 'f1');
+  document.getElementById('tab-gm').classList.toggle('hidden', t !== 'gm');
+  document.getElementById('tab-btn-f1').classList.toggle('active', t === 'f1');
+  document.getElementById('tab-btn-gm').classList.toggle('active', t === 'gm');
+}
+['form', 'chaos', 'pick'].forEach(k => {
+  document.getElementById('ctl-' + k).addEventListener('input', e => {
+    document.getElementById('lbl-' + k).textContent = k === 'form' ? e.target.value + '%' : e.target.value;
+  });
+});
+
+(async () => {
+  await loadGame();
+  runSimulation(); // first run automatically
+})();
+</script>
+</body>
+</html>
