@@ -1270,6 +1270,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       <button class="nav-tab" onclick="showPage('tv')">📺 TV GUIDE</button>
       <button class="nav-tab" onclick="showPage('drivers')">👤 DRIVERS</button>
       <button class="nav-tab" onclick="showPage('stats')">📈 STATS</button>
+      <button class="nav-tab" onclick="window.open('sim.html','_blank')" title="Season simulator">🎲 SIM</button>
       <button class="nav-tab" onclick="showPage('admin')" id="nav-admin" style="color:#ffa500;">🔐 ADMIN</button>
       <button class="nav-tab" onclick="showPage('2026gp')">🏁 2026 GP</button>
       <button class="nav-tab" onclick="showPage('2025')">🗂 2025 SEASON</button>
@@ -1324,6 +1325,9 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   <div style="height:1px;background:var(--border);margin:8px 0;"></div>
   <button class="mobile-nav-tab" id="mob-stats" onclick="mobileNav('stats')">
     <span class="mob-icon">📈</span> STATS
+  </button>
+  <button class="mobile-nav-tab" onclick="window.open('sim.html','_blank');closeMobileMenu()">
+    <span class="mob-icon">🎲</span> SIMULATOR
   </button>
   <button class="mobile-nav-tab admin-tab" id="mob-admin" onclick="mobileNav('admin')">
     <span class="mob-icon">🔐</span> ADMIN
