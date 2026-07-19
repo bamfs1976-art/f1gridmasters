@@ -3654,10 +3654,18 @@ function renderAdminDashboard() {
         <div class="admin-card-desc">Pick a race to generate its shareable card. Screenshot to share as an image, or click <strong>💬 COPY FOR WHATSAPP</strong> to copy a ready-to-paste message with team emoji and stats.</div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
           ${(() => {
-            const drafted = RACES.filter(r => STATE.draftPicks[r.id] && Object.keys(STATE.draftPicks[r.id]).length > 0);
-            if (!drafted.length) return '<p style="color:var(--muted);font-size:13px">No drafted races yet</p>';
+            // Prefer the upcoming race: the current race, or the one after it
+            // once the current race already has a result entered.
             const currentRaceId = RACES[STATE.currentRaceIdx]?.id;
-            const autoId = (drafted.find(r => r.id === currentRaceId) || drafted[drafted.length - 1])?.id || '';
+            let preferId = currentRaceId;
+            if (preferId && STATE.raceResults[preferId] && STATE.currentRaceIdx + 1 < RACES.length) {
+              preferId = RACES[STATE.currentRaceIdx + 1].id;
+            }
+            const drafted = RACES.filter(r =>
+              (STATE.draftPicks[r.id] && Object.keys(STATE.draftPicks[r.id]).length > 0) ||
+              r.id === currentRaceId || r.id === preferId);
+            if (!drafted.length) return '<p style="color:var(--muted);font-size:13px">No drafted races yet</p>';
+            const autoId = (drafted.find(r => r.id === preferId) || drafted[drafted.length - 1])?.id || '';
             return `<select id="share-race-select" onchange="renderPickCard(this.value)"
               style="padding:8px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;
                      color:var(--text);font-size:14px;cursor:pointer;font-family:Rajdhani,sans-serif">
@@ -3984,6 +3992,25 @@ function renderPickCard(raceId) {
   if (!upcoming) rows.sort((a,b) => (b.pts||0) - (a.pts||0) || a.name.localeCompare(b.name));
   else rows.sort((a,b) => a.name.localeCompare(b.name));
 
+  // Draft not resolved yet (blind prefs stay secret): show progress, not picks.
+  if (upcoming && rows.length === 0) {
+    const submitted = STATE.draftSubmitted?.[raceId] || {};
+    const inCount = STATE.players.filter(p => submitted[p.id]).length;
+    el.innerHTML = `
+      <div style="background:var(--panel2);border:1px dashed var(--border);border-radius:10px;padding:24px;text-align:center;max-width:580px">
+        <div style="font-size:30px;margin-bottom:8px">${race.flag}</div>
+        <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;letter-spacing:1px;">${race.name} GRAND PRIX</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:10px;">
+          Picks aren't resolved yet — <strong>${inCount} of ${STATE.players.length}</strong> preferences submitted.<br>
+          The share card appears automatically once every player has picked and the draft resolves.<br>
+          Chase the stragglers with <strong>⏰ PICK REMINDER</strong> on the draft page.
+        </div>
+      </div>`;
+    const waBtnEmpty = document.getElementById('pick-card-wa-btn');
+    if (waBtnEmpty) waBtnEmpty.innerHTML = '';
+    return;
+  }
+
   const podClr = ['#FFD700','#C0C0C0','#CD7F32'];
   const podium = raceResult ? [1,2,3].map(p => raceResult[p]) : [];
 
@@ -4094,6 +4121,8 @@ function sharePickCardWhatsApp(raceId) {
     pts: getPts(racePicks[p.id]),
     pos: getPos(racePicks[p.id]),
   })).filter(r => r.driver);
+
+  if (rows.length === 0) { showToast('No resolved picks to share for this race yet', 'info'); return; }
 
   const upcoming = !raceResult;
   if (!upcoming) rows.sort((a,b) => (b.pts||0) - (a.pts||0) || a.name.localeCompare(b.name));
