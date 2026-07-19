@@ -750,6 +750,13 @@ nav {
 }
 .share-preview-overlay.open .share-preview-modal { transform: none; }
 .share-preview-modal.wide { max-width: 960px; }
+.share-preview-theme { display: flex; gap: 8px; margin-bottom: 10px; }
+.share-preview-theme button {
+  background: var(--panel2); border: 1px solid var(--border); color: var(--muted);
+  font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; font-weight: 700;
+  padding: 6px 14px; border-radius: 6px; cursor: pointer;
+}
+.share-preview-theme button.active { border-color: var(--gold); color: var(--gold); }
 .share-preview-title {
   font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 900;
   letter-spacing: 2px; margin-bottom: 18px; color: var(--text);
@@ -1617,6 +1624,10 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   <div class="share-preview-modal">
     <div class="share-preview-title" id="share-preview-title">📸 PICK ORDER PREVIEW</div>
     <div class="share-preview-section-label">IMAGE PREVIEW</div>
+    <div class="share-preview-theme" id="share-preview-theme" style="display:none">
+      <button id="share-theme-dark" onclick="setSharePreviewTheme('dark')">🌙 DARK</button>
+      <button id="share-theme-light" onclick="setSharePreviewTheme('light')">☀️ LIGHT</button>
+    </div>
     <img id="share-preview-img" class="share-preview-img" alt="Share image preview" />
     <div class="share-preview-section-label">WHATSAPP MESSAGE PREVIEW</div>
     <textarea id="share-preview-textarea" class="share-preview-textarea" readonly></textarea>
@@ -2441,6 +2452,7 @@ function renderDraft() {
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
       <button class="share-standings-btn" onclick="previewPickOrder(${raceIdx})" title="Preview and share pick order image or WhatsApp message" style="background:var(--gold);color:#000;font-weight:700;">📸 SHARE PICK ORDER</button>
       <button class="share-standings-btn" onclick="previewPickOrder(${raceIdx})" title="Preview pick order before sharing via WhatsApp" style="background:#25D366;color:#fff;font-weight:700;">💬 WHATSAPP</button>
+      <button class="share-standings-btn" onclick="previewPickReminder(${raceIdx})" title="Deadline reminder showing who still needs to pick" style="background:var(--accent);color:#000;font-weight:700;">⏰ PICK REMINDER</button>
     </div>
   `;
 
@@ -6872,8 +6884,38 @@ function _buildRaceReportText() {
 }
 
 // Three-panel landscape share image: race result · championship · next picks.
-function _buildRaceReportCanvas() {
+// theme: 'dark' (default) or 'light'.
+function _buildRaceReportCanvas(theme) {
   const { completedRaces, lastRace, standings, raceRanked, nextRace, nextOrder } = _buildRaceReportData();
+
+  const light = theme === 'light';
+  const P = light ? {
+    bg:'#f4f5f7', title:'#15151e',
+    hdrDivider:'rgba(0,0,0,0.12)',
+    panelBg:'#ffffff', panelBorder:'rgba(0,0,0,0.10)',
+    panelDivider:'rgba(0,0,0,0.08)', altRow:'rgba(0,0,0,0.028)',
+    sub:'#5c6070', name:'#15151e', nameMuted:'#9a9eae', subMuted:'#b0b3c0',
+    chipFill:'rgba(0,0,0,0.05)', chipStroke:'rgba(0,0,0,0.18)',
+    chipText:'#666a7a', chipPodiumText:'#15151e',
+    barMuted:'rgba(0,0,0,0.12)',
+    gold:'#b8860b', green:'#15803d', blue:'#2563eb', zero:'#b0b3c0',
+    moveUp:'#15803d', moveDown:'#dc2626', moveNone:'#b0b3c0',
+    accentChamp:'#b8860b', accentNext:'#0284c7', deadline:'#9a7000',
+    noteText:'#8a8ea0',
+  } : {
+    bg:'#0b0b12', title:'#ffffff',
+    hdrDivider:'rgba(255,255,255,0.08)',
+    panelBg:'#11111b', panelBorder:'rgba(255,255,255,0.07)',
+    panelDivider:'rgba(255,255,255,0.06)', altRow:'rgba(255,255,255,0.022)',
+    sub:'#8b90a5', name:'#ffffff', nameMuted:'#70768c', subMuted:'#565c72',
+    chipFill:'rgba(255,255,255,0.05)', chipStroke:'rgba(255,255,255,0.14)',
+    chipText:'#9aa0b4', chipPodiumText:'#0b0b12',
+    barMuted:'rgba(255,255,255,0.10)',
+    gold:'#FFD700', green:'#4ade80', blue:'#60a5fa', zero:'#3d4358',
+    moveUp:'#4ade80', moveDown:'#f87171', moveNone:'#3d4358',
+    accentChamp:'#FFD700', accentNext:'#4dc9ff', deadline:'#f5b942',
+    noteText:'#666c80',
+  };
 
   const SCALE = 2, PAD = 32, GAP = 20, PANEL_W = 376;
   const W = PAD * 2 + PANEL_W * 3 + GAP * 2;
@@ -6903,22 +6945,22 @@ function _buildRaceReportCanvas() {
     ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2);
     if (rank < 3) {
       ctx.fillStyle = podium[rank]; ctx.fill();
-      ctx.fillStyle = '#0b0b12';
+      ctx.fillStyle = P.chipPodiumText;
     } else {
-      ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#9aa0b4';
+      ctx.fillStyle = P.chipFill; ctx.fill();
+      ctx.strokeStyle = P.chipStroke; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = P.chipText;
     }
     ctx.font = '700 11px Orbitron, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText(String(rank + 1), cx, cy + 4);
   }
 
   // ── Background + header ─────────────────────────────────────
-  ctx.fillStyle = '#0b0b12'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = P.bg; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = '#E10600'; ctx.fillRect(0, 0, W, 5);
 
   ctx.font = '900 24px Orbitron, sans-serif';
-  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+  ctx.fillStyle = P.title; ctx.textAlign = 'left';
   ctx.fillText('F1 GRID MASTERS 2026', PAD, 44);
   ctx.font = '700 12px Orbitron, sans-serif';
   ctx.fillStyle = '#E10600';
@@ -6931,7 +6973,7 @@ function _buildRaceReportCanvas() {
     ctx.font = '34px serif'; ctx.textAlign = 'right';
     ctx.fillText(lastRace.flag, W - PAD, 56);
   }
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = P.hdrDivider; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(PAD, HDR_H - 12); ctx.lineTo(W - PAD, HDR_H - 12); ctx.stroke();
 
   // ── Panel scaffolding ───────────────────────────────────────
@@ -6940,16 +6982,16 @@ function _buildRaceReportCanvas() {
 
   function panelFrame(i, accent, label, subtitle) {
     const x = panelX(i);
-    roundRect(x, panelY, PANEL_W, PANEL_H, 12, '#11111b', 'rgba(255,255,255,0.07)');
+    roundRect(x, panelY, PANEL_W, PANEL_H, 12, P.panelBg, P.panelBorder);
     ctx.fillStyle = accent;
     ctx.fillRect(x + 18, panelY + 20, 26, 3);
     ctx.font = '700 14px Orbitron, sans-serif';
     ctx.fillStyle = accent; ctx.textAlign = 'left';
     ctx.fillText(label, x + 18, panelY + 44);
     ctx.font = '600 13px Rajdhani, sans-serif';
-    ctx.fillStyle = '#8b90a5';
+    ctx.fillStyle = P.sub;
     ctx.fillText(subtitle, x + 18, panelY + 64);
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = P.panelDivider; ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(x + 14, panelY + PANEL_HDR - 8);
     ctx.lineTo(x + PANEL_W - 14, panelY + PANEL_HDR - 8);
@@ -6959,14 +7001,14 @@ function _buildRaceReportCanvas() {
   function rowBase(x, i) {
     const rowY = panelY + PANEL_HDR + i * ROW_H;
     if (i % 2 === 0) {
-      ctx.fillStyle = 'rgba(255,255,255,0.022)';
+      ctx.fillStyle = P.altRow;
       ctx.fillRect(x + 10, rowY + 2, PANEL_W - 20, ROW_H - 4);
     }
     return { rowY, midY: rowY + ROW_H / 2 };
   }
   function emptyPanelNote(x, msg) {
     ctx.font = '600 13px Rajdhani, sans-serif';
-    ctx.fillStyle = '#666c80'; ctx.textAlign = 'center';
+    ctx.fillStyle = P.noteText; ctx.textAlign = 'center';
     ctx.fillText(msg, x + PANEL_W / 2, panelY + PANEL_HDR + 40);
   }
 
@@ -6979,25 +7021,25 @@ function _buildRaceReportCanvas() {
       const { rowY, midY } = rowBase(x, i);
       const scored = p.lastPts > 0;
       rankChip(x + 30, midY, i);
-      ctx.fillStyle = scored ? p.driverColor : 'rgba(255,255,255,0.10)';
+      ctx.fillStyle = scored ? p.driverColor : P.barMuted;
       ctx.fillRect(x + 50, rowY + 8, 3, ROW_H - 16);
       ctx.font = '700 17px Rajdhani, sans-serif';
-      ctx.fillStyle = scored ? '#ffffff' : '#70768c';
+      ctx.fillStyle = scored ? P.name : P.nameMuted;
       ctx.textAlign = 'left';
       ctx.fillText(fitText(p.name, 150), x + 61, midY + 6);
       ctx.font = '600 12px Rajdhani, sans-serif';
-      ctx.fillStyle = scored ? '#8b90a5' : '#565c72';
+      ctx.fillStyle = scored ? P.sub : P.subMuted;
       ctx.textAlign = 'right';
       ctx.fillText(`${p.lastPick || '—'} · ${p.lastPos ? 'P' + p.lastPos : '—'}`, x + PANEL_W - 64, midY + 5);
       ctx.font = '900 16px Orbitron, sans-serif';
-      ctx.fillStyle = p.lastPts >= 8 ? '#FFD700' : p.lastPts >= 5 ? '#4ade80' : scored ? '#60a5fa' : '#3d4358';
+      ctx.fillStyle = p.lastPts >= 8 ? P.gold : p.lastPts >= 5 ? P.green : scored ? P.blue : P.zero;
       ctx.fillText(scored ? `+${p.lastPts}` : '–', x + PANEL_W - 18, midY + 5);
     });
   }
 
   // ── Panel 2: championship standings ─────────────────────────
   {
-    const x = panelFrame(1, '#FFD700', '🏆 CHAMPIONSHIP',
+    const x = panelFrame(1, P.accentChamp, '🏆 CHAMPIONSHIP',
       `Season standings · after round ${completedRaces.length} of ${RACES.length}`);
     standings.forEach((p, i) => {
       const { rowY, midY } = rowBase(x, i);
@@ -7005,28 +7047,28 @@ function _buildRaceReportCanvas() {
       ctx.fillStyle = p.color || '#E10600';
       ctx.fillRect(x + 50, rowY + 8, 3, ROW_H - 16);
       ctx.font = '700 17px Rajdhani, sans-serif';
-      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+      ctx.fillStyle = P.name; ctx.textAlign = 'left';
       ctx.fillText(fitText(p.name, 160), x + 61, midY + 6);
       const mv = p.move || 0;
       ctx.font = '700 12px Rajdhani, sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillStyle = mv > 0 ? '#4ade80' : mv < 0 ? '#f87171' : '#3d4358';
+      ctx.fillStyle = mv > 0 ? P.moveUp : mv < 0 ? P.moveDown : P.moveNone;
       ctx.fillText(mv > 0 ? `▲${mv}` : mv < 0 ? `▼${-mv}` : '·', x + PANEL_W - 68, midY + 5);
       ctx.font = '900 17px Orbitron, sans-serif';
-      ctx.fillStyle = i === 0 ? '#FFD700' : '#ffffff';
+      ctx.fillStyle = i === 0 ? P.gold : P.name;
       ctx.fillText(`${p.total}`, x + PANEL_W - 18, midY + 6);
     });
   }
 
   // ── Panel 3: next race pick order ───────────────────────────
   {
-    const x = panelFrame(2, '#4dc9ff', '📋 NEXT PICK ORDER',
+    const x = panelFrame(2, P.accentNext, '📋 NEXT PICK ORDER',
       nextRace
         ? `${nextRace.name} GP · ${nextRace.date}${nextRace.sprint ? ' · SPRINT' : ''}`
         : 'Season complete');
     if (nextRace) {
       ctx.font = '700 11px Orbitron, sans-serif';
-      ctx.fillStyle = '#f5b942'; ctx.textAlign = 'right';
+      ctx.fillStyle = P.deadline; ctx.textAlign = 'right';
       ctx.fillText(`⏰ DUE ${_pickDeadlineLabel(nextRace.date)}`, x + PANEL_W - 18, panelY + 44);
     } else {
       emptyPanelNote(x, 'No further races this season');
@@ -7037,10 +7079,12 @@ function _buildRaceReportCanvas() {
       ctx.fillStyle = p.color || '#E10600';
       ctx.fillRect(x + 50, rowY + 8, 3, ROW_H - 16);
       ctx.font = '700 17px Rajdhani, sans-serif';
-      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+      ctx.fillStyle = P.name; ctx.textAlign = 'left';
       ctx.fillText(fitText(p.name, 180), x + 61, midY + 6);
       ctx.font = '700 12px Orbitron, sans-serif';
-      ctx.fillStyle = p.color || '#8b90a5'; ctx.textAlign = 'right';
+      // pale player colours wash out on the light background
+      ctx.fillStyle = light ? P.sub : (p.color || P.sub);
+      ctx.textAlign = 'right';
       ctx.fillText(`PICK ${i + 1}`, x + PANEL_W - 18, midY + 5);
     });
   }
@@ -7070,9 +7114,10 @@ async function shareStandingsImage() {
   try {
     await _ensureShareFonts();
     const completed = RACES.filter(r => STATE.raceResults[r.id] && STATE.draftRevealed?.[r.id]).length;
-    const canvas = _buildRaceReportCanvas();
+    const canvas = _buildRaceReportCanvas(_previewTheme);
     _openSharePreview('📸 RACE REPORT PREVIEW', canvas, _buildRaceReportText(),
-      `f1-gridmasters-race-report-r${completed}.png`, true);
+      `f1-gridmasters-race-report-r${completed}.png`, true,
+      theme => _buildRaceReportCanvas(theme));
   } catch(e) {
     showToast('Image generation failed: ' + e.message, 'error');
   }
@@ -7201,6 +7246,24 @@ function _buildPickOrderCanvas(raceIdx) {
 let _previewCanvas = null;
 let _previewWAText = '';
 let _previewFilename = '';
+let _previewRebuild = null;
+let _previewTheme = (function() {
+  try { return localStorage.getItem('f1gm_share_theme') || 'dark'; } catch(e) { return 'dark'; }
+})();
+
+function _updateShareThemeButtons() {
+  document.getElementById('share-theme-dark').classList.toggle('active', _previewTheme === 'dark');
+  document.getElementById('share-theme-light').classList.toggle('active', _previewTheme === 'light');
+}
+
+function setSharePreviewTheme(theme) {
+  if (!_previewRebuild || theme === _previewTheme) return;
+  _previewTheme = theme;
+  try { localStorage.setItem('f1gm_share_theme', theme); } catch(e) {}
+  _updateShareThemeButtons();
+  _previewCanvas = _previewRebuild(theme);
+  document.getElementById('share-preview-img').src = _previewCanvas.toDataURL('image/png');
+}
 
 // Canvas text silently falls back to sans-serif if a font face isn't
 // loaded yet, so force-load the faces the share cards draw with first.
@@ -7242,10 +7305,13 @@ async function _saveCanvasImage(canvas, filename) {
   return true;
 }
 
-function _openSharePreview(title, canvas, waText, filename, wide) {
+function _openSharePreview(title, canvas, waText, filename, wide, rebuild) {
   _previewCanvas = canvas;
   _previewWAText = waText;
   _previewFilename = filename;
+  _previewRebuild = rebuild || null;
+  document.getElementById('share-preview-theme').style.display = _previewRebuild ? 'flex' : 'none';
+  if (_previewRebuild) _updateShareThemeButtons();
   document.getElementById('share-preview-title').textContent = title;
   document.querySelector('.share-preview-modal').classList.toggle('wide', !!wide);
   document.getElementById('share-preview-img').src = canvas.toDataURL('image/png');
@@ -7285,6 +7351,7 @@ function closeSharePreview() {
   _previewCanvas = null;
   _previewWAText = '';
   _previewFilename = '';
+  _previewRebuild = null;
 }
 
 async function sharePreviewDownload() {
@@ -7342,6 +7409,193 @@ function sharePickOrderWhatsApp(raceIdx) {
   lines.push('🔗 f1gridmasters.netlify.app');
 
   window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+}
+
+// ── PICK DEADLINE REMINDER CARD ───────────────────────────────────────────────
+
+// 9pm-Thursday deadline as a Date, for countdown maths.
+function _pickDeadlineDate(raceDateStr) {
+  const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+  const parts = raceDateStr.trim().split(' ');
+  const mon = months[parts[0]]; const day = parseInt(parts[1]);
+  if (mon === undefined || isNaN(day)) return null;
+  const raceDate = new Date(2026, mon, day);
+  const dow = raceDate.getDay();
+  const daysBack = dow === 4 ? 0 : ((dow + 3) % 7);
+  const thu = new Date(raceDate); thu.setDate(raceDate.getDate() - daysBack);
+  thu.setHours(21, 0, 0, 0);
+  return thu;
+}
+
+function _pickDeadlineCountdown(raceDateStr) {
+  const deadline = _pickDeadlineDate(raceDateStr);
+  if (!deadline) return '';
+  const msLeft = deadline - new Date();
+  if (msLeft < 0) return 'DEADLINE PASSED';
+  const days = Math.floor(msLeft / 86400000);
+  const hours = Math.floor((msLeft % 86400000) / 3600000);
+  if (days > 1) return `${days} DAYS TO GO`;
+  if (days === 1) return '1 DAY TO GO';
+  if (hours >= 1) return `${hours} ${hours === 1 ? 'HOUR' : 'HOURS'} TO GO — GET THEM IN!`;
+  return 'LAST CALL — UNDER AN HOUR!';
+}
+
+function _pendingPickPlayers(raceId) {
+  const submitted = STATE.draftSubmitted?.[raceId] || {};
+  return STATE.players.filter(p => !submitted[p.id]);
+}
+
+function _buildPickReminderCanvas(raceIdx, theme) {
+  const race = RACES[raceIdx];
+  const light = theme === 'light';
+  const P = light ? {
+    bg:'#f4f5f7', title:'#15151e', sub:'#5c6070',
+    boxBg:'rgba(200,150,0,0.10)', boxBorder:'rgba(180,130,0,0.55)', boxText:'#9a7000',
+    barTrack:'rgba(0,0,0,0.10)', barFill:'#15803d',
+    name:'#15151e', altRow:'rgba(0,0,0,0.028)',
+    okBg:'rgba(21,128,61,0.10)', okBorder:'rgba(21,128,61,0.45)', okText:'#15803d',
+  } : {
+    bg:'#0b0b12', title:'#ffffff', sub:'#8b90a5',
+    boxBg:'rgba(245,185,66,0.08)', boxBorder:'rgba(245,185,66,0.5)', boxText:'#f5b942',
+    barTrack:'rgba(255,255,255,0.10)', barFill:'#4ade80',
+    name:'#ffffff', altRow:'rgba(255,255,255,0.022)',
+    okBg:'rgba(74,222,128,0.08)', okBorder:'rgba(74,222,128,0.45)', okText:'#4ade80',
+  };
+
+  const pending = _pendingPickPlayers(race.id);
+  const total = STATE.players.length;
+  const inCount = total - pending.length;
+
+  const SCALE = 2, W = 540, PAD = 28;
+  const ROW_H = 40;
+  const HEADER_H = 150, BOX_H = 82, PROG_H = 52, FOOTER_H = 54;
+  const listH = pending.length > 0 ? 30 + pending.length * ROW_H : 70;
+  const H = HEADER_H + BOX_H + 16 + PROG_H + listH + 20 + FOOTER_H;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * SCALE; canvas.height = H * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  ctx.fillStyle = P.bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#E10600'; ctx.fillRect(0, 0, W, 5);
+
+  let y = 28;
+  ctx.font = '900 13px Orbitron, sans-serif';
+  ctx.fillStyle = '#E10600'; ctx.textAlign = 'center';
+  ctx.fillText('F1 GRID MASTERS 2026', W / 2, y);
+
+  y += 36;
+  ctx.font = '34px serif';
+  ctx.fillText(race.flag, W / 2, y);
+  y += 34;
+  ctx.font = '900 21px Orbitron, sans-serif';
+  ctx.fillStyle = P.title;
+  ctx.fillText(`${race.name} GRAND PRIX`, W / 2, y);
+  y += 20;
+  ctx.font = '600 12px Rajdhani, sans-serif';
+  ctx.fillStyle = P.sub;
+  ctx.fillText(`${race.circuit} · ${race.date} 2026${race.sprint ? ' · SPRINT WEEKEND' : ''}`, W / 2, y);
+
+  // deadline box
+  y = HEADER_H;
+  ctx.fillStyle = P.boxBg;
+  ctx.strokeStyle = P.boxBorder; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(PAD, y, W - PAD * 2, BOX_H, 10); ctx.fill(); ctx.stroke();
+  ctx.font = '700 11px Orbitron, sans-serif';
+  ctx.fillStyle = P.boxText; ctx.textAlign = 'center';
+  ctx.fillText('⏰  PICKS DUE', W / 2, y + 22);
+  ctx.font = '900 20px Orbitron, sans-serif';
+  ctx.fillText(_pickDeadlineLabel(race.date), W / 2, y + 48);
+  ctx.font = '700 11px Orbitron, sans-serif';
+  ctx.fillText(_pickDeadlineCountdown(race.date), W / 2, y + 68);
+
+  // progress
+  y += BOX_H + 16;
+  ctx.font = '700 11px Orbitron, sans-serif';
+  ctx.fillStyle = P.sub; ctx.textAlign = 'left';
+  ctx.fillText('PICKS IN', PAD, y + 12);
+  ctx.textAlign = 'right';
+  ctx.fillStyle = P.title;
+  ctx.fillText(`${inCount} OF ${total}`, W - PAD, y + 12);
+  ctx.fillStyle = P.barTrack;
+  ctx.beginPath(); ctx.roundRect(PAD, y + 22, W - PAD * 2, 8, 4); ctx.fill();
+  if (inCount > 0) {
+    ctx.fillStyle = P.barFill;
+    ctx.beginPath();
+    ctx.roundRect(PAD, y + 22, Math.max(8, (W - PAD * 2) * inCount / Math.max(total, 1)), 8, 4);
+    ctx.fill();
+  }
+
+  y += PROG_H;
+  if (pending.length > 0) {
+    ctx.font = '700 12px Orbitron, sans-serif';
+    ctx.fillStyle = '#E10600'; ctx.textAlign = 'left';
+    ctx.fillText(`⌛ STILL TO PICK (${pending.length})`, PAD, y + 12);
+    y += 22;
+    pending.forEach((p, i) => {
+      const rowY = y + i * ROW_H, midY = rowY + ROW_H / 2;
+      if (i % 2 === 0) {
+        ctx.fillStyle = P.altRow;
+        ctx.fillRect(PAD, rowY + 2, W - PAD * 2, ROW_H - 4);
+      }
+      ctx.fillStyle = p.color || '#E10600';
+      ctx.fillRect(PAD + 8, rowY + 8, 3, ROW_H - 16);
+      ctx.font = '700 17px Rajdhani, sans-serif';
+      ctx.fillStyle = P.name; ctx.textAlign = 'left';
+      ctx.fillText(p.name, PAD + 20, midY + 6);
+      ctx.font = '700 11px Orbitron, sans-serif';
+      ctx.fillStyle = P.boxText; ctx.textAlign = 'right';
+      ctx.fillText('PICK NEEDED', W - PAD - 8, midY + 4);
+    });
+  } else {
+    ctx.fillStyle = P.okBg;
+    ctx.strokeStyle = P.okBorder; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(PAD, y + 8, W - PAD * 2, 46, 10); ctx.fill(); ctx.stroke();
+    ctx.font = '700 13px Orbitron, sans-serif';
+    ctx.fillStyle = P.okText; ctx.textAlign = 'center';
+    ctx.fillText('✅ ALL PICKS ARE IN — SEE YOU AT LIGHTS OUT', W / 2, y + 36);
+  }
+
+  ctx.fillStyle = '#E10600'; ctx.fillRect(0, H - FOOTER_H, W, FOOTER_H);
+  ctx.font = 'bold 13px Orbitron, sans-serif';
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+  ctx.fillText('F1 GRID MASTERS 2026  ·  f1gridmasters.netlify.app', W / 2, H - FOOTER_H / 2 + 5);
+
+  return canvas;
+}
+
+async function previewPickReminder(raceIdx) {
+  const race = RACES[raceIdx];
+  if (!race) return;
+  const pending = _pendingPickPlayers(race.id);
+  const total = STATE.players.length;
+  const countdown = _pickDeadlineCountdown(race.date);
+
+  const lines = [
+    '🏎 *F1 GRID MASTERS 2026*',
+    '',
+    `⏰ *PICK REMINDER — ${race.flag} ${race.name} GP*`,
+    `📍 ${race.circuit} · ${race.date}${race.sprint ? ' · 🏃 Sprint weekend' : ''}`,
+    `🗓 Picks due *${_pickDeadlineLabel(race.date)}*${countdown ? ` — ${countdown.toLowerCase()}` : ''}`,
+    '',
+    `✅ Picks in: ${total - pending.length} of ${total}`,
+  ];
+  if (pending.length > 0) {
+    lines.push('⌛ Still to pick:');
+    pending.forEach(p => lines.push(`• ${p.name}`));
+  } else {
+    lines.push('All picks are in — see you at lights out! 🚦');
+  }
+  lines.push('');
+  lines.push('Get yours in 👉 f1gridmasters.netlify.app');
+
+  await _ensureShareFonts();
+  const canvas = _buildPickReminderCanvas(raceIdx, _previewTheme);
+  _openSharePreview(
+    '⏰ PICK REMINDER PREVIEW', canvas, lines.join('\n'),
+    `f1-gridmasters-reminder-${race.name.toLowerCase().replace(/\s+/g,'-')}.png`, false,
+    theme => _buildPickReminderCanvas(raceIdx, theme));
 }
 
 // ============================================================
