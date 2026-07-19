@@ -749,6 +749,7 @@ nav {
   max-height: 92vh; overflow-y: auto;
 }
 .share-preview-overlay.open .share-preview-modal { transform: none; }
+.share-preview-modal.wide { max-width: 960px; }
 .share-preview-title {
   font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 900;
   letter-spacing: 2px; margin-bottom: 18px; color: var(--text);
@@ -1614,9 +1615,9 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <!-- SHARE PREVIEW MODAL -->
 <div class="share-preview-overlay" id="share-preview-overlay" onclick="if(event.target===this)closeSharePreview()">
   <div class="share-preview-modal">
-    <div class="share-preview-title">📸 PICK ORDER PREVIEW</div>
+    <div class="share-preview-title" id="share-preview-title">📸 PICK ORDER PREVIEW</div>
     <div class="share-preview-section-label">IMAGE PREVIEW</div>
-    <img id="share-preview-img" class="share-preview-img" alt="Pick order image preview" />
+    <img id="share-preview-img" class="share-preview-img" alt="Share image preview" />
     <div class="share-preview-section-label">WHATSAPP MESSAGE PREVIEW</div>
     <textarea id="share-preview-textarea" class="share-preview-textarea" readonly></textarea>
     <div class="share-preview-actions">
@@ -3141,8 +3142,8 @@ function renderLeaderboard() {
         <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;color:var(--accent);">${racesRemaining}</div>
         <div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);">LEFT</div>
       </div>
-      <button class="share-standings-btn" onclick="shareStandings()" title="Copy standings as text">📋 SHARE</button>
-      <button class="share-standings-btn" onclick="shareStandingsImage()" title="Download standings as image" style="background:var(--gold);color:#000">📸 IMAGE</button>
+      <button class="share-standings-btn" onclick="shareStandings()" title="Copy race report text for WhatsApp">📋 SHARE</button>
+      <button class="share-standings-btn" onclick="shareStandingsImage()" title="Race report image — result, standings &amp; next pick order" style="background:var(--gold);color:#000">📸 REPORT</button>
     </div>
     <div class="card" style="padding:0;overflow:hidden;">
       <table class="leaderboard-table">
@@ -6789,295 +6790,288 @@ function closeProfileModal() {
 }
 
 // ============================================================
-//  SHARE STANDINGS
+//  RACE REPORT SHARING (result · standings · next pick order)
 // ============================================================
-function shareStandings() {
+
+// Gathers everything the post-race report needs: last completed race
+// points, season standings with position movement, and the pick order
+// for the race that follows the last completed one.
+function _buildRaceReportData() {
   const completedRaces = RACES.filter(r => STATE.raceResults[r.id] && STATE.draftRevealed?.[r.id]);
   const lastRace = completedRaces[completedRaces.length - 1] || null;
 
   const playerData = STATE.players.map(player => {
     const { total, racePoints } = calcPlayerPoints(player.id);
-    const lastPts  = lastRace ? (racePoints[lastRace.id] ?? null) : null;
+    const lastPts  = lastRace ? (racePoints[lastRace.id] ?? 0) : 0;
     const lastPick = lastRace ? (STATE.draftPicks[lastRace.id]?.[player.id] || null) : null;
-    // finish position of their driver in the last race
     const lastPos  = lastRace && lastPick
       ? Object.entries(STATE.raceResults[lastRace.id] || {}).find(([,s]) => s === lastPick)?.[0] || null
       : null;
-    return { ...player, total, lastPts, lastPick, lastPos };
-  }).sort((a, b) => b.total - a.total);
+    const driver = DRIVERS.find(d => d.short === lastPick);
+    return { ...player, total, lastPts, lastPick, lastPos, driverColor: driver?.teamColor || '#888' };
+  });
 
+  const standings = [...playerData].sort((a, b) => b.total - a.total);
+  const prevOrder = [...playerData].sort((a, b) => (b.total - b.lastPts) - (a.total - a.lastPts));
+  standings.forEach((p, curRank) => {
+    p.move = lastRace ? prevOrder.findIndex(q => q.id === p.id) - curRank : 0;
+  });
+
+  const raceRanked = lastRace
+    ? [...playerData].sort((a, b) =>
+        (b.lastPts - a.lastPts) ||
+        ((parseInt(a.lastPos) || 99) - (parseInt(b.lastPos) || 99)))
+    : [];
+
+  const nextIdx  = lastRace ? RACES.findIndex(r => r.id === lastRace.id) + 1 : STATE.currentRaceIdx;
+  const nextRace = nextIdx < RACES.length ? RACES[nextIdx] : null;
+  const nextOrder = nextRace
+    ? getDraftOrderForRace(nextIdx).map(pid => STATE.players.find(p => p.id === pid)).filter(Boolean)
+    : [];
+
+  return { completedRaces, lastRace, standings, raceRanked, nextRace, nextIdx, nextOrder };
+}
+
+// WhatsApp-formatted text version of the race report (uses *bold*).
+function _buildRaceReportText() {
+  const { completedRaces, lastRace, standings, raceRanked, nextRace, nextOrder } = _buildRaceReportData();
   const medals = ['🥇','🥈','🥉'];
-  const lines = ['🏎 F1 GRID MASTERS 2026'];
+  const lines = ['🏎 *F1 GRID MASTERS 2026*'];
 
   if (lastRace) {
-    const racePodium = [...playerData].sort((a,b) => (b.lastPts||0) - (a.lastPts||0));
     lines.push('');
-    lines.push(`🏁 ${lastRace.flag} ${lastRace.name} GP — RACE POINTS`);
-    racePodium.forEach((p, i) => {
-      const pos  = p.lastPos  ? `P${p.lastPos}` : '—';
-      const drv  = p.lastPick || '—';
-      const pts  = p.lastPts !== null ? `+${p.lastPts}pts` : '0pts';
-      lines.push(`${medals[i] || `${i+1}.`} ${p.name}  (${drv} · ${pos})  ${pts}`);
+    lines.push(`🏁 *${lastRace.flag} ${lastRace.name} GP — RESULT* · Round ${completedRaces.length} of ${RACES.length}`);
+    const scorers = raceRanked.filter(p => p.lastPts > 0);
+    const blanks  = raceRanked.filter(p => !(p.lastPts > 0));
+    scorers.forEach((p, i) => {
+      lines.push(`${medals[i] || `${i+1}.`} ${p.name} — ${p.lastPick || '—'} ${p.lastPos ? 'P' + p.lastPos : ''} · *${p.lastPts} ${p.lastPts === 1 ? 'pt' : 'pts'}*`);
     });
+    if (blanks.length) lines.push(`0 pts: ${blanks.map(p => p.name).join(', ')}`);
   }
 
   lines.push('');
-  lines.push(`📊 STANDINGS AFTER RACE ${completedRaces.length}`);
-  playerData.forEach((p, i) => {
-    lines.push(`${medals[i] || `${i+1}.`} ${p.name} — ${p.total}pts`);
+  lines.push(`🏆 *CHAMPIONSHIP — AFTER ROUND ${completedRaces.length}*`);
+  standings.forEach((p, i) => {
+    const behind = standings[0].total - p.total;
+    const gap  = i === 0 || behind === 0 ? '' : ` (-${behind})`;
+    const move = p.move > 0 ? ` 🔺${p.move}` : p.move < 0 ? ` 🔻${-p.move}` : '';
+    lines.push(`${medals[i] || `${i+1}.`} ${p.name} — *${p.total} pts*${gap}${move}`);
   });
+
+  if (nextRace) {
+    lines.push('');
+    lines.push(`📅 *NEXT: ${nextRace.flag} ${nextRace.name} GP* · ${nextRace.date}${nextRace.sprint ? ' · 🏃 Sprint' : ''}`);
+    lines.push(`⏰ Picks due ${_pickDeadlineLabel(nextRace.date)}`);
+    lines.push('*PICK ORDER*');
+    nextOrder.forEach((p, i) => lines.push(`${i+1}. ${p.name}`));
+  }
 
   lines.push('');
   lines.push('🔗 f1gridmasters.netlify.app');
+  return lines.join('\n');
+}
 
-  const text = lines.join('\n');
+// Three-panel landscape share image: race result · championship · next picks.
+function _buildRaceReportCanvas() {
+  const { completedRaces, lastRace, standings, raceRanked, nextRace, nextOrder } = _buildRaceReportData();
+
+  const SCALE = 2, PAD = 32, GAP = 20, PANEL_W = 376;
+  const W = PAD * 2 + PANEL_W * 3 + GAP * 2;
+  const HDR_H = 96, PANEL_HDR = 92, ROW_H = 38, FTR_H = 46;
+  const rowCount = Math.max(standings.length, nextOrder.length, 1);
+  const PANEL_H = PANEL_HDR + rowCount * ROW_H + 14;
+  const H = HDR_H + PANEL_H + 18 + FTR_H;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * SCALE; canvas.height = H * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  function roundRect(x, y, w, h, r, fill, stroke) {
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
+    if (fill)  { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+  }
+  function fitText(text, maxW) {
+    let t = String(text);
+    if (ctx.measureText(t).width <= maxW) return t;
+    while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+    return t + '…';
+  }
+  function rankChip(cx, cy, rank) {
+    const podium = ['#FFD700', '#C9CDD3', '#CD7F32'];
+    ctx.beginPath(); ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+    if (rank < 3) {
+      ctx.fillStyle = podium[rank]; ctx.fill();
+      ctx.fillStyle = '#0b0b12';
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#9aa0b4';
+    }
+    ctx.font = '800 10px Orbitron, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(String(rank + 1), cx, cy + 3.5);
+  }
+
+  // ── Background + header ─────────────────────────────────────
+  ctx.fillStyle = '#0b0b12'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#E10600'; ctx.fillRect(0, 0, W, 5);
+
+  ctx.font = '900 22px Orbitron, sans-serif';
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+  ctx.fillText('F1 GRID MASTERS 2026', PAD, 44);
+  ctx.font = '700 11px Orbitron, sans-serif';
+  ctx.fillStyle = '#E10600';
+  ctx.fillText(
+    lastRace
+      ? `${lastRace.name} GRAND PRIX  ·  ROUND ${completedRaces.length} OF ${RACES.length}  ·  RACE REPORT`
+      : `SEASON REPORT  ·  ${completedRaces.length} ROUNDS COMPLETED`,
+    PAD, 68);
+  if (lastRace) {
+    ctx.font = '34px serif'; ctx.textAlign = 'right';
+    ctx.fillText(lastRace.flag, W - PAD, 56);
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD, HDR_H - 12); ctx.lineTo(W - PAD, HDR_H - 12); ctx.stroke();
+
+  // ── Panel scaffolding ───────────────────────────────────────
+  const panelY = HDR_H;
+  const panelX = i => PAD + i * (PANEL_W + GAP);
+
+  function panelFrame(i, accent, label, subtitle) {
+    const x = panelX(i);
+    roundRect(x, panelY, PANEL_W, PANEL_H, 12, '#11111b', 'rgba(255,255,255,0.07)');
+    ctx.fillStyle = accent;
+    ctx.fillRect(x + 18, panelY + 20, 26, 3);
+    ctx.font = '800 13px Orbitron, sans-serif';
+    ctx.fillStyle = accent; ctx.textAlign = 'left';
+    ctx.fillText(label, x + 18, panelY + 44);
+    ctx.font = '600 12px Rajdhani, sans-serif';
+    ctx.fillStyle = '#8b90a5';
+    ctx.fillText(subtitle, x + 18, panelY + 64);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + 14, panelY + PANEL_HDR - 8);
+    ctx.lineTo(x + PANEL_W - 14, panelY + PANEL_HDR - 8);
+    ctx.stroke();
+    return x;
+  }
+  function rowBase(x, i) {
+    const rowY = panelY + PANEL_HDR + i * ROW_H;
+    if (i % 2 === 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.022)';
+      ctx.fillRect(x + 10, rowY + 2, PANEL_W - 20, ROW_H - 4);
+    }
+    return { rowY, midY: rowY + ROW_H / 2 };
+  }
+  function emptyPanelNote(x, msg) {
+    ctx.font = '600 13px Rajdhani, sans-serif';
+    ctx.fillStyle = '#666c80'; ctx.textAlign = 'center';
+    ctx.fillText(msg, x + PANEL_W / 2, panelY + PANEL_HDR + 40);
+  }
+
+  // ── Panel 1: race result, 10 points down ────────────────────
+  {
+    const x = panelFrame(0, '#E10600', '🏁 RACE RESULT',
+      lastRace ? `${lastRace.name} GP · ${lastRace.date} · points 10-1` : 'No race completed yet');
+    if (!lastRace) emptyPanelNote(x, 'Results appear after the first race');
+    raceRanked.forEach((p, i) => {
+      const { rowY, midY } = rowBase(x, i);
+      const scored = p.lastPts > 0;
+      rankChip(x + 30, midY, i);
+      ctx.fillStyle = scored ? p.driverColor : 'rgba(255,255,255,0.10)';
+      ctx.fillRect(x + 50, rowY + 8, 3, ROW_H - 16);
+      ctx.font = '700 15px Rajdhani, sans-serif';
+      ctx.fillStyle = scored ? '#ffffff' : '#70768c';
+      ctx.textAlign = 'left';
+      ctx.fillText(fitText(p.name, 158), x + 61, midY + 5);
+      ctx.font = '600 11px Rajdhani, sans-serif';
+      ctx.fillStyle = scored ? '#8b90a5' : '#565c72';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${p.lastPick || '—'} · ${p.lastPos ? 'P' + p.lastPos : '—'}`, x + PANEL_W - 62, midY + 4);
+      ctx.font = '800 14px Orbitron, sans-serif';
+      ctx.fillStyle = p.lastPts >= 8 ? '#FFD700' : p.lastPts >= 5 ? '#4ade80' : scored ? '#60a5fa' : '#3d4358';
+      ctx.fillText(scored ? `+${p.lastPts}` : '0', x + PANEL_W - 18, midY + 5);
+    });
+  }
+
+  // ── Panel 2: championship standings ─────────────────────────
+  {
+    const x = panelFrame(1, '#FFD700', '🏆 CHAMPIONSHIP',
+      `Season standings · after round ${completedRaces.length} of ${RACES.length}`);
+    standings.forEach((p, i) => {
+      const { rowY, midY } = rowBase(x, i);
+      rankChip(x + 30, midY, i);
+      ctx.fillStyle = p.color || '#E10600';
+      ctx.fillRect(x + 50, rowY + 8, 3, ROW_H - 16);
+      ctx.font = '700 15px Rajdhani, sans-serif';
+      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+      ctx.fillText(fitText(p.name, 168), x + 61, midY + 5);
+      const mv = p.move || 0;
+      ctx.font = '700 11px Rajdhani, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = mv > 0 ? '#4ade80' : mv < 0 ? '#f87171' : '#3d4358';
+      ctx.fillText(mv > 0 ? `▲${mv}` : mv < 0 ? `▼${-mv}` : '·', x + PANEL_W - 66, midY + 4);
+      ctx.font = '900 15px Orbitron, sans-serif';
+      ctx.fillStyle = i === 0 ? '#FFD700' : '#ffffff';
+      ctx.fillText(`${p.total}`, x + PANEL_W - 18, midY + 5);
+    });
+  }
+
+  // ── Panel 3: next race pick order ───────────────────────────
+  {
+    const x = panelFrame(2, '#4dc9ff', '📋 NEXT PICK ORDER',
+      nextRace
+        ? `${nextRace.name} GP · ${nextRace.date}${nextRace.sprint ? ' · SPRINT' : ''}`
+        : 'Season complete');
+    if (nextRace) {
+      ctx.font = '700 10px Orbitron, sans-serif';
+      ctx.fillStyle = '#f5b942'; ctx.textAlign = 'right';
+      ctx.fillText(`⏰ DUE ${_pickDeadlineLabel(nextRace.date)}`, x + PANEL_W - 18, panelY + 44);
+    } else {
+      emptyPanelNote(x, 'No further races this season');
+    }
+    nextOrder.forEach((p, i) => {
+      const { rowY, midY } = rowBase(x, i);
+      rankChip(x + 30, midY, i);
+      ctx.fillStyle = p.color || '#E10600';
+      ctx.fillRect(x + 50, rowY + 8, 3, ROW_H - 16);
+      ctx.font = '700 15px Rajdhani, sans-serif';
+      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+      ctx.fillText(fitText(p.name, 190), x + 61, midY + 5);
+      ctx.font = '700 11px Orbitron, sans-serif';
+      ctx.fillStyle = p.color || '#8b90a5'; ctx.textAlign = 'right';
+      ctx.fillText(`PICK ${i + 1}`, x + PANEL_W - 18, midY + 4);
+    });
+  }
+
+  // ── Footer ──────────────────────────────────────────────────
+  ctx.fillStyle = '#E10600'; ctx.fillRect(0, H - FTR_H, W, FTR_H);
+  ctx.font = 'bold 13px Orbitron, sans-serif';
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+  ctx.fillText('F1 GRID MASTERS 2026  ·  f1gridmasters.netlify.app', W / 2, H - FTR_H / 2 + 5);
+
+  return canvas;
+}
+
+function shareStandings() {
+  const text = _buildRaceReportText();
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => showToast('Standings copied to clipboard!', 'success'));
+    navigator.clipboard.writeText(text).then(() => showToast('Race report copied — paste into WhatsApp!', 'success'));
   } else {
     const ta = document.createElement('textarea');
     ta.value = text; document.body.appendChild(ta); ta.select();
     document.execCommand('copy'); document.body.removeChild(ta);
-    showToast('Standings copied!', 'success');
+    showToast('Race report copied!', 'success');
   }
 }
 
-async function shareStandingsImage() {
-  showToast('Generating image...', 'info');
+function shareStandingsImage() {
   try {
-    // ── Gather data ─────────────────────────────────────────────
-    const completedRaces = RACES.filter(r => STATE.raceResults[r.id] && STATE.draftRevealed?.[r.id]);
-    const lastRace = completedRaces[completedRaces.length - 1] || null;
-
-    const playerData = STATE.players.map(player => {
-      const { total, racePoints } = calcPlayerPoints(player.id);
-      const lastPts  = lastRace ? (racePoints[lastRace.id] ?? 0) : 0;
-      const lastPick = lastRace ? (STATE.draftPicks[lastRace.id]?.[player.id] || '—') : '—';
-      const lastPos  = lastRace && lastPick !== '—'
-        ? Object.entries(STATE.raceResults[lastRace.id] || {}).find(([,s]) => s === lastPick)?.[0] || null
-        : null;
-      const driver   = DRIVERS.find(d => d.short === lastPick);
-      return { ...player, total, lastPts, lastPick, lastPos, driverColor: driver?.teamColor || '#888' };
-    }).sort((a, b) => b.total - a.total);
-
-    const raceRanked = lastRace ? [...playerData].sort((a, b) => (b.lastPts||0) - (a.lastPts||0)) : [];
-    const maxTotal   = playerData[0]?.total || 1;
-
-    // ── Canvas dimensions ────────────────────────────────────────
-    const SCALE   = 2;
-    const W       = 560;
-    const PAD     = 28;
-    const ROW_H   = 56;
-    const HDR_H   = 90;       // top header
-    const SEC_H   = 36;       // section label row
-    const FTR_H   = 50;
-    const numPlayers = playerData.length;
-    const raceSection  = lastRace ? SEC_H + numPlayers * ROW_H + 16 : 0;
-    const standSection = SEC_H + numPlayers * ROW_H + 16;
-    const totalH = HDR_H + raceSection + standSection + FTR_H + 20;
-
-    const canvas = document.createElement('canvas');
-    canvas.width  = W * SCALE;
-    canvas.height = totalH * SCALE;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(SCALE, SCALE);
-
-    // ── Helpers ──────────────────────────────────────────────────
-    function hexToRgba(hex, a) {
-      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-      return `rgba(${r},${g},${b},${a})`;
-    }
-    function drawRoundRect(x, y, w, h, r, fill, stroke) {
-      ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
-      if (fill)  { ctx.fillStyle   = fill;   ctx.fill();   }
-      if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
-    }
-    const medals = ['🥇','🥈','🥉'];
-
-    // ── Background ───────────────────────────────────────────────
-    ctx.fillStyle = '#090910';
-    ctx.fillRect(0, 0, W, totalH);
-
-    // ── Red top stripe ───────────────────────────────────────────
-    ctx.fillStyle = '#E10600';
-    ctx.fillRect(0, 0, W, 5);
-
-    // ── App title ────────────────────────────────────────────────
-    let y = 22;
-    ctx.font = '900 13px Orbitron, sans-serif';
-    ctx.fillStyle = '#E10600';
-    ctx.textAlign = 'center';
-    ctx.fillText('F1 GRID MASTERS 2026', W / 2, y);
-
-    y += 22;
-    ctx.font = '600 12px Rajdhani, sans-serif';
-    ctx.fillStyle = '#666677';
-    ctx.textAlign = 'center';
-    ctx.fillText(
-      lastRace
-        ? `${lastRace.flag}  ${lastRace.name} GP  ·  Race ${completedRaces.length} of ${RACES.length}`
-        : `Season standings  ·  ${completedRaces.length} races completed`,
-      W / 2, y
-    );
-
-    // thin divider
-    y += 16;
-    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke();
-
-    // ── SECTION 1: Latest race points ───────────────────────────
-    if (lastRace) {
-      y += 14;
-      // Section label
-      ctx.font = '700 10px Orbitron, sans-serif';
-      ctx.fillStyle = '#E10600';
-      ctx.textAlign = 'left';
-      ctx.fillText(`🏁  ${lastRace.name} GP — RACE POINTS`, PAD, y);
-      ctx.font = '700 10px Orbitron, sans-serif';
-      ctx.fillStyle = '#444455';
-      ctx.textAlign = 'right';
-      ctx.fillText('DRIVER · POS · PTS', W - PAD, y);
-
-      y += 8;
-      raceRanked.forEach((p, i) => {
-        const rowY  = y + i * ROW_H;
-        const midY  = rowY + ROW_H / 2;
-
-        // alt row bg
-        if (i % 2 === 0) {
-          ctx.fillStyle = 'rgba(255,255,255,0.018)';
-          ctx.fillRect(PAD, rowY + 3, W - PAD * 2, ROW_H - 6);
-        }
-
-        // rank medal / number
-        ctx.font = i < 3 ? '20px serif' : '800 14px Orbitron, sans-serif';
-        ctx.fillStyle = i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#334455';
-        ctx.textAlign = 'center';
-        ctx.fillText(i < 3 ? medals[i] : `${i+1}`, PAD + 14, midY + 6);
-
-        // driver colour accent bar
-        ctx.fillStyle = p.driverColor;
-        ctx.fillRect(PAD + 30, rowY + 10, 4, ROW_H - 20);
-
-        // player name
-        ctx.font = '700 16px Rajdhani, sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'left';
-        ctx.fillText(p.name, PAD + 42, midY + 6);
-
-        // driver code + position pill
-        const posLabel = p.lastPos ? `P${p.lastPos}` : '—';
-        const drvLabel = `${p.lastPick}  ·  ${posLabel}`;
-        ctx.font = '600 11px Rajdhani, sans-serif';
-        ctx.fillStyle = '#888899';
-        ctx.textAlign = 'right';
-        ctx.fillText(drvLabel, W - PAD - 54, midY + 5);
-
-        // points badge
-        const ptsLabel = p.lastPts > 0 ? `+${p.lastPts}` : '0';
-        const badgeX   = W - PAD - 46;
-        const badgeW   = 42;
-        const badgeH   = 22;
-        const badgeY   = midY - badgeH / 2;
-        const badgeCol = p.lastPts >= 9 ? '#FFD700' : p.lastPts >= 6 ? '#4ade80' : p.lastPts > 0 ? '#60a5fa' : '#334455';
-        drawRoundRect(badgeX, badgeY, badgeW, badgeH, 5, hexToRgba(badgeCol, 0.15), hexToRgba(badgeCol, 0.6));
-        ctx.font = '800 13px Orbitron, sans-serif';
-        ctx.fillStyle = badgeCol;
-        ctx.textAlign = 'center';
-        ctx.fillText(ptsLabel, badgeX + badgeW / 2, badgeY + 15);
-
-        // row bottom divider
-        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(PAD + 30, rowY + ROW_H - 1);
-        ctx.lineTo(W - PAD, rowY + ROW_H - 1);
-        ctx.stroke();
-      });
-
-      y += numPlayers * ROW_H + 16;
-
-      // section divider
-      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke();
-      y += 2;
-    }
-
-    // ── SECTION 2: Championship Standings ───────────────────────
-    y += 12;
-    ctx.font = '700 10px Orbitron, sans-serif';
-    ctx.fillStyle = '#FFD700';
-    ctx.textAlign = 'left';
-    ctx.fillText(`🏆  CHAMPIONSHIP STANDINGS  ·  AFTER RACE ${completedRaces.length}`, PAD, y);
-
-    y += 8;
-    playerData.forEach((p, i) => {
-      const rowY = y + i * ROW_H;
-      const midY = rowY + ROW_H / 2;
-      const pct  = Math.round((p.total / maxTotal) * 100);
-
-      if (i % 2 === 0) {
-        ctx.fillStyle = 'rgba(255,255,255,0.018)';
-        ctx.fillRect(PAD, rowY + 3, W - PAD * 2, ROW_H - 6);
-      }
-
-      // rank
-      ctx.font = i < 3 ? '20px serif' : '800 14px Orbitron, sans-serif';
-      ctx.fillStyle = i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : '#334455';
-      ctx.textAlign = 'center';
-      ctx.fillText(i < 3 ? medals[i] : `${i+1}`, PAD + 14, midY + 6);
-
-      // player colour bar
-      ctx.fillStyle = p.color || '#E10600';
-      ctx.fillRect(PAD + 30, rowY + 10, 4, ROW_H - 20);
-
-      // name
-      ctx.font = '700 16px Rajdhani, sans-serif';
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'left';
-      ctx.fillText(p.name, PAD + 42, midY - 2);
-
-      // points bar
-      const barX = PAD + 42;
-      const barW = W - PAD * 2 - 80;
-      const barH = 5;
-      const barY = midY + 8;
-      ctx.fillStyle = 'rgba(255,255,255,0.08)';
-      ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 3); ctx.fill();
-      ctx.fillStyle = p.color || '#E10600';
-      ctx.beginPath(); ctx.roundRect(barX, barY, Math.max(6, barW * pct / 100), barH, 3); ctx.fill();
-
-      // total points
-      ctx.font = '900 18px Orbitron, sans-serif';
-      ctx.fillStyle = p.color || '#E10600';
-      ctx.textAlign = 'right';
-      ctx.fillText(`${p.total}`, W - PAD, midY + 6);
-
-      // row divider
-      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(PAD + 30, rowY + ROW_H - 1);
-      ctx.lineTo(W - PAD, rowY + ROW_H - 1);
-      ctx.stroke();
-    });
-
-    // ── Footer ───────────────────────────────────────────────────
-    const footerY = totalH - FTR_H;
-    ctx.fillStyle = '#E10600';
-    ctx.fillRect(0, footerY, W, FTR_H);
-    ctx.font = 'bold 13px Orbitron, sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.fillText('F1 GRID MASTERS 2026  ·  f1gridmasters.netlify.app', W / 2, footerY + FTR_H / 2 + 5);
-
-    // ── Download ─────────────────────────────────────────────────
-    const link = document.createElement('a');
-    link.download = `f1-gridmasters-standings-r${completedRaces.length}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    showToast('Standings image downloaded!', 'success');
+    const completed = RACES.filter(r => STATE.raceResults[r.id] && STATE.draftRevealed?.[r.id]).length;
+    const canvas = _buildRaceReportCanvas();
+    _openSharePreview('📸 RACE REPORT PREVIEW', canvas, _buildRaceReportText(),
+      `f1-gridmasters-race-report-r${completed}.png`, true);
   } catch(e) {
     showToast('Image generation failed: ' + e.message, 'error');
   }
@@ -7086,24 +7080,25 @@ async function shareStandingsImage() {
 // ── PICK ORDER SHARE IMAGE ────────────────────────────────────
 // ── PICK ORDER CANVAS BUILDER ─────────────────────────────────────────────────
 
+// Thursday-9pm pick deadline label for a race date string like 'Jul 26'.
+function _pickDeadlineLabel(raceDateStr) {
+  const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+  const parts = raceDateStr.trim().split(' ');
+  const mon = months[parts[0]]; const day = parseInt(parts[1]);
+  if (mon === undefined || isNaN(day)) return '9PM THURSDAY BEFORE RACE';
+  const raceDate = new Date(2026, mon, day);
+  const dow = raceDate.getDay();
+  const daysBack = dow === 4 ? 0 : ((dow + 3) % 7);
+  const thu = new Date(raceDate); thu.setDate(raceDate.getDate() - daysBack);
+  const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  return `9PM ${dayNames[thu.getDay()]} ${thu.getDate()} ${monNames[thu.getMonth()]}`;
+}
+
 function _buildPickOrderCanvas(raceIdx) {
   const race = RACES[raceIdx];
   const draftOrder = getDraftOrderForRace(raceIdx);
-
-  function getDeadlineLabel(raceDateStr) {
-    const months = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
-    const parts = raceDateStr.trim().split(' ');
-    const mon = months[parts[0]]; const day = parseInt(parts[1]);
-    if (mon === undefined || isNaN(day)) return '9PM THURSDAY BEFORE RACE';
-    const raceDate = new Date(2026, mon, day);
-    const dow = raceDate.getDay();
-    const daysBack = dow === 4 ? 0 : ((dow + 3) % 7);
-    const thu = new Date(raceDate); thu.setDate(raceDate.getDate() - daysBack);
-    const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-    const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-    return `9PM ${dayNames[thu.getDay()]} ${thu.getDate()} ${monNames[thu.getMonth()]}`;
-  }
-  const deadlineLabel = getDeadlineLabel(race.date);
+  const deadlineLabel = _pickDeadlineLabel(race.date);
 
   const SCALE = 2, W = 540, PAD = 28;
   const HEADER_H = 130, DEADLINE_H = 64, ROW_H = 58, FOOTER_H = 54, LABEL_H = 22;
@@ -7203,8 +7198,19 @@ function _buildPickOrderCanvas(raceIdx) {
 // ── SHARE PREVIEW MODAL ───────────────────────────────────────────────────────
 
 let _previewCanvas = null;
-let _previewRaceIdx = null;
 let _previewWAText = '';
+let _previewFilename = '';
+
+function _openSharePreview(title, canvas, waText, filename, wide) {
+  _previewCanvas = canvas;
+  _previewWAText = waText;
+  _previewFilename = filename;
+  document.getElementById('share-preview-title').textContent = title;
+  document.querySelector('.share-preview-modal').classList.toggle('wide', !!wide);
+  document.getElementById('share-preview-img').src = canvas.toDataURL('image/png');
+  document.getElementById('share-preview-textarea').value = waText;
+  document.getElementById('share-preview-overlay').classList.add('open');
+}
 
 function previewPickOrder(raceIdx) {
   const race = RACES[raceIdx];
@@ -7226,33 +7232,27 @@ function previewPickOrder(raceIdx) {
   });
   lines.push('');
   lines.push('🔗 f1gridmasters.netlify.app');
-  _previewWAText = lines.join('\n');
-
   const canvas = _buildPickOrderCanvas(raceIdx);
-  _previewCanvas = canvas;
-  _previewRaceIdx = raceIdx;
-
-  document.getElementById('share-preview-img').src = canvas.toDataURL('image/png');
-  document.getElementById('share-preview-textarea').value = _previewWAText;
-  document.getElementById('share-preview-overlay').classList.add('open');
+  _openSharePreview(
+    '📸 PICK ORDER PREVIEW', canvas, lines.join('\n'),
+    `f1-gridmasters-picks-${race.name.toLowerCase().replace(/\s+/g,'-')}.png`, false);
 }
 
 function closeSharePreview() {
   document.getElementById('share-preview-overlay').classList.remove('open');
   _previewCanvas = null;
-  _previewRaceIdx = null;
   _previewWAText = '';
+  _previewFilename = '';
 }
 
 function sharePreviewDownload() {
-  if (!_previewCanvas || _previewRaceIdx === null) return;
-  const race = RACES[_previewRaceIdx];
+  if (!_previewCanvas || !_previewFilename) return;
   try {
     const link = document.createElement('a');
-    link.download = `f1-gridmasters-picks-${race.name.toLowerCase().replace(/\s+/g,'-')}.png`;
+    link.download = _previewFilename;
     link.href = _previewCanvas.toDataURL('image/png');
     link.click();
-    showToast('Pick order image downloaded!', 'success');
+    showToast('Image downloaded!', 'success');
     closeSharePreview();
   } catch(e) {
     showToast('Image download failed: ' + e.message, 'error');
