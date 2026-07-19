@@ -1623,7 +1623,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
     <div class="share-preview-actions">
       <button class="btn btn-outline btn-sm" onclick="closeSharePreview()">CANCEL</button>
       <button class="btn btn-sm" onclick="sharePreviewWhatsApp()" style="background:#25D366;color:#fff;border:none;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:1px;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;">💬 OPEN WHATSAPP</button>
-      <button class="btn btn-sm" onclick="sharePreviewDownload()" style="background:var(--gold);color:#000;border:none;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:1px;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;">📸 DOWNLOAD IMAGE</button>
+      <button class="btn btn-sm" onclick="sharePreviewDownload()" style="background:var(--gold);color:#000;border:none;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:1px;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;">💾 SAVE IMAGE</button>
     </div>
   </div>
 </div>
@@ -6877,7 +6877,7 @@ function _buildRaceReportCanvas() {
 
   const SCALE = 2, PAD = 32, GAP = 20, PANEL_W = 376;
   const W = PAD * 2 + PANEL_W * 3 + GAP * 2;
-  const HDR_H = 96, PANEL_HDR = 92, ROW_H = 38, FTR_H = 46;
+  const HDR_H = 96, PANEL_HDR = 92, ROW_H = 42, FTR_H = 46;
   const rowCount = Math.max(standings.length, nextOrder.length, 1);
   const PANEL_H = PANEL_HDR + rowCount * ROW_H + 14;
   const H = HDR_H + PANEL_H + 18 + FTR_H;
@@ -6900,7 +6900,7 @@ function _buildRaceReportCanvas() {
   }
   function rankChip(cx, cy, rank) {
     const podium = ['#FFD700', '#C9CDD3', '#CD7F32'];
-    ctx.beginPath(); ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2);
     if (rank < 3) {
       ctx.fillStyle = podium[rank]; ctx.fill();
       ctx.fillStyle = '#0b0b12';
@@ -6909,18 +6909,18 @@ function _buildRaceReportCanvas() {
       ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1; ctx.stroke();
       ctx.fillStyle = '#9aa0b4';
     }
-    ctx.font = '800 10px Orbitron, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(String(rank + 1), cx, cy + 3.5);
+    ctx.font = '700 11px Orbitron, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(String(rank + 1), cx, cy + 4);
   }
 
   // ── Background + header ─────────────────────────────────────
   ctx.fillStyle = '#0b0b12'; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = '#E10600'; ctx.fillRect(0, 0, W, 5);
 
-  ctx.font = '900 22px Orbitron, sans-serif';
+  ctx.font = '900 24px Orbitron, sans-serif';
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
   ctx.fillText('F1 GRID MASTERS 2026', PAD, 44);
-  ctx.font = '700 11px Orbitron, sans-serif';
+  ctx.font = '700 12px Orbitron, sans-serif';
   ctx.fillStyle = '#E10600';
   ctx.fillText(
     lastRace
@@ -6943,10 +6943,10 @@ function _buildRaceReportCanvas() {
     roundRect(x, panelY, PANEL_W, PANEL_H, 12, '#11111b', 'rgba(255,255,255,0.07)');
     ctx.fillStyle = accent;
     ctx.fillRect(x + 18, panelY + 20, 26, 3);
-    ctx.font = '800 13px Orbitron, sans-serif';
+    ctx.font = '700 14px Orbitron, sans-serif';
     ctx.fillStyle = accent; ctx.textAlign = 'left';
     ctx.fillText(label, x + 18, panelY + 44);
-    ctx.font = '600 12px Rajdhani, sans-serif';
+    ctx.font = '600 13px Rajdhani, sans-serif';
     ctx.fillStyle = '#8b90a5';
     ctx.fillText(subtitle, x + 18, panelY + 64);
     ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
@@ -6981,17 +6981,17 @@ function _buildRaceReportCanvas() {
       rankChip(x + 30, midY, i);
       ctx.fillStyle = scored ? p.driverColor : 'rgba(255,255,255,0.10)';
       ctx.fillRect(x + 50, rowY + 8, 3, ROW_H - 16);
-      ctx.font = '700 15px Rajdhani, sans-serif';
+      ctx.font = '700 17px Rajdhani, sans-serif';
       ctx.fillStyle = scored ? '#ffffff' : '#70768c';
       ctx.textAlign = 'left';
-      ctx.fillText(fitText(p.name, 158), x + 61, midY + 5);
-      ctx.font = '600 11px Rajdhani, sans-serif';
+      ctx.fillText(fitText(p.name, 150), x + 61, midY + 6);
+      ctx.font = '600 12px Rajdhani, sans-serif';
       ctx.fillStyle = scored ? '#8b90a5' : '#565c72';
       ctx.textAlign = 'right';
-      ctx.fillText(`${p.lastPick || '—'} · ${p.lastPos ? 'P' + p.lastPos : '—'}`, x + PANEL_W - 62, midY + 4);
-      ctx.font = '800 14px Orbitron, sans-serif';
+      ctx.fillText(`${p.lastPick || '—'} · ${p.lastPos ? 'P' + p.lastPos : '—'}`, x + PANEL_W - 64, midY + 5);
+      ctx.font = '900 16px Orbitron, sans-serif';
       ctx.fillStyle = p.lastPts >= 8 ? '#FFD700' : p.lastPts >= 5 ? '#4ade80' : scored ? '#60a5fa' : '#3d4358';
-      ctx.fillText(scored ? `+${p.lastPts}` : '0', x + PANEL_W - 18, midY + 5);
+      ctx.fillText(scored ? `+${p.lastPts}` : '–', x + PANEL_W - 18, midY + 5);
     });
   }
 
@@ -7004,17 +7004,17 @@ function _buildRaceReportCanvas() {
       rankChip(x + 30, midY, i);
       ctx.fillStyle = p.color || '#E10600';
       ctx.fillRect(x + 50, rowY + 8, 3, ROW_H - 16);
-      ctx.font = '700 15px Rajdhani, sans-serif';
+      ctx.font = '700 17px Rajdhani, sans-serif';
       ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
-      ctx.fillText(fitText(p.name, 168), x + 61, midY + 5);
+      ctx.fillText(fitText(p.name, 160), x + 61, midY + 6);
       const mv = p.move || 0;
-      ctx.font = '700 11px Rajdhani, sans-serif';
+      ctx.font = '700 12px Rajdhani, sans-serif';
       ctx.textAlign = 'right';
       ctx.fillStyle = mv > 0 ? '#4ade80' : mv < 0 ? '#f87171' : '#3d4358';
-      ctx.fillText(mv > 0 ? `▲${mv}` : mv < 0 ? `▼${-mv}` : '·', x + PANEL_W - 66, midY + 4);
-      ctx.font = '900 15px Orbitron, sans-serif';
+      ctx.fillText(mv > 0 ? `▲${mv}` : mv < 0 ? `▼${-mv}` : '·', x + PANEL_W - 68, midY + 5);
+      ctx.font = '900 17px Orbitron, sans-serif';
       ctx.fillStyle = i === 0 ? '#FFD700' : '#ffffff';
-      ctx.fillText(`${p.total}`, x + PANEL_W - 18, midY + 5);
+      ctx.fillText(`${p.total}`, x + PANEL_W - 18, midY + 6);
     });
   }
 
@@ -7025,7 +7025,7 @@ function _buildRaceReportCanvas() {
         ? `${nextRace.name} GP · ${nextRace.date}${nextRace.sprint ? ' · SPRINT' : ''}`
         : 'Season complete');
     if (nextRace) {
-      ctx.font = '700 10px Orbitron, sans-serif';
+      ctx.font = '700 11px Orbitron, sans-serif';
       ctx.fillStyle = '#f5b942'; ctx.textAlign = 'right';
       ctx.fillText(`⏰ DUE ${_pickDeadlineLabel(nextRace.date)}`, x + PANEL_W - 18, panelY + 44);
     } else {
@@ -7036,12 +7036,12 @@ function _buildRaceReportCanvas() {
       rankChip(x + 30, midY, i);
       ctx.fillStyle = p.color || '#E10600';
       ctx.fillRect(x + 50, rowY + 8, 3, ROW_H - 16);
-      ctx.font = '700 15px Rajdhani, sans-serif';
+      ctx.font = '700 17px Rajdhani, sans-serif';
       ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
-      ctx.fillText(fitText(p.name, 190), x + 61, midY + 5);
-      ctx.font = '700 11px Orbitron, sans-serif';
+      ctx.fillText(fitText(p.name, 180), x + 61, midY + 6);
+      ctx.font = '700 12px Orbitron, sans-serif';
       ctx.fillStyle = p.color || '#8b90a5'; ctx.textAlign = 'right';
-      ctx.fillText(`PICK ${i + 1}`, x + PANEL_W - 18, midY + 4);
+      ctx.fillText(`PICK ${i + 1}`, x + PANEL_W - 18, midY + 5);
     });
   }
 
@@ -7066,8 +7066,9 @@ function shareStandings() {
   }
 }
 
-function shareStandingsImage() {
+async function shareStandingsImage() {
   try {
+    await _ensureShareFonts();
     const completed = RACES.filter(r => STATE.raceResults[r.id] && STATE.draftRevealed?.[r.id]).length;
     const canvas = _buildRaceReportCanvas();
     _openSharePreview('📸 RACE REPORT PREVIEW', canvas, _buildRaceReportText(),
@@ -7201,6 +7202,46 @@ let _previewCanvas = null;
 let _previewWAText = '';
 let _previewFilename = '';
 
+// Canvas text silently falls back to sans-serif if a font face isn't
+// loaded yet, so force-load the faces the share cards draw with first.
+async function _ensureShareFonts() {
+  try {
+    await Promise.all([
+      document.fonts.load('900 24px Orbitron'),
+      document.fonts.load('700 14px Orbitron'),
+      document.fonts.load('700 17px Rajdhani'),
+      document.fonts.load('600 13px Rajdhani'),
+    ]);
+  } catch (e) { /* draw with system fonts rather than fail */ }
+}
+
+// Save a canvas as a PNG. On phones this opens the native share sheet so
+// the image can go straight to Photos via "Save Image"; elsewhere it
+// falls back to a normal browser download.
+// Returns false only when the user dismissed the share sheet themselves.
+async function _saveCanvasImage(canvas, filename) {
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  if (blob && navigator.canShare && navigator.share) {
+    const file = new File([blob], filename, { type: 'image/png' });
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        showToast('Choose "Save Image" to add it to your Photos', 'info');
+        await navigator.share({ files: [file], title: 'F1 Grid Masters' });
+        return true;
+      } catch (e) {
+        if (e.name === 'AbortError') return false;
+        // any other share failure: fall through to a plain download
+      }
+    }
+  }
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('Image saved to your Downloads folder', 'success');
+  return true;
+}
+
 function _openSharePreview(title, canvas, waText, filename, wide) {
   _previewCanvas = canvas;
   _previewWAText = waText;
@@ -7212,11 +7253,12 @@ function _openSharePreview(title, canvas, waText, filename, wide) {
   document.getElementById('share-preview-overlay').classList.add('open');
 }
 
-function previewPickOrder(raceIdx) {
+async function previewPickOrder(raceIdx) {
   const race = RACES[raceIdx];
   if (!race) return;
   const draftOrder = getDraftOrderForRace(raceIdx);
   if (draftOrder.length === 0) { showToast('No players in draft order', 'info'); return; }
+  await _ensureShareFonts();
 
   const medals = ['🥇','🥈','🥉'];
   const lines = [
@@ -7245,17 +7287,13 @@ function closeSharePreview() {
   _previewFilename = '';
 }
 
-function sharePreviewDownload() {
+async function sharePreviewDownload() {
   if (!_previewCanvas || !_previewFilename) return;
   try {
-    const link = document.createElement('a');
-    link.download = _previewFilename;
-    link.href = _previewCanvas.toDataURL('image/png');
-    link.click();
-    showToast('Image downloaded!', 'success');
-    closeSharePreview();
+    // keep the modal open if the user backs out of the share sheet
+    if (await _saveCanvasImage(_previewCanvas, _previewFilename)) closeSharePreview();
   } catch(e) {
-    showToast('Image download failed: ' + e.message, 'error');
+    showToast('Image save failed: ' + e.message, 'error');
   }
 }
 
@@ -7265,19 +7303,15 @@ function sharePreviewWhatsApp() {
   closeSharePreview();
 }
 
-function sharePickOrderImage(raceIdx) {
+async function sharePickOrderImage(raceIdx) {
   const race = RACES[raceIdx];
   if (!race) return;
   const draftOrder = getDraftOrderForRace(raceIdx);
   if (draftOrder.length === 0) { showToast('No players in draft order', 'info'); return; }
-  showToast('Generating pick order image...', 'info');
-  const canvas = _buildPickOrderCanvas(raceIdx);
   try {
-    const link = document.createElement('a');
-    link.download = `f1-gridmasters-picks-${race.name.toLowerCase().replace(/\s+/g,'-')}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    showToast('Pick order image downloaded!', 'success');
+    await _ensureShareFonts();
+    const canvas = _buildPickOrderCanvas(raceIdx);
+    await _saveCanvasImage(canvas, `f1-gridmasters-picks-${race.name.toLowerCase().replace(/\s+/g,'-')}.png`);
   } catch(e) {
     showToast('Image generation failed: ' + e.message, 'error');
   }
