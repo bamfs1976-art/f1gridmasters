@@ -18,26 +18,41 @@
 <meta property="og:image" content="https://f1gridmasters.netlify.app/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#E10600">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Exo+2:ital,wght@1,700;1,800;1,900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --red: #E10600;
+  /* Broadcast Red design tokens */
+  --f1-red: #E10600;
+  --carbon-black: #0B0B0C;
+  --track-dark: #1F1F21;
+  --pit-gray: #38383F;
+  --signal-green: #22C55E;
+  --signal-amber: #FACC15;
+  --radius: 6px;
+  --font-display: 'Exo 2', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', sans-serif;
+
+  /* semantic mappings (legacy names used throughout) */
+  --red: var(--f1-red);
   --gold: #d4a000;
   --silver: #C0C0C0;
   --bronze: #CD7F32;
-  --carbon: #090910;
-  --dark: #0e0e18;
-  --panel: #13131f;
-  --panel2: #1a1a2a;
-  --panel3: #21213a;
+  --carbon: var(--carbon-black);
+  --dark: #131315;
+  --panel: var(--track-dark);
+  --panel2: #29292e;
+  --panel3: var(--pit-gray);
   --border: rgba(255,255,255,0.08);
-  --text: #e8e8f2;
-  --muted: #9090b8;
-  --accent: #00c8ff;
-  --green: #00c853;
-  --nav-bg: rgba(9,9,16,0.97);
+  --text: #f2f2f4;
+  --muted: #a6a6b0;
+  --accent: #ff6057;
+  --green: var(--signal-green);
+  --nav-bg: rgba(11,11,12,0.97);
   --shadow: rgba(0,0,0,0.4);
 }
+
+::selection { background: var(--f1-red); color: #fff; }
 
 /* ── LIGHT MODE ── */
 html.light {
@@ -87,7 +102,7 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--carbon);
   color: var(--text);
-  font-family: 'Rajdhani', sans-serif;
+  font-family:var(--font-sans);
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -108,7 +123,7 @@ body::before {
 /* TOP STRIPE */
 .top-stripe {
   position: fixed; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--red), var(--gold), var(--red));
+  background: var(--f1-red);
   z-index: 200;
 }
 
@@ -138,15 +153,15 @@ nav {
   background: var(--red);
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 12px; color: white;
+  font-family:var(--font-display);font-style:italic; font-weight: 900; font-size: 12px; color: white;
 }
 .nav-logo h1 {
-  font-family: 'Orbitron', sans-serif;
+  font-family:var(--font-display);font-style:italic;
   font-size: clamp(12px, 2.5vw, 18px); font-weight: 900;
   letter-spacing: 3px; line-height: 1;
 }
 .nav-logo p {
-  font-family: 'Share Tech Mono', monospace;
+  font-family:var(--font-mono);
   font-size: 9px; color: var(--muted); letter-spacing: 2px; margin-top: 2px;
 }
 
@@ -157,7 +172,7 @@ nav {
   padding: 16px 18px;
   background: none; border: none;
   color: var(--muted); cursor: pointer;
-  font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 2px;
+  font-family:var(--font-display);font-style:italic; font-size: 9px; letter-spacing: 2px;
   border-bottom: 2px solid transparent; transition: all 0.2s;
   white-space: nowrap;
 }
@@ -241,7 +256,7 @@ nav {
   padding: 16px 28px;
   background: none; border: none; border-left: 3px solid transparent;
   color: var(--muted); cursor: pointer; width: 100%;
-  font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 2px;
+  font-family:var(--font-display);font-style:italic; font-size: 11px; letter-spacing: 2px;
   text-align: left; transition: all 0.15s;
 }
 .mobile-nav-tab:hover {
@@ -272,10 +287,10 @@ nav {
   width: 30px; height: 30px; background: var(--red); flex-shrink: 0;
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 10px; color: white;
+  font-family:var(--font-display);font-style:italic; font-weight: 900; font-size: 10px; color: white;
 }
 .mobile-menu-logo span {
-  font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 3px;
+  font-family:var(--font-display);font-style:italic; font-size: 13px; font-weight: 900; letter-spacing: 3px;
 }
 
 .mobile-menu-close {
@@ -303,7 +318,7 @@ nav {
 
 /* COMMON COMPONENTS */
 .section-head {
-  font-family: 'Share Tech Mono', monospace; font-size: 11px;
+  font-family:var(--font-mono); font-size: 11px;
   color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
   display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
 }
@@ -321,7 +336,7 @@ nav {
 
 .btn {
   padding: 12px 24px;
-  font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 2px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 11px; letter-spacing: 2px; font-weight: 700;
   border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;
 }
 .btn-red { background: var(--red); color: white; }
@@ -352,7 +367,7 @@ nav {
   text-align: center; padding: 40px 20px 30px;
 }
 .setup-hero h2 {
-  font-family: 'Orbitron', sans-serif; font-size: clamp(24px, 5vw, 48px);
+  font-family:var(--font-display);font-style:italic; font-size: clamp(24px, 5vw, 48px);
   font-weight: 900; letter-spacing: 4px; line-height: 1;
   background: linear-gradient(135deg, #fff 30%, var(--red) 70%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -372,7 +387,7 @@ nav {
   flex: 1; padding: 11px 14px;
   background: var(--panel2); border: 1px solid var(--border);
   border-radius: 6px; color: var(--text);
-  font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 600;
+  font-family:var(--font-sans); font-size: 15px; font-weight: 600;
   outline: none; transition: border-color 0.2s;
 }
 .input-field:focus { border-color: var(--red); }
@@ -393,7 +408,7 @@ nav {
 .player-num-badge {
   width: 26px; height: 26px; border-radius: 50%;
   background: var(--red); color: white;
-  font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 10px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
 .remove-btn {
@@ -422,11 +437,11 @@ nav {
 }
 .points-table tr:last-child td { border-bottom: none; }
 .points-table .pos-cell {
-  font-family: 'Orbitron', sans-serif; font-size: 11px;
+  font-family:var(--font-display);font-style:italic; font-size: 11px;
   color: var(--muted); width: 50px;
 }
 .points-table .pts-cell {
-  font-family: 'Share Tech Mono', monospace; font-size: 13px;
+  font-family:var(--font-mono); font-size: 13px;
   color: var(--gold); text-align: right;
 }
 
@@ -441,10 +456,10 @@ nav {
 .draft-race-info { display: flex; align-items: center; gap: 16px; }
 .draft-race-flag { font-size: 32px; }
 .draft-race-name {
-  font-family: 'Orbitron', sans-serif; font-size: clamp(14px, 2.5vw, 20px);
+  font-family:var(--font-display);font-style:italic; font-size: clamp(14px, 2.5vw, 20px);
   font-weight: 900; letter-spacing: 2px;
 }
-.draft-race-sub { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 3px; }
+.draft-race-sub { font-family:var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
 
 .current-picker-card {
   background: linear-gradient(135deg, rgba(225,6,0,0.15), rgba(225,6,0,0.05));
@@ -456,8 +471,8 @@ nav {
   0%, 100% { border-color: rgba(225,6,0,0.4); }
   50% { border-color: rgba(225,6,0,0.9); box-shadow: 0 0 20px rgba(225,6,0,0.2); }
 }
-.picker-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 2px; }
-.picker-name { font-family: 'Orbitron', sans-serif; font-size: clamp(14px, 2.5vw, 18px); font-weight: 700; color: var(--red); margin-top: 3px; }
+.picker-label { font-family:var(--font-mono); font-size: 9px; color: var(--muted); letter-spacing: 2px; }
+.picker-name { font-family:var(--font-display);font-style:italic; font-size: clamp(14px, 2.5vw, 18px); font-weight: 700; color: var(--red); margin-top: 3px; }
 .picker-pos { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
 .draft-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
@@ -487,14 +502,14 @@ nav {
 
 .dpc-team-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
 .dpc-num {
-  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 11px; font-weight: 700;
   color: var(--muted); margin-bottom: 6px;
 }
 .dpc-name { font-weight: 700; font-size: 14px; line-height: 1.2; }
 .dpc-team { font-size: 11px; color: var(--muted); margin-top: 3px; }
 .taken-label {
   display: none; position: absolute; top: 6px; right: 6px;
-  font-family: 'Share Tech Mono', monospace; font-size: 9px;
+  font-family:var(--font-mono); font-size: 9px;
   color: var(--muted); letter-spacing: 1px;
 }
 .driver-pick-card.taken .taken-label,
@@ -518,11 +533,11 @@ nav {
 }
 .sticky-picks-chips::-webkit-scrollbar { display: none; }
 .sticky-pick-chip {
-  flex-shrink: 0; font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  flex-shrink: 0; font-family:var(--font-mono); font-size: 12px;
   padding: 4px 8px; border-radius: 4px; white-space: nowrap;
 }
 .sticky-lock-btn {
-  flex-shrink: 0; font-family: 'Orbitron', sans-serif; font-size: 11px;
+  flex-shrink: 0; font-family:var(--font-display);font-style:italic; font-size: 11px;
   font-weight: 700; letter-spacing: 0.5px; padding: 8px 14px;
   background: var(--green); color: #000; border: none; border-radius: 6px;
   cursor: pointer; white-space: nowrap;
@@ -541,9 +556,9 @@ nav {
   background: rgba(225,6,0,0.12); border: 1px solid rgba(225,6,0,0.3);
 }
 .pick-order-item.done { opacity: 0.4; }
-.poi-slot { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--muted); width: 30px; flex-shrink: 0; }
+.poi-slot { font-family:var(--font-display);font-style:italic; font-size: 10px; color: var(--muted); width: 30px; flex-shrink: 0; }
 .poi-name { font-weight: 600; font-size: 14px; flex: 1; }
-.poi-pick { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--accent); }
+.poi-pick { font-family:var(--font-mono); font-size: 11px; color: var(--accent); }
 
 .draft-complete-banner {
   background: linear-gradient(135deg, rgba(0,230,118,0.1), rgba(0,200,255,0.1));
@@ -551,7 +566,7 @@ nav {
   padding: 20px; text-align: center; margin-bottom: 20px;
 }
 .draft-complete-banner h3 {
-  font-family: 'Orbitron', sans-serif; font-size: 16px; letter-spacing: 2px;
+  font-family:var(--font-display);font-style:italic; font-size: 16px; letter-spacing: 2px;
   color: var(--green); margin-bottom: 6px;
 }
 
@@ -583,7 +598,7 @@ nav {
   border-radius: 6px; padding: 10px 12px;
 }
 .finish-pos {
-  font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 12px; font-weight: 700;
   width: 28px; flex-shrink: 0; text-align: center;
 }
 .finish-pos.p1 { color: var(--gold); }
@@ -591,7 +606,7 @@ nav {
 .finish-pos.p3 { color: var(--bronze); }
 .finish-select {
   flex: 1; background: transparent; border: none; color: var(--text);
-  font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600;
+  font-family:var(--font-sans); font-size: 14px; font-weight: 600;
   cursor: pointer; outline: none;
 }
 .finish-select option { background: var(--panel); }
@@ -601,7 +616,7 @@ nav {
    ============================================ */
 .leaderboard-table { width: 100%; border-collapse: collapse; }
 .leaderboard-table th {
-  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  font-family:var(--font-mono); font-size: 10px;
   color: var(--muted); letter-spacing: 2px; padding: 10px 14px;
   border-bottom: 1px solid var(--border); text-align: left;
 }
@@ -611,7 +626,7 @@ nav {
 .leaderboard-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 
 .lb-rank {
-  font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 14px; font-weight: 700;
   width: 40px;
 }
 .lb-rank.r1 { color: var(--gold); }
@@ -620,14 +635,14 @@ nav {
 
 .lb-name { font-weight: 700; font-size: 16px; }
 .lb-total {
-  font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 16px; font-weight: 700;
   text-align: right; color: var(--text);
 }
 .lb-total.leader { color: var(--gold); }
 
 .race-pts-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .rp-chip {
-  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  font-family:var(--font-mono); font-size: 10px;
   padding: 3px 7px; border-radius: 3px; background: var(--panel2);
   border: 1px solid var(--border); color: var(--muted);
 }
@@ -653,17 +668,17 @@ nav {
 .schedule-item.current-race { border-color: rgba(225,6,0,0.5); background: rgba(225,6,0,0.05); }
 .schedule-item.completed { opacity: 0.55; }
 .si-num {
-  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 11px; font-weight: 700;
   color: var(--muted); width: 30px; flex-shrink: 0;
 }
 .si-flag { font-size: 22px; flex-shrink: 0; }
 .si-info { flex: 1; }
 .si-name { font-weight: 700; font-size: 15px; }
 .si-circuit { font-size: 12px; color: var(--muted); }
-.si-date { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--muted); white-space: nowrap; }
-.si-sprint { font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 2px 7px; background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.25); border-radius: 3px; color: var(--gold); }
+.si-date { font-family:var(--font-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.si-sprint { font-family:var(--font-mono); font-size: 9px; padding: 2px 7px; background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.25); border-radius: 3px; color: var(--gold); }
 .si-status {
-  font-family: 'Share Tech Mono', monospace; font-size: 10px; padding: 4px 10px;
+  font-family:var(--font-mono); font-size: 10px; padding: 4px 10px;
   border-radius: 4px; flex-shrink: 0;
 }
 .si-status.done { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
@@ -673,12 +688,12 @@ nav {
 /* TV GUIDE */
 .tv-guide-banner { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:14px 18px; background:linear-gradient(135deg,rgba(0,100,180,0.15),rgba(193,25,33,0.1)); border:1px solid rgba(0,140,220,0.25); border-radius:10px; margin-bottom:18px; }
 .tv-brand { display:flex; align-items:center; gap:10px; }
-.tv-brand-logo { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:900; letter-spacing:2px; }
+.tv-brand-logo { font-family:var(--font-display);font-style:italic; font-size:13px; font-weight:900; letter-spacing:2px; }
 .tv-brand-sky { color:#008CDB; }
 .tv-brand-sports { color:#c11921; }
 .tv-brand-f1 { color:var(--gold); }
-.tv-brand-note { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--muted); }
-.tv-sky-link { font-family:'Share Tech Mono',monospace; font-size:10px; padding:5px 12px; border:1px solid rgba(0,140,220,0.35); border-radius:4px; color:#008CDB; text-decoration:none; white-space:nowrap; }
+.tv-brand-note { font-family:var(--font-mono); font-size:10px; color:var(--muted); }
+.tv-sky-link { font-family:var(--font-mono); font-size:10px; padding:5px 12px; border:1px solid rgba(0,140,220,0.35); border-radius:4px; color:#008CDB; text-decoration:none; white-space:nowrap; }
 .tv-sky-link:hover { background:rgba(0,140,220,0.1); }
 .tv-race-card { background:var(--panel2); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; overflow:hidden; }
 .tv-race-card.tv-current { border-color:rgba(255,215,0,0.4); }
@@ -690,7 +705,7 @@ nav {
 .tv-race-name { font-weight:700; font-size:14px; letter-spacing:0.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .tv-race-meta { font-size:11px; color:var(--muted); margin-top:2px; }
 .tv-badges { display:flex; gap:6px; align-items:center; flex-shrink:0; }
-.tv-status-badge { font-family:'Share Tech Mono',monospace; font-size:9px; padding:3px 8px; border-radius:3px; }
+.tv-status-badge { font-family:var(--font-mono); font-size:9px; padding:3px 8px; border-radius:3px; }
 .tv-badge-live { background:rgba(255,215,0,0.12); color:var(--gold); border:1px solid rgba(255,215,0,0.3); }
 .tv-badge-next { background:rgba(225,6,0,0.12); color:var(--red); border:1px solid rgba(225,6,0,0.3); }
 .tv-badge-upcoming { color:var(--muted); border:1px solid var(--border); }
@@ -701,15 +716,15 @@ nav {
 .tv-race-card.open .tv-sessions { display:block; }
 .tv-session-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
 .tv-session-row:last-of-type { border-bottom:none; }
-.tv-session-day { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--muted); width:28px; flex-shrink:0; text-align:center; }
+.tv-session-day { font-family:var(--font-mono); font-size:9px; color:var(--muted); width:28px; flex-shrink:0; text-align:center; }
 .tv-session-label { flex:1; font-size:12px; color:var(--text); }
-.tv-session-time { font-family:'Share Tech Mono',monospace; font-size:13px; font-weight:600; color:var(--accent); }
-.tv-session-tz { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--muted); margin-left:2px; }
+.tv-session-time { font-family:var(--font-mono); font-size:13px; font-weight:600; color:var(--accent); }
+.tv-session-tz { font-family:var(--font-mono); font-size:9px; color:var(--muted); margin-left:2px; }
 .tv-session-race .tv-session-time { color:var(--red); }
 .tv-session-race .tv-session-label { font-weight:700; }
-.tv-approx-note { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--muted); padding:8px 0 2px; opacity:0.75; }
+.tv-approx-note { font-family:var(--font-mono); font-size:10px; color:var(--muted); padding:8px 0 2px; opacity:0.75; }
 .tv-watch-row { display:flex; justify-content:flex-end; padding-top:8px; }
-.tv-watch-btn { font-family:'Share Tech Mono',monospace; font-size:10px; padding:4px 12px; border:1px solid rgba(0,140,220,0.3); border-radius:4px; color:#008CDB; text-decoration:none; cursor:pointer; background:none; }
+.tv-watch-btn { font-family:var(--font-mono); font-size:10px; padding:4px 12px; border:1px solid rgba(0,140,220,0.3); border-radius:4px; color:#008CDB; text-decoration:none; cursor:pointer; background:none; }
 .tv-watch-btn:hover { background:rgba(0,140,220,0.1); }
 
 /* MODAL */
@@ -728,7 +743,7 @@ nav {
 }
 .modal-overlay.open .modal { transform: none; }
 .modal h3 {
-  font-family: 'Orbitron', sans-serif; font-size: 16px; letter-spacing: 2px;
+  font-family:var(--font-display);font-style:italic; font-size: 16px; letter-spacing: 2px;
   margin-bottom: 6px;
 }
 .modal p { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
@@ -753,16 +768,16 @@ nav {
 .share-preview-theme { display: flex; gap: 8px; margin-bottom: 10px; }
 .share-preview-theme button {
   background: var(--panel2); border: 1px solid var(--border); color: var(--muted);
-  font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 10px; letter-spacing: 1px; font-weight: 700;
   padding: 6px 14px; border-radius: 6px; cursor: pointer;
 }
 .share-preview-theme button.active { border-color: var(--gold); color: var(--gold); }
 .share-preview-title {
-  font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 900;
+  font-family:var(--font-display);font-style:italic; font-size: 14px; font-weight: 900;
   letter-spacing: 2px; margin-bottom: 18px; color: var(--text);
 }
 .share-preview-section-label {
-  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  font-family:var(--font-mono); font-size: 10px;
   color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; margin-top: 16px;
 }
 .share-preview-img {
@@ -772,7 +787,7 @@ nav {
 .share-preview-textarea {
   width: 100%; background: var(--panel2); border: 1px solid var(--border);
   border-radius: 6px; padding: 12px; color: var(--text);
-  font-family: 'Share Tech Mono', monospace; font-size: 12px; line-height: 1.8;
+  font-family:var(--font-mono); font-size: 12px; line-height: 1.8;
   resize: vertical; box-sizing: border-box; min-height: 140px;
 }
 .share-preview-actions {
@@ -784,7 +799,7 @@ nav {
   position: fixed; bottom: 30px; right: 30px;
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 8px; padding: 14px 20px;
-  font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 600;
+  font-family:var(--font-sans); font-size: 15px; font-weight: 600;
   z-index: 999; transform: translateY(80px); opacity: 0; transition: all 0.3s;
   max-width: 320px;
 }
@@ -799,7 +814,7 @@ nav {
 }
 .empty-state .icon { font-size: 48px; opacity: 0.3; margin-bottom: 16px; animation: floatAnim 3s ease-in-out infinite; }
 @keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-.empty-state h3 { font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 2px; color: var(--muted); }
+.empty-state h3 { font-family:var(--font-display);font-style:italic; font-size: 14px; letter-spacing: 2px; color: var(--muted); }
 .empty-state p { font-size: 13px; color: var(--muted); opacity: 0.6; margin-top: 8px; }
 
 /* Scrollbar */
@@ -820,12 +835,12 @@ nav {
   min-height: 60vh; gap: 20px; text-align: center;
 }
 .admin-locked .lock-icon { font-size: 64px; opacity: 0.5; animation: floatAnim 3s ease-in-out infinite; }
-.admin-locked h2 { font-family: 'Orbitron', sans-serif; font-size: 20px; letter-spacing: 3px; }
+.admin-locked h2 { font-family:var(--font-display);font-style:italic; font-size: 20px; letter-spacing: 3px; }
 .admin-locked p { color: var(--muted); font-size: 14px; }
 .pw-input-wrap { display: flex; gap: 10px; justify-content: center; }
 .pw-input {
   padding: 12px 16px; background: var(--panel2); border: 1px solid var(--border);
-  border-radius: 6px; color: var(--text); font-family: 'Share Tech Mono', monospace;
+  border-radius: 6px; color: var(--text); font-family:var(--font-mono);
   font-size: 15px; letter-spacing: 4px; outline: none; width: 200px; text-align: center;
   transition: border-color 0.2s;
 }
@@ -843,7 +858,7 @@ nav {
 }
 .admin-badge {
   display: flex; align-items: center; gap: 10px;
-  font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; color: #ffa500;
+  font-family:var(--font-display);font-style:italic; font-size: 14px; font-weight: 700; color: #ffa500;
 }
 .admin-badge .dot { width:8px;height:8px;background:#ffa500;border-radius:50%;animation:pulse 2s infinite; }
 
@@ -854,7 +869,7 @@ nav {
   padding: 20px; position: relative; overflow: hidden;
 }
 .admin-card-title {
-  font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 2px;
+  font-family:var(--font-display);font-style:italic; font-size: 11px; letter-spacing: 2px;
   color: #ffa500; margin-bottom: 6px;
 }
 .admin-card-desc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
@@ -864,7 +879,7 @@ nav {
 
 .picks-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .picks-table th {
-  font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 2px;
+  font-family:var(--font-mono); font-size: 9px; letter-spacing: 2px;
   color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left;
 }
 .picks-table td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
@@ -872,7 +887,7 @@ nav {
 
 .driver-tag {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 8px; border-radius: 4px; font-family: 'Share Tech Mono', monospace;
+  padding: 3px 8px; border-radius: 4px; font-family:var(--font-mono);
   font-size: 11px; border: 1px solid;
 }
 
@@ -882,7 +897,7 @@ nav {
   border-bottom: 1px solid rgba(255,255,255,0.03);
   font-size: 12px;
 }
-.log-time { font-family: 'Share Tech Mono', monospace; color: var(--muted); flex-shrink: 0; width: 52px; }
+.log-time { font-family:var(--font-mono); color: var(--muted); flex-shrink: 0; width: 52px; }
 .log-msg { color: var(--text); }
 .log-msg.good { color: var(--green); }
 .log-msg.warn { color: #ffa500; }
@@ -918,14 +933,14 @@ nav {
   padding: 10px 14px; background: var(--panel2); border: 1px solid var(--border);
   border-radius: 6px;
 }
-.dri-slot { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--muted); width: 28px; }
+.dri-slot { font-family:var(--font-display);font-style:italic; font-size: 10px; color: var(--muted); width: 28px; }
 .dri-player { font-weight: 700; font-size: 14px; flex: 1; }
-.dri-driver { font-family: 'Share Tech Mono', monospace; font-size: 12px; }
-.dri-hidden { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--muted); font-style: italic; }
+.dri-driver { font-family:var(--font-mono); font-size: 12px; }
+.dri-hidden { font-family:var(--font-mono); font-size: 11px; color: var(--muted); font-style: italic; }
 .dri-edit-btn {
   background: transparent; border: 1px solid var(--border); color: var(--muted);
   padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
-  font-family: 'Rajdhani', sans-serif; transition: all 0.2s;
+  font-family:var(--font-sans); transition: all 0.2s;
 }
 .dri-edit-btn:hover { border-color: var(--red); color: var(--red); }
 
@@ -933,7 +948,7 @@ nav {
 .stats-sub {
   padding: 8px 16px; background: var(--panel2); border: 1px solid var(--border);
   border-radius: 6px; color: var(--muted); cursor: pointer;
-  font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 1px;
+  font-family:var(--font-display);font-style:italic; font-size: 9px; letter-spacing: 1px;
   transition: all 0.2s; white-space: nowrap;
 }
 .stats-sub.active { background: var(--red); border-color: var(--red); color: white; }
@@ -946,7 +961,7 @@ nav {
   border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px;
 }
 .form-rank {
-  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 11px; font-weight: 700;
   width: 24px; text-align: center; flex-shrink: 0;
 }
 .form-name { font-weight: 700; font-size: 15px; flex: 1; min-width: 80px; }
@@ -961,11 +976,11 @@ nav {
 .form-dot {
   width: 20px; height: 20px; border-radius: 4px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Share Tech Mono', monospace; font-size: 9px; font-weight: 700;
+  font-family:var(--font-mono); font-size: 9px; font-weight: 700;
   flex-shrink: 0;
 }
 .form-total {
-  font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 900;
+  font-family:var(--font-display);font-style:italic; font-size: 16px; font-weight: 900;
   min-width: 40px; text-align: right;
 }
 .form-avg { font-size: 11px; color: var(--muted); text-align: right; min-width: 55px; }
@@ -975,10 +990,10 @@ nav {
 .h2h-select {
   flex: 1; min-width: 140px; padding: 10px 14px;
   background: var(--panel2); border: 1px solid var(--border);
-  border-radius: 6px; color: var(--text); font-family: 'Rajdhani', sans-serif;
+  border-radius: 6px; color: var(--text); font-family:var(--font-sans);
   font-size: 14px; outline: none; cursor: pointer;
 }
-.h2h-vs { font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--muted); }
+.h2h-vs { font-family:var(--font-display);font-style:italic; font-size: 12px; color: var(--muted); }
 .h2h-bar-wrap { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin: 8px 0; background: var(--panel3); }
 .h2h-bar-a { background: var(--red); transition: width 0.5s ease; }
 .h2h-bar-b { background: var(--accent); transition: width 0.5s ease; }
@@ -988,7 +1003,7 @@ nav {
 }
 .h2h-race-row:last-child { border-bottom: none; }
 .h2h-win { font-weight: 700; }
-.h2h-pts { font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+.h2h-pts { font-family:var(--font-mono); font-size: 11px; }
 
 /* ── DRIVER STATS ── */
 .drvstat-card {
@@ -999,7 +1014,7 @@ nav {
 .drvstat-bar-label { font-size: 12px; color: var(--muted); width: 90px; flex-shrink: 0; }
 .drvstat-bar-track { flex: 1; height: 6px; background: var(--panel3); border-radius: 3px; overflow: hidden; }
 .drvstat-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-.drvstat-val { font-family: 'Share Tech Mono', monospace; font-size: 11px; width: 40px; text-align: right; }
+.drvstat-val { font-family:var(--font-mono); font-size: 11px; width: 40px; text-align: right; }
 
 /* ── HEATMAP ── */
 .heatmap-grid {
@@ -1008,7 +1023,7 @@ nav {
 .heatmap-cell {
   aspect-ratio: 1; border-radius: 3px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Share Tech Mono', monospace; font-size: 9px;
+  font-family:var(--font-mono); font-size: 9px;
   transition: transform 0.15s; cursor: default;
 }
 .heatmap-cell:hover { transform: scale(1.3); z-index: 10; position: relative; }
@@ -1022,7 +1037,7 @@ nav {
 }
 .streak-fire { font-size: 24px; flex-shrink: 0; }
 .streak-num {
-  font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 900;
+  font-family:var(--font-display);font-style:italic; font-size: 28px; font-weight: 900;
   line-height: 1; flex-shrink: 0;
 }
 .streak-label { font-size: 12px; color: var(--muted); }
@@ -1030,13 +1045,13 @@ nav {
 /* ── PREDICTIONS ── */
 .prediction-form { display: flex; flex-direction: column; gap: 14px; }
 .pred-field label {
-  display: block; font-family: 'Share Tech Mono', monospace;
+  display: block; font-family:var(--font-mono);
   font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-bottom: 6px;
 }
 .pred-field select, .pred-field input {
   width: 100%; padding: 10px 14px; background: var(--panel2);
   border: 1px solid var(--border); border-radius: 6px;
-  color: var(--text); font-family: 'Rajdhani', sans-serif; font-size: 14px; outline: none;
+  color: var(--text); font-family:var(--font-sans); font-size: 14px; outline: none;
 }
 
 /* ── JOLPICA IMPORT ── */
@@ -1059,7 +1074,7 @@ nav {
   background: var(--panel2); border-radius: 6px; margin-bottom: 6px;
 }
 .pred-bonus { 
-  font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 11px; font-weight: 700;
   padding: 3px 8px; border-radius: 4px; background: var(--gold); color: #000;
 }
 
@@ -1086,7 +1101,7 @@ nav {
 .ref-podium-step.p2 { padding-top: 16px; background: rgba(192,192,192,0.08); border-color: rgba(192,192,192,0.3); }
 .ref-podium-step.p3 { padding-top: 8px; background: rgba(205,127,50,0.08); border-color: rgba(205,127,50,0.3); }
 .ref-mini-bar { height: 8px; border-radius: 4px; transition: width 0.6s ease; }
-.ref-stat-num { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; }
+.ref-stat-num { font-family:var(--font-display);font-style:italic; font-size: 24px; font-weight: 900; }
 .ref-stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
 .ref-insight-card {
   background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
@@ -1095,7 +1110,7 @@ nav {
 .ref-insight-card.green { border-left-color: var(--green); }
 .ref-insight-card.gold { border-left-color: var(--gold); }
 .ref-insight-card.blue { border-left-color: var(--accent); }
-.ref-insight-title { font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 2px; color: var(--muted); margin-bottom: 6px; }
+.ref-insight-title { font-family:var(--font-display);font-style:italic; font-size: 11px; letter-spacing: 2px; color: var(--muted); margin-bottom: 6px; }
 .ref-insight-value { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
 .ref-insight-sub { font-size: 13px; color: var(--muted); line-height: 1.5; }
 .results-detail { display: none; }
@@ -1103,7 +1118,7 @@ nav {
 .pos-badge {
   display: inline-flex; align-items: center; justify-content: center;
   width: 26px; height: 26px; border-radius: 6px;
-  font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+  font-family:var(--font-display);font-style:italic; font-size: 10px; font-weight: 700;
 }
 
 
@@ -1117,7 +1132,7 @@ nav {
 
 .offline-banner {
   background: rgba(239,68,68,0.12); border-bottom: 1px solid rgba(239,68,68,0.3);
-  color: #ef4444; font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: #ef4444; font-family:var(--font-mono); font-size: 12px;
   letter-spacing: 1px; text-align: center; padding: 8px 16px;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   position: sticky; top: 47px; z-index: 89;
@@ -1129,22 +1144,22 @@ nav {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
 }
 .rsb-flag { font-size: 20px; flex-shrink: 0; }
-.rsb-race { font-family: Orbitron,sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
-.rsb-sub { font-family: Share Tech Mono,monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+.rsb-race { font-family:var(--font-display);font-style:italic; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
+.rsb-sub { font-family:var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 1px; }
 .rsb-cta {
   margin-left: auto; flex-shrink: 0;
-  font-family: Orbitron,sans-serif; font-size: 9px; letter-spacing: 2px;
+  font-family:var(--font-display);font-style:italic; font-size: 9px; letter-spacing: 2px;
   padding: 6px 14px; background: var(--red); color: white;
   border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s;
 }
 .rsb-cta:hover { background: #c00000; }
 .rsb-countdown {
-  font-family: Share Tech Mono,monospace; font-size: 11px; color: var(--gold);
+  font-family:var(--font-mono); font-size: 11px; color: var(--gold);
   background: rgba(212,160,0,0.1); border: 1px solid rgba(212,160,0,0.25);
   padding: 4px 10px; border-radius: 4px;
 }
 .rsb-submitted {
-  font-family: Share Tech Mono,monospace; font-size: 10px; color: var(--green);
+  font-family:var(--font-mono); font-size: 10px; color: var(--green);
   background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.25);
   padding: 4px 10px; border-radius: 4px;
 }
@@ -1170,10 +1185,10 @@ nav {
 .profile-modal-avatar {
   width: 52px; height: 52px; border-radius: 50%; background: var(--red); color: white;
   display: flex; align-items: center; justify-content: center;
-  font-family: Orbitron,sans-serif; font-size: 18px; font-weight: 900; flex-shrink: 0;
+  font-family:var(--font-display);font-style:italic; font-size: 18px; font-weight: 900; flex-shrink: 0;
 }
-.profile-modal-name { font-family: Orbitron,sans-serif; font-size: 18px; font-weight: 900; letter-spacing: 2px; }
-.profile-modal-sub { font-family: Share Tech Mono,monospace; font-size: 10px; color: var(--muted); margin-top: 3px; }
+.profile-modal-name { font-family:var(--font-display);font-style:italic; font-size: 18px; font-weight: 900; letter-spacing: 2px; }
+.profile-modal-sub { font-family:var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
 .profile-close-btn {
   margin-left: auto; background: none; border: 1px solid var(--border);
   color: var(--muted); width: 32px; height: 32px; border-radius: 6px;
@@ -1187,8 +1202,8 @@ nav {
   background: var(--panel2); border: 1px solid var(--border);
   border-radius: 8px; padding: 14px; text-align: center;
 }
-.profile-stat-val { font-family: Orbitron,sans-serif; font-size: 22px; font-weight: 900; }
-.profile-stat-label { font-family: Share Tech Mono,monospace; font-size: 9px; color: var(--muted); margin-top: 3px; letter-spacing: 1px; }
+.profile-stat-val { font-family:var(--font-display);font-style:italic; font-size: 22px; font-weight: 900; }
+.profile-stat-label { font-family:var(--font-mono); font-size: 9px; color: var(--muted); margin-top: 3px; letter-spacing: 1px; }
 .profile-race-row {
   display: grid; grid-template-columns: auto 1fr auto auto;
   align-items: center; gap: 12px; padding: 10px 14px;
@@ -1208,13 +1223,13 @@ nav {
 .lb-gap-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 100px; }
 .lb-gap-track { flex: 1; height: 4px; background: var(--panel3); border-radius: 2px; overflow: hidden; }
 .lb-gap-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width 0.6s ease; }
-.lb-gap-num { font-family: Share Tech Mono,monospace; font-size: 10px; color: var(--muted); white-space: nowrap; min-width: 28px; text-align: right; }
+.lb-gap-num { font-family:var(--font-mono); font-size: 10px; color: var(--muted); white-space: nowrap; min-width: 28px; text-align: right; }
 /* ── SHARE BUTTON ── */
 .share-standings-btn {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 16px; background: var(--panel2); border: 1px solid var(--border);
   border-radius: 6px; color: var(--muted); cursor: pointer; font-size: 12px;
-  font-family: Orbitron,sans-serif; letter-spacing: 1px; transition: all 0.2s;
+  font-family:var(--font-display);font-style:italic; letter-spacing: 1px; transition: all 0.2s;
 }
 .share-standings-btn:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -1228,7 +1243,7 @@ nav {
 }
 html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 .identity-overlay h2 {
-  font-family: 'Orbitron', sans-serif; font-size: clamp(16px,4vw,24px);
+  font-family:var(--font-display);font-style:italic; font-size: clamp(16px,4vw,24px);
   font-weight: 900; letter-spacing: 3px; text-align: center;
 }
 .identity-overlay p { font-size: 13px; color: var(--muted); text-align: center; max-width: 320px; }
@@ -1239,7 +1254,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 .identity-btn {
   padding: 12px 20px; background: var(--panel);
   border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text); cursor: pointer; font-family: 'Rajdhani', sans-serif;
+  color: var(--text); cursor: pointer; font-family:var(--font-sans);
   font-size: 15px; font-weight: 600; transition: all 0.2s;
   min-width: 100px; text-align: center;
 }
@@ -1255,6 +1270,11 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 .identity-dot {
   width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0;
 }
+
+/* ── BROADCAST RED BASE ── */
+:focus-visible { outline: 2px solid var(--f1-red); outline-offset: 2px; border-radius: 2px; }
+button:focus:not(:focus-visible) { outline: none; }
+html { scrollbar-color: var(--pit-gray) var(--carbon-black); }
 
 </style>
 </head>
@@ -1349,13 +1369,13 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   <button class="mobile-nav-tab" id="mob-2025" onclick="mobileNav('2025')">
     <span class="mob-icon">🗂</span> 2025 SEASON
   </button>
-  <div style="padding:20px 28px 0;font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);letter-spacing:1px;">
+  <div style="padding:20px 28px 0;font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:1px;">
     2026 FANTASY LEAGUE
   </div>
   <div style="padding:10px 28px 0;">
     <button onclick="showIdentityOverlay();closeMobileMenu();" id="mob-identity-line"
       style="display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--border);
-      border-radius:8px;padding:10px 16px;color:var(--muted);font-family:Orbitron,sans-serif;
+      border-radius:8px;padding:10px 16px;color:var(--muted);font-family:var(--font-display);font-style:italic;
       font-size:11px;letter-spacing:1px;cursor:pointer;width:100%;transition:all 0.2s;">
       👤 SELECT IDENTITY
     </button>
@@ -1363,7 +1383,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   <div style="padding:10px 28px 4px;">
     <button onclick="toggleTheme();closeMobileMenu();" style="display:flex;align-items:center;gap:10px;
       background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;
-      color:var(--text);font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;width:100%;
+      color:var(--text);font-family:var(--font-display);font-style:italic;font-size:12px;letter-spacing:1px;cursor:pointer;width:100%;
       transition:background 0.2s;" id="mob-theme-btn">
       <span id="mob-theme-icon">🌙</span> <span id="mob-theme-label">LIGHT MODE</span>
     </button>
@@ -1421,7 +1441,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 
     <!-- LIVE SYNC INDICATOR -->
     <div style="text-align:center;margin-bottom:20px">
-      <span id="sync-status-badge" style="display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--muted);font-family:Orbitron,sans-serif;letter-spacing:1px">
+      <span id="sync-status-badge" style="display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--muted);font-family:var(--font-display);font-style:italic;letter-spacing:1px">
         <span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#555;display:inline-block"></span>
         <span id="sync-label">CONNECTING...</span>
       </span>
@@ -1633,8 +1653,8 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
     <textarea id="share-preview-textarea" class="share-preview-textarea" readonly></textarea>
     <div class="share-preview-actions">
       <button class="btn btn-outline btn-sm" onclick="closeSharePreview()">CANCEL</button>
-      <button class="btn btn-sm" onclick="sharePreviewWhatsApp()" style="background:#25D366;color:#fff;border:none;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:1px;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;">💬 OPEN WHATSAPP</button>
-      <button class="btn btn-sm" onclick="sharePreviewDownload()" style="background:var(--gold);color:#000;border:none;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:1px;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;">💾 SAVE IMAGE</button>
+      <button class="btn btn-sm" onclick="sharePreviewWhatsApp()" style="background:#25D366;color:#fff;border:none;font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;">💬 OPEN WHATSAPP</button>
+      <button class="btn btn-sm" onclick="sharePreviewDownload()" style="background:var(--gold);color:#000;border:none;font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;">💾 SAVE IMAGE</button>
     </div>
   </div>
 </div>
@@ -2433,7 +2453,7 @@ function renderDraft() {
           <div class="picker-name" style="font-size:20px">${submittedCount} / ${totalPlayers}</div>
           ${myPlayerId
             ? `<div class="picker-pos" style="font-size:12px;margin-top:2px">${iHaveSubmitted ? '✅ Submitted' : '⏳ Your turn coming'}</div>
-               <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-top:4px">YOU PICK ${myPos ? 'P' + myPos : '?'}</div>`
+               <div style="font-family:var(--font-display);font-style:italic;font-size:14px;font-weight:700;color:var(--gold);margin-top:4px">YOU PICK ${myPos ? 'P' + myPos : '?'}</div>`
             : `<div class="picker-pos">⏳ Pick your name</div>`}
         </div>`;
       })();
@@ -2541,18 +2561,18 @@ function renderDraft() {
     const draftOrderRows = draftOrder.map((pid, i) => {
       const p = STATE.players.find(pl => pl.id === pid);
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-        <div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:${i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)'};width:36px;flex-shrink:0">P${i+1}</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:13px;font-weight:700;color:${i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--muted)'};width:36px;flex-shrink:0">P${i+1}</div>
         <div style="font-size:14px;font-weight:600">${p ? esc(p.name) : '?'}</div>
       </div>`;
     }).join('');
     myPickPanel = `
       <div style="background:var(--panel2);border:2px solid var(--gold);border-radius:12px;padding:20px;text-align:center;margin-bottom:8px">
         <div style="font-size:36px;margin-bottom:10px">👤</div>
-        <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;color:var(--fg);margin-bottom:6px">WHO ARE YOU?</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:14px;font-weight:700;letter-spacing:1px;color:var(--fg);margin-bottom:6px">WHO ARE YOU?</div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Tell us who you are to see your draft position and submit picks</div>
-        <button class="btn btn-green" style="font-size:14px;padding:12px 24px;font-family:Orbitron,sans-serif;letter-spacing:1px;width:100%;max-width:280px" onclick="showIdentityOverlay()">🏎 SELECT MY NAME</button>
+        <button class="btn btn-green" style="font-size:14px;padding:12px 24px;font-family:var(--font-display);font-style:italic;letter-spacing:1px;width:100%;max-width:280px" onclick="showIdentityOverlay()">🏎 SELECT MY NAME</button>
         <div style="margin-top:20px;text-align:left">
-          <div style="font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:1px;color:var(--muted);margin-bottom:8px">DRAFT ORDER — RACE ${raceIdx+1}</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:10px;letter-spacing:1px;color:var(--muted);margin-bottom:8px">DRAFT ORDER — RACE ${raceIdx+1}</div>
           ${draftOrderRows}
         </div>
       </div>`;
@@ -2571,7 +2591,7 @@ function renderDraft() {
       : 'var(--muted)';
     myPickPanel = `
       <div class="card" style="padding:16px;border-top:3px solid var(--green)">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:8px">YOUR RESOLVED PICK</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:8px">YOUR RESOLVED PICK</div>
         ${myDriver ? `
           <div style="display:flex;align-items:center;gap:10px">
             <div style="width:4px;height:40px;background:${myDriver.teamColor};border-radius:2px"></div>
@@ -2586,11 +2606,11 @@ function renderDraft() {
     const prefDrivers = myPrefs.map(short => DRIVERS.find(d => d.short === short)).filter(Boolean);
     myPickPanel = `
       <div class="card" style="padding:16px;border-top:3px solid var(--green)">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:10px">✅ YOUR PREFERENCES LOCKED IN</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:10px">✅ YOUR PREFERENCES LOCKED IN</div>
         <div style="max-height:340px;overflow-y:auto;margin-bottom:4px">
         ${prefDrivers.map((d, i) => `
           <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
-            <div style="font-size:11px;font-family:Orbitron,sans-serif;color:${getRankColor(i)};width:64px;flex-shrink:0">CHOICE ${i+1}</div>
+            <div style="font-size:11px;font-family:var(--font-display);font-style:italic;color:${getRankColor(i)};width:64px;flex-shrink:0">CHOICE ${i+1}</div>
             <div style="width:4px;height:28px;background:${d.teamColor};border-radius:2px"></div>
             <div style="flex:1">
               <div style="font-weight:600;font-size:13px">${d.name}</div>
@@ -2612,7 +2632,7 @@ function renderDraft() {
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div>
-            <div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--fg)">YOUR RANKED PICKS</div>
+            <div style="font-family:var(--font-display);font-style:italic;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--fg)">YOUR RANKED PICKS</div>
             <div style="font-size:11px;color:var(--muted);margin-top:2px">Draft position: P${draftPos} · ${prefDrivers.length} selected</div>
           </div>
           ${prefDrivers.length > 0 ? `<div style="font-size:22px">🏎</div>` : `<div style="font-size:22px;opacity:0.3">🏎</div>`}
@@ -2630,7 +2650,7 @@ function renderDraft() {
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
             ${prefDrivers.map((d, i) => `
               <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:${rankBg[i]||'var(--panel)'};border:1px solid ${rankColors[i]||'var(--border)'};border-left:4px solid ${d.teamColor};border-radius:8px">
-                <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:${rankColors[i]||'var(--muted)'};width:28px;text-align:center;flex-shrink:0;line-height:1">${i+1}</div>
+                <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:900;color:${rankColors[i]||'var(--muted)'};width:28px;text-align:center;flex-shrink:0;line-height:1">${i+1}</div>
                 <div style="flex:1;min-width:0">
                   <div style="font-weight:700;font-size:15px">${d.name}</div>
                   <div style="font-size:11px;color:var(--muted)">${d.team}</div>
@@ -2643,7 +2663,7 @@ function renderDraft() {
               </div>
             `).join('')}
           </div>
-          <button class="btn btn-green" style="width:100%;font-size:14px;padding:14px;font-family:Orbitron,sans-serif;letter-spacing:1px" onclick="confirmSubmitPrefs()">
+          <button class="btn btn-green" style="width:100%;font-size:14px;padding:14px;font-family:var(--font-display);font-style:italic;letter-spacing:1px" onclick="confirmSubmitPrefs()">
             🔒 SUBMIT ${prefDrivers.length} PICK${prefDrivers.length > 1 ? 'S' : ''}
           </button>
         `}
@@ -2671,7 +2691,7 @@ function renderDraft() {
               <span style="font-weight:600;font-size:13px">${esc(player?.name)}</span>
               <span style="margin-left:8px">${choiceLabel}</span>
             </div>
-            <span style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--accent)">${driver?.short} · ${driver?.team}</span>
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--accent)">${driver?.short} · ${driver?.team}</span>
           </div>`;
         }).join('')}
       </div>`;
@@ -2679,7 +2699,7 @@ function renderDraft() {
     allPicksPanel = `
       <div class="card" style="padding:16px;text-align:center;">
         <div style="font-size:28px;margin-bottom:8px">🔒</div>
-        <div style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px;color:var(--muted)">PICKS SEALED</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:12px;letter-spacing:1px;color:var(--muted)">PICKS SEALED</div>
         <div style="font-size:12px;color:var(--muted);margin-top:6px">All picks resolved. Waiting for admin to reveal.</div>
       </div>`;
   }
@@ -2705,7 +2725,7 @@ function renderDraft() {
 
       ${/* ── SUBMISSION STATUS (collapsed at bottom) ── */ ''}
       <details class="status-details" style="margin-top:20px;">
-        <summary style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);cursor:pointer;padding:10px 0;list-style:none;display:flex;align-items:center;gap:8px;">
+        <summary style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);cursor:pointer;padding:10px 0;list-style:none;display:flex;align-items:center;gap:8px;">
           <span>▶</span> SUBMISSION STATUS (${submittedCount}/${totalPlayers})
         </summary>
         <div class="card" style="padding:16px;margin-top:8px;">
@@ -2716,7 +2736,7 @@ function renderDraft() {
                 ? `<button class="btn btn-green btn-sm" style="width:100%" onclick="goToNextRace()">
                     ADVANCE TO RACE ${raceIdx+2 <= RACES.length ? raceIdx+2 : '—'} DRAFT ▶
                    </button>`
-                : `<div style="padding:10px;background:rgba(255,165,0,0.05);border:1px solid rgba(255,165,0,0.2);border-radius:6px;text-align:center;font-size:12px;color:#ffa500;font-family:Share Tech Mono,monospace;">
+                : `<div style="padding:10px;background:rgba(255,165,0,0.05);border:1px solid rgba(255,165,0,0.2);border-radius:6px;text-align:center;font-size:12px;color:#ffa500;font-family:var(--font-mono);">
                     ⏳ AWAITING ADMIN REVEAL
                    </div>`}
             </div>` : ''}
@@ -2939,7 +2959,7 @@ function renderResultEntry(raceId) {
       return `
         <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px">
           <div style="font-weight:700;font-size:14px;flex:1">${esc(player.name)}</div>
-          <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">🔒 SEALED</span>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">🔒 SEALED</span>
         </div>
       `;
     }
@@ -2948,10 +2968,10 @@ function renderResultEntry(raceId) {
         <div style="font-weight:700;font-size:14px;flex:1">${esc(player.name)}</div>
         <div style="display:flex;align-items:center;gap:6px">
           <div style="width:3px;height:20px;border-radius:2px;background:${driver?.teamColor}"></div>
-          <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--accent)">${driver?.short}</span>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">${driver?.short}</span>
           <span style="font-size:12px;color:var(--muted)">${driver?.name.split(' ').pop()}</span>
         </div>
-        <div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;color:${pts>0?'var(--gold)':'var(--muted)'}">
+        <div style="font-family:var(--font-display);font-style:italic;font-size:13px;font-weight:700;color:${pts>0?'var(--gold)':'var(--muted)'}">
           ${pts === null ? '<span style="font-size:11px;letter-spacing:1px">PENDING</span>' : pts > 0 ? '+' + pts : '—'}
         </div>
       </div>
@@ -2974,7 +2994,7 @@ function renderResultEntry(raceId) {
         ${Object.keys(existingResult).length > 0
           ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${Object.entries(existingResult).sort((a,b)=>a[0]-b[0]).map(([pos,short]) => {
               const d = DRIVERS.find(dr => dr.short === short);
-              return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:4px;background:var(--panel2);border:1px solid var(--border);font-family:Share Tech Mono,monospace;font-size:12px"><span style="color:${pos<=3?'var(--gold)':'var(--muted)'};font-weight:700">P${pos}</span><span style="color:${d?.teamColor||'var(--text)'};font-weight:700">${short}</span></span>`;
+              return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:4px;background:var(--panel2);border:1px solid var(--border);font-family:var(--font-mono);font-size:12px"><span style="color:${pos<=3?'var(--gold)':'var(--muted)'};font-weight:700">P${pos}</span><span style="color:${d?.teamColor||'var(--text)'};font-weight:700">${short}</span></span>`;
             }).join('')}</div>`
           : '<p style="color:var(--muted);font-size:13px">No result yet.</p>'}
         <p style="font-size:12px;color:var(--muted);margin-top:12px;">🔐 Results are entered by the admin after each race.</p>
@@ -3122,7 +3142,7 @@ function renderLeaderboard() {
 
     let gapHtml;
     if (rank === 1) {
-      gapHtml = `<span style="font-size:11px;color:var(--green);font-family:Share Tech Mono,monospace">LEAD</span>`;
+      gapHtml = `<span style="font-size:11px;color:var(--green);font-family:var(--font-mono)">LEAD</span>`;
     } else {
       const gap = leaderTotal - player.total;
       const pct = leaderTotal > 0 ? Math.max(4, Math.round((1 - gap / leaderTotal) * 100)) : 4;
@@ -3141,18 +3161,18 @@ function renderLeaderboard() {
   document.getElementById('lb-content').innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
       <div class="card" style="flex:1;min-width:200px;padding:16px 24px;">
-        <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;">
+        <div style="font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:900;">
           ${esc(playerData[0]?.name || '—')}<span style="color:var(--gold);margin-left:8px;">🏆</span>
         </div>
-        <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);margin-top:4px;">CURRENT LEADER · ${leaderTotal} PTS</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-top:4px;">CURRENT LEADER · ${leaderTotal} PTS</div>
       </div>
       <div class="card" style="padding:16px 20px;text-align:center;">
-        <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;">${racesPlayed}<span style="font-size:12px;color:var(--muted)">/22</span></div>
-        <div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);">DONE</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:700;">${racesPlayed}<span style="font-size:12px;color:var(--muted)">/22</span></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">DONE</div>
       </div>
       <div class="card" style="padding:16px 20px;text-align:center;">
-        <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;color:var(--accent);">${racesRemaining}</div>
-        <div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);">LEFT</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:700;color:var(--accent);">${racesRemaining}</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">LEFT</div>
       </div>
       <button class="share-standings-btn" onclick="shareStandings()" title="Copy race report text for WhatsApp">📋 SHARE</button>
       <button class="share-standings-btn" onclick="shareStandingsImage()" title="Race report image — result, standings &amp; next pick order" style="background:var(--gold);color:#000">📸 REPORT</button>
@@ -3188,12 +3208,12 @@ function renderSchedule() {
         const ptsLabel = pts === null ? '' : pts > 0
           ? `<span style="color:var(--gold);font-weight:700;margin-left:6px">+${pts}pts</span>`
           : `<span style="color:var(--muted);margin-left:6px">0pts</span>`;
-        myPickHtml = `<div style="display:flex;align-items:center;gap:4px;font-family:Share Tech Mono,monospace;font-size:11px;margin-top:4px">
+        myPickHtml = `<div style="display:flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:11px;margin-top:4px">
           <span style="width:8px;height:8px;border-radius:50%;background:${driver?.teamColor};display:inline-block;flex-shrink:0"></span>
           <span style="color:${driver?.teamColor}">${myShort}</span>${ptsLabel}
         </div>`;
       } else if (myShort && !revealed) {
-        myPickHtml = `<div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);margin-top:4px">🔒 SEALED</div>`;
+        myPickHtml = `<div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:4px">🔒 SEALED</div>`;
       }
     }
     return `
@@ -3261,7 +3281,7 @@ function renderDrivers() {
       style="padding:6px 12px;border-radius:20px;border:1px solid ${t===activeTeamFilter ? color : 'var(--border)'};
       background:${t===activeTeamFilter ? color+'22' : 'var(--panel2)'};
       color:${t===activeTeamFilter ? color : 'var(--muted)'};
-      font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;
+      font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;cursor:pointer;
       white-space:nowrap;transition:all 0.2s;">
       ${t === 'ALL' ? '⬡ ALL DRIVERS' : t.toUpperCase()}
     </button>`;
@@ -3316,12 +3336,12 @@ function driverCard(d) {
           onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
         <!-- Fallback initials -->
         <div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;
-          font-family:Orbitron,sans-serif;font-size:36px;font-weight:900;color:${d.teamColor};opacity:0.4;">
+          font-family:var(--font-display);font-style:italic;font-size:36px;font-weight:900;color:${d.teamColor};opacity:0.4;">
           ${fallbackInitials}
         </div>
         <!-- Car number badge -->
         <div style="position:absolute;top:10px;left:10px;
-          font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;
+          font-family:var(--font-display);font-style:italic;font-size:18px;font-weight:900;
           color:white;text-shadow:0 2px 8px rgba(0,0,0,0.8),0 0 20px ${d.teamColor}88;">
           ${d.num}
         </div>
@@ -3330,7 +3350,7 @@ function driverCard(d) {
       </div>
       <!-- Driver info -->
       <div style="padding:14px 16px;">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;font-weight:700;
           color:${d.teamColor};letter-spacing:1px;margin-bottom:3px;">${d.short}</div>
         <div style="font-weight:700;font-size:16px;line-height:1.2;margin-bottom:6px;">${d.name}</div>
         <div style="display:flex;align-items:center;gap:6px;">
@@ -3364,12 +3384,12 @@ function driverPickedBy(short) {
   const pickedByNames = [...new Set(history.map(h => h.player?.name).filter(Boolean))];
   const chips = history.slice(-5).map(h => {
     const col = h.pts === null ? 'var(--muted)' : h.pts >= 6 ? 'var(--green)' : h.pts > 0 ? 'var(--gold)' : 'var(--muted)';
-    return `<span title="R${h.raceNum} ${h.race.name}: ${esc(h.player?.name)} · ${h.pts ?? '?'}pts" style="display:inline-block;width:18px;height:18px;border-radius:3px;background:${col}22;color:${col};font-size:9px;text-align:center;line-height:18px;font-family:Share Tech Mono,monospace">${h.pts ?? '?'}</span>`;
+    return `<span title="R${h.raceNum} ${h.race.name}: ${esc(h.player?.name)} · ${h.pts ?? '?'}pts" style="display:inline-block;width:18px;height:18px;border-radius:3px;background:${col}22;color:${col};font-size:9px;text-align:center;line-height:18px;font-family:var(--font-mono)">${h.pts ?? '?'}</span>`;
   }).join('');
   return `
     <div style="margin-top:8px;padding:6px 8px;background:var(--panel2);border:1px solid var(--border);border-radius:6px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:1px">PICKED ${totalPicks}x · ${totalPts} PTS</span>
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:1px">PICKED ${totalPicks}x · ${totalPts} PTS</span>
       </div>
       <div style="display:flex;gap:3px;align-items:center">${chips}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:4px">By: ${esc(pickedByNames.join(', '))}</div>
@@ -3481,7 +3501,7 @@ function renderAdminDashboard() {
       return `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;
                 background:${d?.teamColor ? d.teamColor + '18' : 'var(--panel3)'};
                 border:1px solid ${d?.teamColor ? d.teamColor + '44' : 'var(--border)'};
-                font-family:Share Tech Mono,monospace;font-size:11px;white-space:nowrap">
+                font-family:var(--font-mono);font-size:11px;white-space:nowrap">
                <span style="color:${rankColor};font-weight:700;font-size:10px">${rank+1}</span>
                <span style="color:${d?.teamColor || 'var(--text)'};font-weight:700">${s}</span>
              </span>`;
@@ -3536,11 +3556,11 @@ function renderAdminDashboard() {
           <td style="padding:6px 10px">
             ${short ? `<span class="driver-tag" style="color:${driver?.teamColor};border-color:${driver?.teamColor}44;background:${driver?.teamColor}11">${short}</span>` : '<span style="color:var(--muted)">—</span>'}
           </td>
-          <td style="padding:6px 10px;font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">${driver?.team || ''}</td>
+          <td style="padding:6px 10px;font-family:var(--font-mono);font-size:12px;color:var(--muted)">${driver?.team || ''}</td>
         </tr>`;
       }).join('');
       return `<div style="margin-bottom:16px;">
-        <div style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">${r.flag} ${r.name}</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">${r.flag} ${r.name}</div>
         <table class="picks-table"><thead><tr><th>PLAYER</th><th>DRIVER</th><th>TEAM</th></tr></thead><tbody>${rows}</tbody></table>
       </div>`;
     }).join('') || '<p style="color:var(--muted);font-size:13px">No drafts completed yet</p>';
@@ -3553,20 +3573,20 @@ function renderAdminDashboard() {
       </div>
       <div style="display:flex;gap:20px;flex-wrap:wrap;">
         <div style="text-align:center">
-          <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700">${STATE.players.length}</div>
-          <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">PLAYERS</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:700">${STATE.players.length}</div>
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">PLAYERS</div>
         </div>
         <div style="text-align:center">
-          <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700">${racesWithDrafts}</div>
-          <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">DRAFTED</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:700">${racesWithDrafts}</div>
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">DRAFTED</div>
         </div>
         <div style="text-align:center">
-          <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700">${racesWithResults}</div>
-          <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">RESULTS IN</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:700">${racesWithResults}</div>
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">RESULTS IN</div>
         </div>
         <div style="text-align:center">
-          <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700">${raceIdx + 1}</div>
-          <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">CURRENT RACE</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:700">${raceIdx + 1}</div>
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">CURRENT RACE</div>
         </div>
         ${(() => {
           const pd = STATE.players.map(p => { const {total} = calcPlayerPoints(p.id); return {...p, total}; }).sort((a,b)=>b.total-a.total);
@@ -3574,12 +3594,12 @@ function renderAdminDashboard() {
           const totalPts = pd.reduce((s,p)=>s+p.total,0);
           return leader ? `
             <div style="text-align:center">
-              <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:var(--gold)">${esc(leader.name)}</div>
-              <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">LEADING · ${leader.total}pts</div>
+              <div style="font-family:var(--font-display);font-style:italic;font-size:14px;font-weight:700;color:var(--gold)">${esc(leader.name)}</div>
+              <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">LEADING · ${leader.total}pts</div>
             </div>
             <div style="text-align:center">
-              <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;color:var(--accent)">${totalPts}</div>
-              <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">TOTAL PTS</div>
+              <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:700;color:var(--accent)">${totalPts}</div>
+              <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">TOTAL PTS</div>
             </div>` : '';
         })()}
       </div>
@@ -3600,7 +3620,7 @@ function renderAdminDashboard() {
         ${currentRace ? `
           <div style="margin-bottom:14px;padding:12px;background:${revealed ? 'rgba(0,230,118,0.05)' : 'rgba(255,165,0,0.05)'};
             border:1px solid ${revealed ? 'rgba(0,230,118,0.2)' : 'rgba(255,165,0,0.2)'};border-radius:6px;
-            font-family:Share Tech Mono,monospace;font-size:12px;
+            font-family:var(--font-mono);font-size:12px;
             color:${revealed ? 'var(--green)' : '#ffa500'}">
             ${revealed ? '🟢 PICKS REVEALED — players can see all picks' : '🟠 PICKS HIDDEN — players see only their own pick'}
           </div>
@@ -3629,7 +3649,7 @@ function renderAdminDashboard() {
           const isPast = dlDate && dlDate < new Date();
           const dlDisplay = dlDate ? dlDate.toLocaleString() : 'Not set';
           return `
-            <div style="margin-bottom:10px;font-family:Share Tech Mono,monospace;font-size:12px;color:${isPast ? 'var(--red)' : dlDate ? 'var(--gold)' : 'var(--muted)'}">
+            <div style="margin-bottom:10px;font-family:var(--font-mono);font-size:12px;color:${isPast ? 'var(--red)' : dlDate ? 'var(--gold)' : 'var(--muted)'}">
               ${isPast ? '⚠ DEADLINE PASSED' : dlDate ? '⏱ DEADLINE' : '○ NO DEADLINE'}: ${dlDisplay}
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -3668,11 +3688,11 @@ function renderAdminDashboard() {
             const autoId = (drafted.find(r => r.id === preferId) || drafted[drafted.length - 1])?.id || '';
             return `<select id="share-race-select" onchange="renderPickCard(this.value)"
               style="padding:8px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;
-                     color:var(--text);font-size:14px;cursor:pointer;font-family:Rajdhani,sans-serif">
+                     color:var(--text);font-size:14px;cursor:pointer;font-family:var(--font-sans)">
               <option value="">— Select a race —</option>
               ${drafted.map(r => `<option value="${r.id}" ${r.id === autoId ? 'selected' : ''}>${r.flag} ${r.name} · ${r.date}</option>`).join('')}
             </select>
-            <span style="font-size:12px;color:var(--muted);font-family:Share Tech Mono,monospace">📸 Screenshot &nbsp;·&nbsp; or &nbsp;·&nbsp; 💬 Copy text below</span>`;
+            <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono)">📸 Screenshot &nbsp;·&nbsp; or &nbsp;·&nbsp; 💬 Copy text below</span>`;
           })()}
         </div>
         <div id="pick-card-preview"></div>
@@ -3686,14 +3706,14 @@ function renderAdminDashboard() {
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${RACES.filter(r => STATE.draftPicks[r.id] && Object.keys(STATE.draftPicks[r.id]).length > 0 || (STATE.draftPrefs[r.id] && Object.keys(STATE.draftPrefs[r.id]).length > 0)).map(r => `
             <div style="background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;">
-              <div style="font-family:Orbitron,sans-serif;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">
+              <div style="font-family:var(--font-display);font-style:italic;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">
                 ${r.flag} ${r.name} GP
               </div>
               <div style="display:flex;flex-wrap:wrap;gap:6px;">
                 ${STATE.players.map(player => `
                   <button onclick="adminAmendPickOpen('${player.id}','${r.id}')"
                     style="padding:5px 10px;background:var(--panel3);border:1px solid var(--border);
-                    border-radius:4px;color:var(--text);font-family:Rajdhani,sans-serif;font-size:12px;
+                    border-radius:4px;color:var(--text);font-family:var(--font-sans);font-size:12px;
                     font-weight:600;cursor:pointer;transition:all 0.15s;"
                     onmouseover="this.style.borderColor='#ffa500';this.style.color='#ffa500'"
                     onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
@@ -3725,7 +3745,7 @@ function renderAdminDashboard() {
             ◀ PREV RACE
           </button>
         </div>
-        <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);margin-top:8px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:8px">
           Jump to race:
           <select id="jump-race-select" onchange="adminJumpToRace(this.value)"
             style="margin-left:8px;background:var(--panel2);border:1px solid var(--border);color:var(--text);
@@ -3744,7 +3764,7 @@ function renderAdminDashboard() {
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
               <span style="font-weight:600">${esc(p.name)}</span>
               <div style="display:flex;gap:6px;align-items:center">
-                <span style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted)">
+                <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">
                   ${calcPlayerPoints(p.id).total} pts
                 </span>
                 <button class="dri-edit-btn" onclick="adminRemovePlayer('${p.id}')">✕</button>
@@ -3764,7 +3784,7 @@ function renderAdminDashboard() {
         <div class="admin-card-title">🌐 AUTO-IMPORT RESULTS · JOLPICA API</div>
         <div class="admin-card-desc">Fetch official race results automatically from the Jolpica F1 API. Only works once official results are published after the race. If the API is down, use <strong>Manual Results Entry</strong> below.</div>
         <div style="margin-bottom:10px">
-          <label style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);letter-spacing:1px;display:block;margin-bottom:6px">RACE ROUND</label>
+          <label style="font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:1px;display:block;margin-bottom:6px">RACE ROUND</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
 <select id="import-round-select" style="flex:1;padding:8px 12px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:13px">
               <option>Loading...</option>
@@ -3780,7 +3800,7 @@ function renderAdminDashboard() {
         <div class="admin-card-title">📝 MANUAL RESULTS ENTRY</div>
         <div class="admin-card-desc">Backup for when the Jolpica API is unavailable or hasn't published yet. Pick any race and enter the top 10 finishers by hand — saving reveals that race's picks and updates the standings, exactly like an import.</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-          <label style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);letter-spacing:1px">RACE</label>
+          <label style="font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:1px">RACE</label>
           <select id="admin-result-race" onchange="renderAdminResultEntry(this.value)"
             style="padding:8px 12px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:13px;cursor:pointer">
             ${RACES.map((r,i) => `<option value="${r.id}" ${i===raceIdx?'selected':''}>${r.flag} R${i+1} · ${r.name}${STATE.raceResults[r.id] ? ' ✓' : ''}</option>`).join('')}
@@ -3803,9 +3823,9 @@ function renderAdminDashboard() {
               <span>${r.flag} R${i+1} ${r.name}</span>
               <div style="display:flex;align-items:center;gap:8px">
                 ${hasResult
-                  ? `<span style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--green)">✓ ${winner}</span>
+                  ? `<span style="font-family:var(--font-mono);font-size:11px;color:var(--green)">✓ ${winner}</span>
                      <button class="dri-edit-btn" style="color:var(--red);border-color:rgba(225,6,0,0.3)" onclick="adminClearResult('${r.id}')">CLEAR</button>`
-                  : `<span style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">PENDING</span>`
+                  : `<span style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">PENDING</span>`
                 }
               </div>
             </div>`;
@@ -3999,7 +4019,7 @@ function renderPickCard(raceId) {
     el.innerHTML = `
       <div style="background:var(--panel2);border:1px dashed var(--border);border-radius:10px;padding:24px;text-align:center;max-width:580px">
         <div style="font-size:30px;margin-bottom:8px">${race.flag}</div>
-        <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:900;letter-spacing:1px;">${race.name} GRAND PRIX</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:15px;font-weight:900;letter-spacing:1px;">${race.name} GRAND PRIX</div>
         <div style="font-size:13px;color:var(--muted);margin-top:10px;">
           Picks aren't resolved yet — <strong>${inCount} of ${STATE.players.length}</strong> preferences submitted.<br>
           The share card appears automatically once every player has picked and the draft resolves.<br>
@@ -4017,7 +4037,7 @@ function renderPickCard(raceId) {
   el.innerHTML = `
     <div id="pick-share-card" style="
       width:580px;max-width:100%;background:#0d0d0d;border-radius:10px;overflow:hidden;
-      border:1px solid #222;box-shadow:0 4px 24px rgba(0,0,0,0.5);font-family:Rajdhani,sans-serif">
+      border:1px solid #222;box-shadow:0 4px 24px rgba(0,0,0,0.5);font-family:var(--font-sans)">
 
       <div style="background:linear-gradient(135deg,#E10600,#a00000);padding:18px 20px;position:relative;overflow:hidden">
         <div style="position:absolute;top:-20px;right:-30px;width:110px;height:110px;background:rgba(255,255,255,0.06);border-radius:50%"></div>
@@ -4025,28 +4045,28 @@ function renderPickCard(raceId) {
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:30px;line-height:1">${race.flag}</span>
           <div>
-            <div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:#fff;letter-spacing:1px;line-height:1">${race.name}</div>
+            <div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:#fff;letter-spacing:1px;line-height:1">${race.name}</div>
             <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px;font-weight:600;letter-spacing:1px">${race.date} &nbsp;·&nbsp; ${race.circuit}</div>
           </div>
         </div>
       </div>
 
       <div style="background:#111;padding:11px 20px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #222">
-        <span style="font-size:10px;letter-spacing:2px;color:#555;font-weight:700;margin-right:4px;text-transform:uppercase;font-family:Share Tech Mono,monospace">${upcoming?'STATUS':'RESULT'}</span>
+        <span style="font-size:10px;letter-spacing:2px;color:#555;font-weight:700;margin-right:4px;text-transform:uppercase;font-family:var(--font-mono)">${upcoming?'STATUS':'RESULT'}</span>
         ${upcoming
-          ? `<span style="font-size:13px;color:#f59e0b;font-weight:700;letter-spacing:1px;font-family:Share Tech Mono,monospace">⏳ PICKS LOCKED · RACE UPCOMING</span>`
+          ? `<span style="font-size:13px;color:#f59e0b;font-weight:700;letter-spacing:1px;font-family:var(--font-mono)">⏳ PICKS LOCKED · RACE UPCOMING</span>`
           : podium.map((d,i)=>{
               const drv=DRIVERS.find(dr=>dr.short===d);
               return `<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:4px;background:#1a1a1a;border:1px solid #2a2a2a">
-                <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:800;color:${podClr[i]}">P${i+1}</span>
-                <span style="font-family:Share Tech Mono,monospace;font-size:13px;font-weight:700;color:${drv?.teamColor||'#aaa'}">${d}</span>
+                <span style="font-family:var(--font-mono);font-size:12px;font-weight:800;color:${podClr[i]}">P${i+1}</span>
+                <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:${drv?.teamColor||'#aaa'}">${d}</span>
               </div>`;
             }).join('')
         }
       </div>
 
       <div style="display:flex;align-items:center;padding:4px 20px 2px;gap:10px;border-bottom:1px solid #1a1a1a">
-        <span style="width:20px;font-size:10px;color:#333;text-align:right;font-family:Share Tech Mono,monospace;font-weight:700">#</span>
+        <span style="width:20px;font-size:10px;color:#333;text-align:right;font-family:var(--font-mono);font-weight:700">#</span>
         <div style="width:4px"></div>
         <span style="flex:1;font-size:10px;color:#333;font-weight:700;letter-spacing:1px;text-transform:uppercase">PLAYER</span>
         <span style="font-size:10px;color:#333;font-weight:700;letter-spacing:1px;text-transform:uppercase;width:60px;text-align:center">DRIVER</span>
@@ -4060,21 +4080,21 @@ function renderPickCard(raceId) {
         const surname=drv?.name?.split(' ').slice(-1)[0]||row.driver;
         return `<div style="display:flex;align-items:center;padding:7px 20px;gap:10px;border-bottom:1px solid #141414;
           background:${row.pts>0?'rgba(255,255,255,0.02)':'transparent'};opacity:${row.pts===0?'0.5':'1'}">
-          <span style="font-size:12px;color:${rankClr(idx)};font-weight:700;width:20px;text-align:right;font-family:Share Tech Mono,monospace">${upcoming?'':idx+1}</span>
+          <span style="font-size:12px;color:${rankClr(idx)};font-weight:700;width:20px;text-align:right;font-family:var(--font-mono)">${upcoming?'':idx+1}</span>
           <div style="width:4px;height:28px;border-radius:2px;background:${tc};flex-shrink:0"></div>
           <span style="font-size:18px;font-weight:700;color:#e8e8e8;flex:1">${esc(row.name)}</span>
-          <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:700;letter-spacing:1px;
+          <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1px;
             padding:3px 8px;border-radius:4px;background:#1a1a1a;border:1px solid #2a2a2a;color:${tc};text-align:center;min-width:70px">
             <span style="font-size:11px;opacity:0.65">${row.driver}</span><br>${surname}
           </span>
-          ${!upcoming?`<span style="font-size:12px;color:${row.pos?'#aaa':'#444'};font-weight:600;width:32px;text-align:center;font-family:Share Tech Mono,monospace">${row.pos?'P'+row.pos:'—'}</span>
-            <span style="font-size:18px;font-weight:800;width:44px;text-align:right;font-family:Share Tech Mono,monospace;color:${ptsClr(row.pts)}">${row.pts>0?row.pts:row.pts===0?'0':'—'}</span>`:''}
+          ${!upcoming?`<span style="font-size:12px;color:${row.pos?'#aaa':'#444'};font-weight:600;width:32px;text-align:center;font-family:var(--font-mono)">${row.pos?'P'+row.pos:'—'}</span>
+            <span style="font-size:18px;font-weight:800;width:44px;text-align:right;font-family:var(--font-mono);color:${ptsClr(row.pts)}">${row.pts>0?row.pts:row.pts===0?'0':'—'}</span>`:''}
         </div>`;
       }).join('')}
 
       <div style="padding:10px 20px;background:#080808;border-top:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:13px;font-weight:900;letter-spacing:1px;color:#E10600;font-family:Orbitron,sans-serif">🏎 F1GM</span>
-        <span style="font-size:11px;color:#333;letter-spacing:2px;font-weight:700;text-transform:uppercase;font-family:Share Tech Mono,monospace">${upcoming?'picks revealed':'points scored'}</span>
+        <span style="font-size:13px;font-weight:900;letter-spacing:1px;color:#E10600;font-family:var(--font-display);font-style:italic">🏎 F1GM</span>
+        <span style="font-size:11px;color:#333;letter-spacing:2px;font-weight:700;text-transform:uppercase;font-family:var(--font-mono)">${upcoming?'picks revealed':'points scored'}</span>
       </div>
     </div>
   `;
@@ -4083,7 +4103,7 @@ function renderPickCard(raceId) {
   if (waBtn) {
     waBtn.innerHTML = `<button onclick="sharePickCardWhatsApp('${raceId}')"
       style="margin-top:14px;background:#25D366;color:#fff;border:none;border-radius:6px;
-             padding:9px 20px;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;
+             padding:9px 20px;font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;
              font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
       💬 COPY FOR WHATSAPP
     </button>`;
@@ -4311,10 +4331,10 @@ function adminAmendPickOpen(playerId, raceId) {
       padding:28px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
         <div>
-          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:#ffa500;letter-spacing:2px">
+          <div style="font-family:var(--font-display);font-style:italic;font-size:14px;font-weight:700;color:#ffa500;letter-spacing:2px">
             ✏ AMEND PICK
           </div>
-          <div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);margin-top:3px">
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-top:3px">
             ${esc(player.name)} · ${race.name} GP
           </div>
         </div>
@@ -4325,12 +4345,12 @@ function adminAmendPickOpen(playerId, raceId) {
 
       ${picksResolved ? `
       <div style="margin-bottom:18px;">
-        <label style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:2px;display:block;margin-bottom:6px;">
+        <label style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:2px;display:block;margin-bottom:6px;">
           RESOLVED DRIVER (draft already settled)
         </label>
         <select id="amend-resolved-driver"
           style="width:100%;padding:10px 14px;background:var(--panel2);border:1px solid rgba(255,165,0,0.4);
-          border-radius:6px;color:var(--text);font-family:Rajdhani,sans-serif;font-size:14px;outline:none;">
+          border-radius:6px;color:var(--text);font-family:var(--font-sans);font-size:14px;outline:none;">
           <option value="">— No driver —</option>
           ${resolvedOptions}
         </select>
@@ -4338,13 +4358,13 @@ function adminAmendPickOpen(playerId, raceId) {
       </div>` : ''}
 
       <div style="margin-bottom:18px;">
-        <label style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:2px;display:block;margin-bottom:6px;">
+        <label style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:2px;display:block;margin-bottom:6px;">
           PREFERENCE LIST (select multiple — order matters)
         </label>
         <select id="amend-prefs-select" multiple
           style="width:100%;height:220px;padding:6px;background:var(--panel2);
           border:1px solid rgba(255,165,0,0.4);border-radius:6px;color:var(--text);
-          font-family:Share Tech Mono,monospace;font-size:12px;outline:none;">
+          font-family:var(--font-mono);font-size:12px;outline:none;">
           ${prefRows}
         </select>
         <p style="font-size:11px;color:var(--muted);margin-top:6px;">
@@ -4898,31 +4918,31 @@ function updateH2H() {
     <div class="card gap-md">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <div style="text-align:center;flex:1">
-          <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:var(--red)">${totalA}</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:900;color:var(--red)">${totalA}</div>
           <div style="font-size:12px;color:var(--muted)">${esc(pA?.name)}</div>
-          <div style="font-family:Orbitron,sans-serif;font-size:14px;margin-top:4px">${winsA} <span style="font-size:12px;color:var(--muted)">WINS</span></div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:14px;margin-top:4px">${winsA} <span style="font-size:12px;color:var(--muted)">WINS</span></div>
         </div>
         <div style="text-align:center;padding:0 16px">
-          <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">${draws} DRAWS</div>
-          <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--muted);margin-top:4px">${revealedRaces.length} RACES</div>
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">${draws} DRAWS</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:12px;color:var(--muted);margin-top:4px">${revealedRaces.length} RACES</div>
         </div>
         <div style="text-align:center;flex:1">
-          <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:var(--accent)">${totalB}</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:900;color:var(--accent)">${totalB}</div>
           <div style="font-size:12px;color:var(--muted)">${esc(pB?.name)}</div>
-          <div style="font-family:Orbitron,sans-serif;font-size:14px;margin-top:4px">${winsB} <span style="font-size:12px;color:var(--muted)">WINS</span></div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:14px;margin-top:4px">${winsB} <span style="font-size:12px;color:var(--muted)">WINS</span></div>
         </div>
       </div>
       <div class="h2h-bar-wrap">
         <div class="h2h-bar-a" style="width:${pctA}%"></div>
         <div class="h2h-bar-b" style="width:${pctB}%"></div>
       </div>
-      <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);text-align:center">${pctA}% — ${pctB}%</div>
+      <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);text-align:center">${pctA}% — ${pctB}%</div>
     </div>
     <div class="card" style="padding:0;overflow:hidden;margin-top:12px">
       <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;gap:8px">
-        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--red);text-align:right">${esc(pA?.name)}</div>
-        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--muted);text-align:center">RACE</div>
-        <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--accent)">${esc(pB?.name)}</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:12px;color:var(--red);text-align:right">${esc(pA?.name)}</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:12px;color:var(--muted);text-align:center">RACE</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:12px;color:var(--accent)">${esc(pB?.name)}</div>
       </div>
       ${rows}
     </div>`;
@@ -4986,7 +5006,7 @@ function renderDriverStats(el) {
             </div>
           </div>
           <div style="text-align:right">
-            <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900;color:${d.teamColor}">${s.totalPts}</div>
+            <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:900;color:${d.teamColor}">${s.totalPts}</div>
             <div style="font-size:12px;color:var(--muted)">FANTASY PTS</div>
           </div>
         </div>
@@ -5064,7 +5084,7 @@ function renderPickHeatmap(el) {
           <div>${d.short}<br>${bar}</div>
         </div>
         <div style="display:flex;gap:2px">${cells}</div>
-        <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);text-align:right">${freq[d.short]}x</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted);text-align:right">${freq[d.short]}x</div>
       </div>`;
   }).join('');
 
@@ -5238,16 +5258,16 @@ function renderPredictions(el) {
           <span style="display:flex;align-items:center;gap:4px">
             <span style="width:6px;height:6px;border-radius:50%;background:${d?.teamColor||'var(--muted)'}"></span>
             <span style="color:var(--muted)">Champ:</span>
-            <span style="font-family:Share Tech Mono,monospace">${pred.champion || '—'}</span>
+            <span style="font-family:var(--font-mono)">${pred.champion || '—'}</span>
           </span>
           <span style="display:flex;align-items:center;gap:4px">
             <span style="color:var(--muted)">Team:</span>
-            <span style="font-family:Share Tech Mono,monospace">${pred.topTeam || '—'}</span>
+            <span style="font-family:var(--font-mono)">${pred.topTeam || '—'}</span>
           </span>
           <span style="display:flex;align-items:center;gap:4px">
             ${rookieD ? `<span style="width:6px;height:6px;border-radius:50%;background:${rookieD.teamColor}"></span>` : ''}
             <span style="color:var(--muted)">Rookie:</span>
-            <span style="font-family:Share Tech Mono,monospace">${pred.rookie || '—'}</span>
+            <span style="font-family:var(--font-mono)">${pred.rookie || '—'}</span>
           </span>
         </div>
       </div>`;
@@ -5257,7 +5277,7 @@ function renderPredictions(el) {
     <div class="section-head">PRE-SEASON CHAMPION PREDICTIONS</div>
     <div style="display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
       <div class="card">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">SUBMIT PREDICTION</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">SUBMIT PREDICTION</div>
         <div class="prediction-form">
           <div class="pred-field">
             <label>PLAYER</label>
@@ -5280,7 +5300,7 @@ function renderPredictions(el) {
         <p style="font-size:12px;color:var(--muted);margin-top:10px">Correct champion prediction earns +5 bonus points at season end</p>
       </div>
       <div class="card">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">ALL PREDICTIONS</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">ALL PREDICTIONS</div>
         ${predRows || '<p style="color:var(--muted)">No predictions yet</p>'}
         ${actualChamp ? `<div style="margin-top:14px;padding:10px;background:rgba(0,200,83,0.08);border:1px solid rgba(0,200,83,0.2);border-radius:6px;font-size:13px;color:var(--green)">✅ Actual champion: <strong>${actualChamp}</strong></div>` : ''}
       </div>
@@ -5610,7 +5630,7 @@ function renderGP26Standings(el, completedRaces) {
       <img src="${img}" style="height:60px;object-fit:contain;margin:4px 0" onerror="this.style.display='none'">
       <div style="font-weight:700;font-size:14px">${d.name.split(' ').pop()}</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${d.team}</div>
-      <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:${d.teamColor}">${d.pts}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:900;color:${d.teamColor}">${d.pts}</div>
       <div style="font-size:12px;color:var(--muted)">PTS</div>
       <div style="font-size:11px;margin-top:6px">🏆 ${d.wins} wins · 🥇 ${d.podiums} podiums</div>
     </div>`;
@@ -5623,7 +5643,7 @@ function renderGP26Standings(el, completedRaces) {
     const medal = pos===1?'🏆':pos===2?'🥈':pos===3?'🥉':pos;
     const gap = pos > 1 ? `<span style="font-size:11px;color:var(--muted)">-${standings[0].pts - d.pts}</span>` : '';
     return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;padding:9px 10px">${medal}</td>
+      <td style="text-align:center;font-family:var(--font-display);font-style:italic;font-size:12px;font-weight:700;padding:9px 10px">${medal}</td>
       <td style="padding:9px 10px">
         <div style="display:flex;align-items:center;gap:8px">
           <div style="width:4px;height:32px;border-radius:2px;background:${d.teamColor};flex-shrink:0"></div>
@@ -5638,30 +5658,30 @@ function renderGP26Standings(el, completedRaces) {
           <div style="width:100px;height:5px;background:var(--panel3);border-radius:3px;overflow:hidden">
             <div style="width:${pct}%;height:100%;background:${d.teamColor};border-radius:3px"></div>
           </div>
-          <span style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700">${d.pts}</span>
+          <span style="font-family:var(--font-display);font-style:italic;font-size:13px;font-weight:700">${d.pts}</span>
           ${gap}
         </div>
       </td>
-      <td style="text-align:center;padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:12px">${d.wins}</td>
-      <td style="text-align:center;padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:12px">${d.podiums}</td>
-      <td style="text-align:center;padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:12px">${d.top10}</td>
+      <td style="text-align:center;padding:9px 10px;font-family:var(--font-mono);font-size:12px">${d.wins}</td>
+      <td style="text-align:center;padding:9px 10px;font-family:var(--font-mono);font-size:12px">${d.podiums}</td>
+      <td style="text-align:center;padding:9px 10px;font-family:var(--font-mono);font-size:12px">${d.top10}</td>
     </tr>`;
   }).join('');
 
   el.innerHTML = `
     <div class="card" style="margin-bottom:20px;padding:20px">
-      <div style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:16px">2026 WORLD CHAMPIONSHIP · AFTER ${completedRaces.length} RACE${completedRaces.length>1?'S':''}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:12px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:16px">2026 WORLD CHAMPIONSHIP · AFTER ${completedRaces.length} RACE${completedRaces.length>1?'S':''}</div>
       <div style="display:flex;gap:10px;align-items:flex-end;justify-content:center">${podiumHtml}</div>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="border-bottom:1px solid var(--border)">
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">#</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted)">DRIVER</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted)">POINTS</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">W</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">POD</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">T10</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">#</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted)">DRIVER</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted)">POINTS</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">W</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">POD</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">T10</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -5679,10 +5699,10 @@ function renderGP26Constructors(el, completedRaces) {
     const pct = Math.round((t.pts / maxPts) * 100);
     const medal = pos===1?'🏆':pos===2?'🥈':pos===3?'🥉':pos;
     const driverChips = t.drivers.map(d =>
-      `<span style="font-family:Share Tech Mono,monospace;font-size:11px;padding:2px 6px;background:${d.teamColor}22;border:1px solid ${d.teamColor}44;border-radius:3px;margin-right:4px">${d.code} ${d.pts}</span>`
+      `<span style="font-family:var(--font-mono);font-size:11px;padding:2px 6px;background:${d.teamColor}22;border:1px solid ${d.teamColor}44;border-radius:3px;margin-right:4px">${d.code} ${d.pts}</span>`
     ).join('');
     return `<div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;width:30px;text-align:center;flex-shrink:0;color:${pos<=3?t.color:'var(--muted)'}">${medal}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:14px;font-weight:700;width:30px;text-align:center;flex-shrink:0;color:${pos<=3?t.color:'var(--muted)'}">${medal}</div>
       <div style="width:5px;height:40px;border-radius:3px;background:${t.color};flex-shrink:0"></div>
       <div style="flex:1;min-width:120px">
         <div style="font-weight:700;font-size:15px">${t.name}</div>
@@ -5692,7 +5712,7 @@ function renderGP26Constructors(el, completedRaces) {
         <div style="width:120px;height:6px;background:var(--panel3);border-radius:3px;overflow:hidden">
           <div style="width:${pct}%;height:100%;background:${t.color};border-radius:3px"></div>
         </div>
-        <div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:${t.color};min-width:50px;text-align:right">${t.pts}</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:18px;font-weight:900;color:${t.color};min-width:50px;text-align:right">${t.pts}</div>
       </div>
       <div style="display:flex;gap:14px;font-size:12px;color:var(--muted)">
         <span>🏆 ${t.wins}</span>
@@ -5703,13 +5723,13 @@ function renderGP26Constructors(el, completedRaces) {
 
   el.innerHTML = `
     <div class="card" style="margin-bottom:20px;padding:20px;text-align:center">
-      <div style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">2026 CONSTRUCTORS' CHAMPIONSHIP · ${completedRaces.length} RACE${completedRaces.length>1?'S':''}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">2026 CONSTRUCTORS' CHAMPIONSHIP · ${completedRaces.length} RACE${completedRaces.length>1?'S':''}</div>
       <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
         ${teams.slice(0,3).map((t,i) => `
           <div style="text-align:center">
             <div style="font-size:20px">${['🏆','🥈','🥉'][i]}</div>
             <div style="font-weight:700;font-size:14px;color:${t.color}">${t.name}</div>
-            <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:900">${t.pts}</div>
+            <div style="font-family:var(--font-display);font-style:italic;font-size:20px;font-weight:900">${t.pts}</div>
           </div>`).join('')}
       </div>
     </div>
@@ -5734,7 +5754,7 @@ function renderGP26Races(el, completedRaces) {
       <div style="width:4px;height:28px;background:${d?.teamColor||'var(--muted)'};border-radius:2px;flex-shrink:0"></div>
       <div style="flex:1;font-weight:600;font-size:13px">${d?.name?.split(' ').pop() || code}</div>
       <div style="display:flex;gap:2px;flex-wrap:wrap">${dots}</div>
-      <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:${d?.teamColor||'var(--muted)'};min-width:18px;text-align:right">${w}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:15px;font-weight:700;color:${d?.teamColor||'var(--muted)'};min-width:18px;text-align:right">${w}</div>
     </div>`;
   }).join('');
 
@@ -5753,7 +5773,7 @@ function renderGP26Races(el, completedRaces) {
       return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0">
         <span>${medal}</span>
         <div style="width:8px;height:8px;border-radius:50%;background:${d?.teamColor||'var(--muted)'};flex-shrink:0"></div>
-        <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:700">${code}</span>
+        <span style="font-family:var(--font-mono);font-size:12px;font-weight:700">${code}</span>
         <span style="font-size:12px;color:var(--muted)">${d?.name?.split(' ').pop() || ''}</span>
       </div>`;
     }).join('');
@@ -5767,13 +5787,13 @@ function renderGP26Races(el, completedRaces) {
         const pts = F1_POINTS[pos] || 0;
         const posColor = pos===1?'var(--gold)':pos===2?'var(--silver)':pos===3?'var(--bronze)':'var(--muted)';
         return `<div style="display:grid;grid-template-columns:30px 1fr 50px;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
-          <div style="font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;color:${posColor};text-align:center">P${pos}</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:12px;font-weight:700;color:${posColor};text-align:center">P${pos}</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div style="width:6px;height:6px;border-radius:50%;background:${d?.teamColor||'var(--muted)'}"></div>
             <span style="font-size:13px;font-weight:600">${d?.name || code}</span>
             <span style="font-size:11px;color:var(--muted)">${d?.team || ''}</span>
           </div>
-          <div style="font-family:Share Tech Mono,monospace;font-size:12px;text-align:right;color:${pts>0?'var(--gold)':'var(--muted)'}">${pts > 0 ? '+'+pts : '—'}</div>
+          <div style="font-family:var(--font-mono);font-size:12px;text-align:right;color:${pts>0?'var(--gold)':'var(--muted)'}">${pts > 0 ? '+'+pts : '—'}</div>
         </div>`;
       }).join('');
 
@@ -5802,7 +5822,7 @@ function renderGP26Races(el, completedRaces) {
         onmouseover="this.style.background='rgba(255,255,255,0.03)'"
         onmouseout="this.style.background=''"
       >
-        <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">R${raceNum}</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">R${raceNum}</div>
         <div style="font-size:18px">${race.flag}</div>
         <div>
           <div style="font-weight:700;font-size:13px">${race.name} GP</div>
@@ -5810,7 +5830,7 @@ function renderGP26Races(el, completedRaces) {
         </div>
         <div style="display:flex;align-items:center;gap:5px">
           <div style="width:6px;height:6px;border-radius:50%;background:${winnerD?.teamColor||'var(--muted)'};flex-shrink:0"></div>
-          <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:700">${winner||'?'}</span>
+          <span style="font-family:var(--font-mono);font-size:12px;font-weight:700">${winner||'?'}</span>
         </div>
         <div style="font-size:14px;color:var(--muted);text-align:center">${isOpen?'▲':'▼'}</div>
       </div>
@@ -5823,20 +5843,20 @@ function renderGP26Races(el, completedRaces) {
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:20px">
       <div class="card">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">WIN DISTRIBUTION</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">WIN DISTRIBUTION</div>
         ${winSummary || '<p style="color:var(--muted);font-size:12px">No wins yet</p>'}
       </div>
       <div class="card">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">SEASON AT A GLANCE</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">SEASON AT A GLANCE</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div><div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--red)">${completedRaces.length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">RACES DONE</div></div>
-          <div><div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--gold)">${diffWinners}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">DIFF. WINNERS</div></div>
-          <div><div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--accent)">${RACES.length - completedRaces.length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">RACES LEFT</div></div>
-          <div><div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--green)">${RACES.filter(r => r.sprint).length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">SPRINT WEEKENDS</div></div>
+          <div><div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:var(--red)">${completedRaces.length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">RACES DONE</div></div>
+          <div><div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:var(--gold)">${diffWinners}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">DIFF. WINNERS</div></div>
+          <div><div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:var(--accent)">${RACES.length - completedRaces.length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">RACES LEFT</div></div>
+          <div><div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:var(--green)">${RACES.filter(r => r.sprint).length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">SPRINT WEEKENDS</div></div>
         </div>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:Share Tech Mono,monospace;letter-spacing:1px">CLICK ANY RACE TO EXPAND FULL RESULTS</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:var(--font-mono);letter-spacing:1px">CLICK ANY RACE TO EXPAND FULL RESULTS</div>
     <div class="card" style="padding:0;overflow:hidden">${raceRows}</div>`;
 }
 
@@ -5857,11 +5877,11 @@ function renderGP26Stats(el, completedRaces) {
     }).join('');
 
     return `<div class="form-row">
-      <div style="font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;color:${d.teamColor};width:24px;text-align:center;flex-shrink:0">${standings.indexOf(d)+1}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:11px;font-weight:700;color:${d.teamColor};width:24px;text-align:center;flex-shrink:0">${standings.indexOf(d)+1}</div>
       <div style="font-weight:700;font-size:14px;flex:1;min-width:80px">${d.name.split(' ').pop()}</div>
       <div style="display:flex;gap:3px;align-items:flex-end;height:44px;flex:2;border-bottom:1px solid var(--border)">${bars}</div>
       <div style="text-align:right">
-        <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:${d.teamColor}">${d.pts}</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:16px;font-weight:900;color:${d.teamColor}">${d.pts}</div>
         <div style="font-size:11px;color:var(--muted)">${completedRaces.length > 0 ? (d.pts / completedRaces.length).toFixed(1) : 0}/race</div>
       </div>
     </div>`;
@@ -5877,12 +5897,12 @@ function renderGP26Stats(el, completedRaces) {
         <div style="font-weight:700;font-size:13px">${d.name}</div>
         <div style="font-size:11px;color:var(--muted)">${d.team}</div>
       </div>
-      <div style="display:flex;gap:6px;font-family:Share Tech Mono,monospace;font-size:11px">
+      <div style="display:flex;gap:6px;font-family:var(--font-mono);font-size:11px">
         <span style="color:var(--gold)">🥇${d.wins}</span>
         <span style="color:var(--silver)">🥈${d.p2s}</span>
         <span style="color:var(--bronze)">🥉${d.p3s}</span>
       </div>
-      <div style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:900;color:${d.teamColor}">${d.podiums}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:16px;font-weight:900;color:${d.teamColor}">${d.podiums}</div>
     </div>`;
   }).join('');
 
@@ -5975,7 +5995,7 @@ function render2025Standings(el) {
       <img src="${img}" style="height:60px;object-fit:contain;margin:4px 0" onerror="this.style.display='none'">
       <div style="font-weight:700;font-size:14px">${d.name.split(' ').pop()}</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${d.team}</div>
-      <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:${col}">${d.pts}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:900;color:${col}">${d.pts}</div>
       <div style="font-size:12px;color:var(--muted)">PTS</div>
       <div style="font-size:11px;margin-top:6px">🏆 ${d.wins} wins · 🎯 ${d.poles} poles</div>
     </div>`;
@@ -5988,7 +6008,7 @@ function render2025Standings(el) {
     const medal = d.pos===1?'🏆':d.pos===2?'🥈':d.pos===3?'🥉':d.pos;
     const in2026 = !!DRIVERS.find(dr => dr.short === d.code);
     return `<tr>
-      <td style="text-align:center;font-family:Orbitron,sans-serif;font-size:12px;font-weight:700;padding:9px 10px">${medal}</td>
+      <td style="text-align:center;font-family:var(--font-display);font-style:italic;font-size:12px;font-weight:700;padding:9px 10px">${medal}</td>
       <td style="padding:9px 10px">
         <div style="display:flex;align-items:center;gap:8px">
           <div style="width:4px;height:32px;border-radius:2px;background:${col};flex-shrink:0"></div>
@@ -6003,12 +6023,12 @@ function render2025Standings(el) {
           <div style="width:100px;height:5px;background:var(--panel3);border-radius:3px;overflow:hidden">
             <div style="width:${pct}%;height:100%;background:${col};border-radius:3px"></div>
           </div>
-          <span style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700">${d.pts}</span>
+          <span style="font-family:var(--font-display);font-style:italic;font-size:13px;font-weight:700">${d.pts}</span>
         </div>
       </td>
-      <td style="text-align:center;padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:12px">${d.wins}</td>
-      <td style="text-align:center;padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:12px">${d.poles}</td>
-      <td style="text-align:center;padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:12px">${d.podiums}</td>
+      <td style="text-align:center;padding:9px 10px;font-family:var(--font-mono);font-size:12px">${d.wins}</td>
+      <td style="text-align:center;padding:9px 10px;font-family:var(--font-mono);font-size:12px">${d.poles}</td>
+      <td style="text-align:center;padding:9px 10px;font-family:var(--font-mono);font-size:12px">${d.podiums}</td>
       <td style="text-align:center;padding:9px 10px">
         <span style="font-size:12px;color:${in2026?'var(--green)':'var(--red)'}">${in2026?'✅ YES':'❌ NO'}</span>
       </td>
@@ -6017,19 +6037,19 @@ function render2025Standings(el) {
 
   el.innerHTML = `
     <div class="card" style="margin-bottom:20px;padding:20px">
-      <div style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:16px">2025 WORLD CHAMPIONSHIP FINAL PODIUM</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:12px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:16px">2025 WORLD CHAMPIONSHIP FINAL PODIUM</div>
       <div style="display:flex;gap:10px;align-items:flex-end;justify-content:center">${podiumHtml}</div>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="border-bottom:1px solid var(--border)">
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">#</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted)">DRIVER</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted)">POINTS</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">W</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">P</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">POD</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">IN 2026?</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">#</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted)">DRIVER</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted)">POINTS</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">W</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">P</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">POD</th>
+          <th style="padding:9px 10px;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">IN 2026?</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -6053,7 +6073,7 @@ function render2025Races(el) {
       return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0">
         <span>${medal}</span>
         <div style="width:8px;height:8px;border-radius:50%;background:${c};flex-shrink:0"></div>
-        <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:700">${code}</span>
+        <span style="font-family:var(--font-mono);font-size:12px;font-weight:700">${code}</span>
         <span style="font-size:12px;color:var(--muted)">${name}</span>
       </div>`;
     }).join('');
@@ -6069,7 +6089,7 @@ function render2025Races(el) {
             <div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">FASTEST LAP</div>
             <div style="display:flex;align-items:center;gap:6px">
               <div style="width:8px;height:8px;border-radius:50%;background:${getTeamColor2025(r.fl)}"></div>
-              <span style="font-family:Share Tech Mono,monospace;font-size:13px;font-weight:700">${r.fl}</span>
+              <span style="font-family:var(--font-mono);font-size:13px;font-weight:700">${r.fl}</span>
             </div>
           </div>
           <div>
@@ -6089,7 +6109,7 @@ function render2025Races(el) {
         onmouseover="this.style.background='rgba(255,255,255,0.03)'"
         onmouseout="this.style.background=''"
       >
-        <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted)">R${r.round}</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">R${r.round}</div>
         <div style="font-size:18px">${r.flag}</div>
         <div>
           <div style="font-weight:700;font-size:13px">${r.name}</div>
@@ -6097,7 +6117,7 @@ function render2025Races(el) {
         </div>
         <div style="display:flex;align-items:center;gap:5px">
           <div style="width:6px;height:6px;border-radius:50%;background:${col};flex-shrink:0"></div>
-          <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:700">${r.winner}</span>
+          <span style="font-family:var(--font-mono);font-size:12px;font-weight:700">${r.winner}</span>
         </div>
         <div style="font-size:14px;color:var(--muted);text-align:center">${isOpen?'▲':'▼'}</div>
       </div>
@@ -6113,27 +6133,27 @@ function render2025Races(el) {
       <div style="width:4px;height:28px;background:${col};border-radius:2px;flex-shrink:0"></div>
       <div style="flex:1;font-weight:600;font-size:13px">${name}</div>
       <div style="display:flex;gap:2px;flex-wrap:wrap">${dots}</div>
-      <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:${col};min-width:18px;text-align:right">${w}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:15px;font-weight:700;color:${col};min-width:18px;text-align:right">${w}</div>
     </div>`;
   }).join('');
 
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:20px">
       <div class="card">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">WIN DISTRIBUTION</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">WIN DISTRIBUTION</div>
         ${winSummary}
       </div>
       <div class="card">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">SEASON AT A GLANCE</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">SEASON AT A GLANCE</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div><div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--red)">${S2025_RACES.length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">RACES</div></div>
-          <div><div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--gold)">${[...new Set(S2025_RACES.map(r=>r.winner))].length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">DIFF. WINNERS</div></div>
-          <div><div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--accent)">6</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">SPRINT WEEKENDS</div></div>
-          <div><div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:var(--green)">${S2025_RACES.filter(r=>r.winner==='NOR').length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">NOR WINS</div></div>
+          <div><div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:var(--red)">${S2025_RACES.length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">RACES</div></div>
+          <div><div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:var(--gold)">${[...new Set(S2025_RACES.map(r=>r.winner))].length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">DIFF. WINNERS</div></div>
+          <div><div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:var(--accent)">6</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">SPRINT WEEKENDS</div></div>
+          <div><div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:var(--green)">${S2025_RACES.filter(r=>r.winner==='NOR').length}</div><div style="font-size:12px;color:var(--muted);letter-spacing:1px">NOR WINS</div></div>
         </div>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:Share Tech Mono,monospace;letter-spacing:1px">CLICK ANY RACE TO EXPAND DETAILS</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:var(--font-mono);letter-spacing:1px">CLICK ANY RACE TO EXPAND DETAILS</div>
     <div class="card" style="padding:0;overflow:hidden">${raceRows}</div>`;
 }
 
@@ -6161,7 +6181,7 @@ function render2025DriverProfiles(el) {
         <div style="flex:1;height:5px;background:var(--panel3);border-radius:3px;overflow:hidden">
           <div style="width:${Math.max(3,Math.round((s.val/s.max)*100))}%;height:100%;background:${col};border-radius:3px;transition:width 0.6s"></div>
         </div>
-        <div style="font-family:Share Tech Mono,monospace;font-size:11px;min-width:26px;text-align:right">${s.fmt}</div>
+        <div style="font-family:var(--font-mono);font-size:11px;min-width:26px;text-align:right">${s.fmt}</div>
       </div>`).join('');
 
     const strengthTags = analysis?.strengths?.map(s =>
@@ -6184,18 +6204,18 @@ function render2025DriverProfiles(el) {
           <img src="${img}" style="height:70px;object-fit:contain;flex-shrink:0"
             onerror="this.style.display='none'">
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;letter-spacing:1px;color:${col};font-family:Share Tech Mono,monospace;margin-bottom:3px">P${d.pos} · ${d.team}</div>
+            <div style="font-size:11px;letter-spacing:1px;color:${col};font-family:var(--font-mono);margin-bottom:3px">P${d.pos} · ${d.team}</div>
             <div style="font-weight:700;font-size:16px;line-height:1.2">${d.name}</div>
             ${changeTag}${notIn2026Tag}
           </div>
           <div style="text-align:right;flex-shrink:0">
-            <div style="font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;color:${col}">${d.pts}</div>
+            <div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:900;color:${col}">${d.pts}</div>
             <div style="font-size:12px;color:var(--muted)">2025 PTS</div>
           </div>
         </div>
         <div style="padding:12px 16px">${barsHtml}</div>
         ${analysis ? `<div style="padding:12px 16px;border-top:1px solid var(--border)">
-          <div style="font-size:11px;letter-spacing:1px;color:${col};font-family:Share Tech Mono,monospace;margin-bottom:6px">${analysis.heading}</div>
+          <div style="font-size:11px;letter-spacing:1px;color:${col};font-family:var(--font-mono);margin-bottom:6px">${analysis.heading}</div>
           <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">${analysis.summary}</div>
           <div style="margin-bottom:10px">${strengthTags}</div>
           <div style="font-size:12px;padding:8px 12px;background:var(--panel2);border-radius:6px;border-left:3px solid ${col};line-height:1.5">
@@ -6234,7 +6254,7 @@ function render2025Teams(el) {
             </div>
             <div style="font-size:12px;color:var(--muted)">${d.pts} pts · ${d.wins} wins · ${d.podiums} podiums</div>
           </div>
-          <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:700;color:${t.color}">P${d.pos}</div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:14px;font-weight:700;color:${t.color}">P${d.pos}</div>
         </div>`;
     }).join('');
 
@@ -6243,11 +6263,11 @@ function render2025Teams(el) {
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
           <div style="font-size:22px">${medal}</div>
           <div style="flex:1">
-            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700">${t.name}</div>
+            <div style="font-family:var(--font-display);font-style:italic;font-size:15px;font-weight:700">${t.name}</div>
             <div style="font-size:12px;color:var(--muted)">Constructors Championship</div>
           </div>
           <div style="text-align:right">
-            <div style="font-family:Orbitron,sans-serif;font-size:22px;font-weight:900;color:${t.color}">${t.pts}</div>
+            <div style="font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:900;color:${t.color}">${t.pts}</div>
             <div style="font-size:12px;color:var(--muted)">PTS</div>
           </div>
         </div>
@@ -6293,7 +6313,7 @@ function render2025Trends(el) {
         <div style="font-weight:600;font-size:13px">${d.name.split(' ').pop()}</div>
         <div style="font-size:12px;color:var(--muted)">${d.team}</div>
       </div>
-      <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:700;color:${col}">${d.last6pts}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:15px;font-weight:700;color:${col}">${d.last6pts}</div>
       <div style="font-size:18px;width:32px;text-align:center">${fire}</div>
     </div>`;
   }).join('');
@@ -6310,7 +6330,7 @@ function render2025Trends(el) {
   const momentsHtml = moments.map(m => {
     const col = getTeamColor2025(m.driver);
     return `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div style="font-family:Orbitron,sans-serif;font-size:12px;color:var(--muted);width:28px;flex-shrink:0;padding-top:2px">R${m.round}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:12px;color:var(--muted);width:28px;flex-shrink:0;padding-top:2px">R${m.round}</div>
       <div style="font-size:13px;line-height:1.4;flex:1">${m.text}</div>
       <div style="width:5px;background:${col};border-radius:3px;flex-shrink:0"></div>
     </div>`;
@@ -6370,7 +6390,7 @@ function render2025Trends(el) {
       <div style="flex:1;font-size:13px;font-weight:600">${c.circuit}</div>
       <div style="display:flex;align-items:center;gap:5px">
         <div style="width:6px;height:6px;border-radius:50%;background:${col}"></div>
-        <span style="font-family:Share Tech Mono,monospace;font-size:12px;font-weight:700">${c.winner}</span>
+        <span style="font-family:var(--font-mono);font-size:12px;font-weight:700">${c.winner}</span>
       </div>
       <div style="font-size:12px;color:var(--muted);flex:1;text-align:right">${c.note}</div>
     </div>`;
@@ -6379,16 +6399,16 @@ function render2025Trends(el) {
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px">
       <div class="card">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">🔥 END-OF-SEASON MOMENTUM (LAST 6 RACES)</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">🔥 END-OF-SEASON MOMENTUM (LAST 6 RACES)</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Who was in form heading into the winter break?</div>
         ${momHtml}
       </div>
       <div class="card">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">📌 KEY SEASON MOMENTS</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">📌 KEY SEASON MOMENTS</div>
         ${momentsHtml}
       </div>
       <div class="card">
-        <div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">🗺 CIRCUIT FORM GUIDE FOR 2026</div>
+        <div style="font-family:var(--font-display);font-style:italic;font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:12px">🗺 CIRCUIT FORM GUIDE FOR 2026</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px">2025 winner at circuits shared with 2026 calendar</div>
         ${circuitHtml}
       </div>
@@ -6625,11 +6645,11 @@ async function loadAnalytics() {
     const pct = Math.round((count / maxCount) * 100);
     const label = PAGE_LABELS[page] || page.toUpperCase();
     return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
-      <div style="width:90px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0;font-family:Share Tech Mono,monospace">${label}</div>
+      <div style="width:90px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0;font-family:var(--font-mono)">${label}</div>
       <div style="flex:1;background:var(--panel3);border-radius:3px;height:16px;overflow:hidden">
         <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:3px"></div>
       </div>
-      <div style="width:28px;font-family:Share Tech Mono,monospace;font-size:11px;color:var(--text);text-align:right">${count}</div>
+      <div style="width:28px;font-family:var(--font-mono);font-size:11px;color:var(--text);text-align:right">${count}</div>
     </div>`;
   }).join('');
 
@@ -6639,8 +6659,8 @@ async function loadAnalytics() {
     const topLabel = PAGE_LABELS[top[0]] || top[0].toUpperCase();
     return `<tr style="border-bottom:1px solid var(--border)">
       <td style="padding:6px 0;font-size:13px">${esc(name)}</td>
-      <td style="padding:6px 8px;text-align:center;font-family:Share Tech Mono,monospace;font-size:13px;color:var(--accent)">${d.total}</td>
-      <td style="padding:6px 0;font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted)">${topLabel} <span style="color:var(--text)">(${top[1]})</span></td>
+      <td style="padding:6px 8px;text-align:center;font-family:var(--font-mono);font-size:13px;color:var(--accent)">${d.total}</td>
+      <td style="padding:6px 0;font-family:var(--font-mono);font-size:11px;color:var(--muted)">${topLabel} <span style="color:var(--text)">(${top[1]})</span></td>
     </tr>`;
   }).join('');
 
@@ -6649,23 +6669,23 @@ async function loadAnalytics() {
     const t = new Date(r.ts);
     const timeStr = t.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' ' + t.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     return `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
-      <span style="font-family:Share Tech Mono,monospace;color:var(--muted);font-size:10px;width:96px;flex-shrink:0">${timeStr}</span>
+      <span style="font-family:var(--font-mono);color:var(--muted);font-size:10px;width:96px;flex-shrink:0">${timeStr}</span>
       <span style="flex:1;color:var(--text)">${r.player_name ? esc(r.player_name) : '<span style="color:var(--muted)">–</span>'}</span>
-      <span style="font-family:Share Tech Mono,monospace;color:var(--accent);font-size:11px">${PAGE_LABELS[r.page] || r.page}</span>
+      <span style="font-family:var(--font-mono);color:var(--accent);font-size:11px">${PAGE_LABELS[r.page] || r.page}</span>
     </div>`;
   }).join('');
 
   el.innerHTML = `
     <div style="margin-bottom:20px">
-      <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:1px">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:1px">
         PAGE VIEWS · LAST 30 DAYS · ${data.length.toLocaleString()} TOTAL
       </div>
       ${barsHtml}
     </div>
     <div style="margin-bottom:20px">
-      <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px">BY PLAYER</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px">BY PLAYER</div>
       <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted)">
+        <thead><tr style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">
           <th style="padding:4px 0 6px;border-bottom:1px solid var(--border);text-align:left">PLAYER</th>
           <th style="padding:4px 8px 6px;border-bottom:1px solid var(--border);text-align:center">VIEWS</th>
           <th style="padding:4px 0 6px;border-bottom:1px solid var(--border);text-align:left">TOP SECTION</th>
@@ -6674,7 +6694,7 @@ async function loadAnalytics() {
       </table>
     </div>
     <div>
-      <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:1px">RECENT ACTIVITY</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:1px">RECENT ACTIVITY</div>
       ${recentRows}
     </div>`;
 }
@@ -6710,7 +6730,7 @@ _initHamburger();
 document.body.insertAdjacentHTML('afterbegin', `
   <div id="sb-loading" style="position:fixed;inset:0;background:var(--bg,#0a0a0a);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999">
     <div style="font-size:48px;margin-bottom:20px">🏎️</div>
-    <div style="color:var(--gold,#e8b923);font-family:'Orbitron',sans-serif;letter-spacing:3px;font-size:14px">LOADING GAME...</div>
+    <div style="color:var(--gold,#e8b923);font-family:var(--font-display);font-style:italic;letter-spacing:3px;font-size:14px">LOADING GAME...</div>
   </div>
 `);
 
@@ -6800,13 +6820,13 @@ function openPlayerProfile(playerId) {
       : `<span style="color:${pts>0?'var(--gold)':'var(--muted)'};font-weight:700">${pts>0?'+':''}${pts}</span>`;
     const driverDisplay = !revealed
       ? `<span style="color:var(--muted);font-size:11px">SEALED</span>`
-      : driver ? `<span style="color:${driver.teamColor};font-family:Share Tech Mono,monospace;font-size:11px">${driver.short}</span>`
+      : driver ? `<span style="color:${driver.teamColor};font-family:var(--font-mono);font-size:11px">${driver.short}</span>`
       : `<span style="color:var(--muted)">—</span>`;
     return `<div class="profile-race-row">
       <div style="font-size:18px">${r.flag}</div>
       <div><div style="font-weight:700;font-size:14px">${r.name}</div><div style="font-size:11px;color:var(--muted)">${r.date}</div></div>
       <div>${driverDisplay}</div>
-      <div style="font-family:Orbitron,sans-serif;font-size:13px;font-weight:700;text-align:right">${ptsDisplay}</div>
+      <div style="font-family:var(--font-display);font-style:italic;font-size:13px;font-weight:700;text-align:right">${ptsDisplay}</div>
     </div>`;
   }).join('');
 
@@ -6819,8 +6839,8 @@ function openPlayerProfile(playerId) {
       <div class="profile-stat"><div class="profile-stat-val">${avgPts}</div><div class="profile-stat-label">AVG/RACE</div></div>
       <div class="profile-stat"><div class="profile-stat-val" style="color:${rank===1?'var(--gold)':rank===2?'var(--silver)':rank===3?'var(--bronze)':'var(--text)'}">${rank}</div><div class="profile-stat-label">RANK</div></div>
     </div>
-    ${bestRace ? `<div style="background:rgba(212,160,0,0.08);border:1px solid rgba(212,160,0,0.2);border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;"><span style="font-size:20px">⭐</span><div><div style="font-family:Share Tech Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:2px">BEST RACE</div><div style="font-weight:700">${bestRace.race.name} GP · +${bestRace.pts} pts</div></div></div>` : ''}
-    <div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:12px">RACE BY RACE</div>
+    ${bestRace ? `<div style="background:rgba(212,160,0,0.08);border:1px solid rgba(212,160,0,0.2);border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;"><span style="font-size:20px">⭐</span><div><div style="font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:2px">BEST RACE</div><div style="font-weight:700">${bestRace.race.name} GP · +${bestRace.pts} pts</div></div></div>` : ''}
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:12px">RACE BY RACE</div>
     ${raceRows || '<p style="color:var(--muted);font-size:13px">No races completed yet</p>'}
   `;
   document.getElementById('profile-modal-overlay').classList.add('open');
