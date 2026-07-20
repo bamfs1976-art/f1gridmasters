@@ -318,11 +318,13 @@ nav {
 
 /* COMMON COMPONENTS */
 .section-head {
-  font-family:var(--font-mono); font-size: 11px;
-  color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
-  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  font-family:var(--font-display); font-style: italic; font-weight: 800;
+  font-size: 14px; color: var(--text); letter-spacing: 2px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
 }
+.section-head::before { content: ''; width: 4px; height: 16px; background: var(--f1-red); flex-shrink: 0; }
 .section-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.section-head-meta { font-family:var(--font-mono); font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; font-style: normal; }
 
 .card {
   background: var(--panel); border: 1px solid var(--border);
@@ -549,16 +551,33 @@ nav {
 }
 .pick-order-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; border-radius: 6px; margin-bottom: 4px;
+  padding: 12px; border-radius: var(--radius); margin-bottom: 4px;
+  background: rgba(31,31,33,0.5); border-left: 2px solid transparent;
   transition: all 0.2s;
 }
-.pick-order-item.current {
-  background: rgba(225,6,0,0.12); border: 1px solid rgba(225,6,0,0.3);
+.pick-order-item.me { border-left-color: var(--f1-red); }
+.pick-order-item.current { background: rgba(225,6,0,0.12); }
+.pick-order-item.done { opacity: 0.8; }
+.poi-slot {
+  font-family:var(--font-mono); font-weight: 700; font-size: 11px;
+  color: rgba(255,255,255,0.45); width: 26px; flex-shrink: 0;
 }
-.pick-order-item.done { opacity: 0.4; }
-.poi-slot { font-family:var(--font-display);font-style:italic; font-size: 10px; color: var(--muted); width: 30px; flex-shrink: 0; }
-.poi-name { font-weight: 600; font-size: 14px; flex: 1; }
-.poi-pick { font-family:var(--font-mono); font-size: 11px; color: var(--accent); }
+.pick-order-item.me .poi-slot { color: var(--f1-red); }
+.poi-name {
+  font-family:var(--font-display); font-style: italic; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 13px; flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.poi-you { font-family:var(--font-mono); font-size: 9px; font-weight: 700; color: var(--f1-red); font-style: normal; }
+.poi-pick { font-family:var(--font-mono); font-size: 11px; color: var(--text); flex-shrink: 0; }
+.poi-pill {
+  font-family:var(--font-mono); font-size: 8px; font-weight: 700;
+  letter-spacing: 1px; padding: 3px 6px; border-radius: 3px;
+}
+.poi-pill.ok { color: var(--signal-green); background: rgba(34,197,94,0.12); }
+.poi-pill.wait { color: var(--signal-amber); background: rgba(250,204,21,0.10); }
+.poi-pill.locked { color: rgba(255,255,255,0.55); background: rgba(255,255,255,0.07); }
 
 .draft-complete-banner {
   background: linear-gradient(135deg, rgba(0,230,118,0.1), rgba(0,200,255,0.1));
@@ -1292,17 +1311,30 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 }
 .identity-overlay p { font-size: 13px; color: var(--muted); text-align: center; max-width: 320px; }
 .identity-grid {
-  display: flex; flex-wrap: wrap; gap: 10px;
-  justify-content: center; max-width: 480px; padding: 0 16px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  width: 100%; max-width: 480px; padding: 0 16px;
 }
 .identity-btn {
-  padding: 12px 20px; background: var(--panel);
-  border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text); cursor: pointer; font-family:var(--font-sans);
-  font-size: 15px; font-weight: 600; transition: all 0.2s;
-  min-width: 100px; text-align: center;
+  height: 48px; padding: 0 6px;
+  background: var(--track-dark); border: 1px solid rgba(255,255,255,0.05);
+  border-radius: var(--radius); color: var(--text); cursor: pointer;
+  font-family:var(--font-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.identity-btn:hover { border-color: var(--red); color: var(--red); transform: translateY(-2px); }
+.identity-btn:hover { background: var(--f1-red); border-color: var(--f1-red); color: #fff; }
+.identity-btn[aria-checked="true"] { box-shadow: 0 0 0 2px var(--f1-red); border-color: transparent; }
+.identity-watch-btn {
+  display: block; width: calc(100% - 32px); max-width: 448px; margin-top: 8px;
+  padding: 12px; background: transparent;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--muted); cursor: pointer;
+  font-family:var(--font-display); font-style: italic; font-weight: 800;
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  transition: all 0.15s;
+}
+.identity-watch-btn:hover { background: #fff; border-color: #fff; color: #000; }
 .identity-badge {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 6px 12px; background: var(--panel2);
@@ -1484,9 +1516,7 @@ html { scrollbar-color: var(--pit-gray) var(--carbon-black); }
   <h2>WHO ARE YOU?</h2>
   <p>Select your name so the app knows whose pick is whose. Your pick stays private until the admin reveals all picks.</p>
   <div class="identity-grid" id="identity-grid"></div>
-  <button class="btn btn-outline btn-sm" onclick="setIdentity(null)" style="color:var(--muted);margin-top:8px">
-    👁 Just watching
-  </button>
+  <button class="identity-watch-btn" onclick="setIdentity(null)">Just Watching</button>
 </div>
 <div class="page active" id="page-setup">
   <div class="z1">
@@ -2594,14 +2624,14 @@ function renderDraft() {
     const showResolved = picksResolved && (picksRevealed || isMe);
 
     return `
-      <div class="pick-order-item ${hasSubmitted && !picksResolved ? 'done' : ''} ${picksResolved && resolvedDriver ? 'done' : ''}">
-        <div class="poi-slot">P${i+1}</div>
-        <div class="poi-name">${player ? esc(player.name) : '?'}${isMe ? ' <span style="font-size:11px;color:var(--green)">YOU</span>' : ''}</div>
+      <div class="pick-order-item ${hasSubmitted && !picksResolved ? 'done' : ''} ${picksResolved && resolvedDriver ? 'done' : ''} ${isMe ? 'me' : ''}">
+        <div class="poi-slot">${String(i+1).padStart(2,'0')}</div>
+        <div class="poi-name">${player ? esc(player.name) : '?'}${isMe ? ' <span class="poi-you">YOU</span>' : ''}</div>
         <div class="poi-pick">${
           showResolved ? (resolvedDriver?.short || '?') :
-          picksResolved ? '🔒' :
-          hasSubmitted ? '✅' :
-          '⏳'
+          picksResolved ? '<span class="poi-pill locked">LOCKED</span>' :
+          hasSubmitted ? '<span class="poi-pill ok">SUBMITTED</span>' :
+          '<span class="poi-pill wait">PENDING</span>'
         }</div>
       </div>`;
   }).join('');
@@ -6513,13 +6543,27 @@ function showIdentityOverlay() {
   const grid = document.getElementById('identity-grid');
   if (!overlay || !grid) return;
 
-  grid.innerHTML = STATE.players.map(p => {
+  grid.setAttribute('role', 'radiogroup');
+  grid.setAttribute('aria-label', 'Select your player name');
+  grid.innerHTML = STATE.players.map((p, i) => {
     const isMe = p.id === SESSION_PLAYER_ID;
-    return `<button class="identity-btn" onclick="setIdentity('${p.id}')"
-      style="${isMe ? 'border-color:var(--red);color:var(--red)' : ''}">
-      ${isMe ? '✓ ' : ''}${esc(p.name)}
-    </button>`;
+    const focusable = isMe || (!SESSION_PLAYER_ID && i === 0);
+    return `<button class="identity-btn" role="radio" aria-checked="${isMe}"
+      tabindex="${focusable ? 0 : -1}" onclick="setIdentity('${p.id}')" title="${esc(p.name)}">${esc(p.name)}</button>`;
   }).join('');
+  if (!grid._navBound) {
+    grid._navBound = true;
+    grid.addEventListener('keydown', e => {
+      if (!['ArrowRight','ArrowDown','ArrowLeft','ArrowUp'].includes(e.key)) return;
+      const btns = [...grid.querySelectorAll('.identity-btn')];
+      const idx = btns.indexOf(document.activeElement);
+      if (idx === -1) return;
+      e.preventDefault();
+      const delta = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1 : -1;
+      const next = btns[(idx + delta + btns.length) % btns.length];
+      btns.forEach(b => b.tabIndex = -1); next.tabIndex = 0; next.focus();
+    });
+  }
 
   overlay.style.display = 'flex';
   document.body.style.overflow = 'hidden';
