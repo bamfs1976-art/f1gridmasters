@@ -1150,13 +1150,45 @@ nav {
 .race-status-banner.hidden { display: none; }
 
 .offline-banner {
-  background: rgba(239,68,68,0.12); border-bottom: 1px solid rgba(239,68,68,0.3);
-  color: #ef4444; font-family:var(--font-mono); font-size: 12px;
-  letter-spacing: 1px; text-align: center; padding: 8px 16px;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  position: sticky; top: 47px; z-index: 89;
+  position: fixed; top: 58px; right: 12px; z-index: 300;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(31,31,33,0.95); border: 1px solid rgba(250,204,21,0.4);
+  color: var(--signal-amber); font-family:var(--font-mono);
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  padding: 7px 12px; border-radius: var(--radius); cursor: pointer;
+  max-width: 230px; text-align: left;
 }
 .offline-banner.hidden { display: none; }
+.offline-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal-amber); flex-shrink: 0; }
+.offline-full { display: none; font-weight: 400; letter-spacing: 0.3px; text-transform: none; color: rgba(255,255,255,0.78); }
+.offline-banner.expanded { max-width: 330px; }
+.offline-banner.expanded .offline-full { display: inline; }
+@media (prefers-reduced-motion: no-preference) {
+  .offline-dot, .live-dot { animation: pulseDot 1s ease-in-out infinite; }
+  @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+}
+
+/* ── BOTTOM NAV (mobile) ── */
+.bottom-nav {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 210;
+  background: var(--carbon-black); border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+@media (max-width: 768px) { .bottom-nav { display: flex; } }
+.bnav-item {
+  flex: 1; background: none; border: none; color: var(--text); opacity: 0.4;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-family:var(--font-mono); font-size: 9px; font-weight: 500; letter-spacing: 1px;
+  cursor: pointer; padding: 3px 0;
+}
+.bnav-item.active { opacity: 1; }
+.bnav-dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+.bnav-item.active .bnav-dot { background: var(--f1-red); }
+.bnav-item svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+@media (max-width: 768px) {
+  #sticky-picks-bar { bottom: 56px; }
+  .page { padding-bottom: 130px !important; }
+}
 .rsb-inner {
   max-width: 1300px; margin: 0 auto;
   padding: 14px 20px 10px;
@@ -1489,11 +1521,37 @@ html { scrollbar-color: var(--pit-gray) var(--carbon-black); }
   </div>
 </div>
 
-<!-- OFFLINE BANNER -->
-<div class="offline-banner hidden" id="offline-banner">
-  <span style="font-size:14px">⚠</span>
-  <span>OFFLINE — reconnecting… changes made now may not reach other players; reload once you're back online</span>
+<!-- OFFLINE CHIP (tap to expand) -->
+<div class="offline-banner hidden" id="offline-banner" role="status"
+     onclick="this.classList.toggle('expanded')" title="Connection status">
+  <span class="offline-dot" aria-hidden="true"></span>
+  <span>OFFLINE · RETRYING</span>
+  <span class="offline-full">Changes made now may not reach other players — reload once you're back online.</span>
 </div>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav" aria-label="Primary">
+  <button class="bnav-item" data-page="draft" onclick="showPage('draft')">
+    <span class="bnav-dot" aria-hidden="true"></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>
+    PICKS
+  </button>
+  <button class="bnav-item" data-page="results" onclick="showPage('results')">
+    <span class="bnav-dot" aria-hidden="true"></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M5 3h13l-2.5 4L18 11H5"/></svg>
+    RESULTS
+  </button>
+  <button class="bnav-item" data-page="leaderboard" onclick="showPage('leaderboard')">
+    <span class="bnav-dot" aria-hidden="true"></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 21v-4m0 0a6 6 0 0 0 6-6V4H6v7a6 6 0 0 0 6 6zM6 6H3v2a4 4 0 0 0 3 3.87M18 6h3v2a4 4 0 0 1-3 3.87"/></svg>
+    STANDINGS
+  </button>
+  <button class="bnav-item" data-page="schedule" onclick="showPage('schedule')">
+    <span class="bnav-dot" aria-hidden="true"></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    CALENDAR
+  </button>
+</nav>
 
 <!-- PLAYER PROFILE MODAL -->
 <div class="profile-modal-overlay" id="profile-modal-overlay" onclick="if(event.target===this)closeProfileModal()">
@@ -2272,6 +2330,9 @@ function showPage(id) {
       t.classList.add('active');
     }
   });
+  // Sync mobile bottom nav active state (presentation only)
+  document.querySelectorAll('.bnav-item').forEach(b =>
+    b.classList.toggle('active', b.dataset.page === id));
 
   if (id === 'draft') {
     renderDraft();
