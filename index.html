@@ -1124,8 +1124,8 @@ nav {
 
 /* ── RACE STATUS BANNER ── */
 .race-status-banner {
-  background: linear-gradient(135deg, rgba(225,6,0,0.12), rgba(225,6,0,0.04));
-  border-bottom: 1px solid rgba(225,6,0,0.25);
+  background: linear-gradient(90deg, var(--f1-red), #7c0300);
+  border-bottom: 1px solid rgba(0,0,0,0.4);
   position: sticky; top: 47px; z-index: 90; overflow: hidden;
 }
 .race-status-banner.hidden { display: none; }
@@ -1140,28 +1140,72 @@ nav {
 .offline-banner.hidden { display: none; }
 .rsb-inner {
   max-width: 1300px; margin: 0 auto;
-  padding: 8px 20px;
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 14px 20px 10px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
 }
-.rsb-flag { font-size: 20px; flex-shrink: 0; }
-.rsb-race { font-family:var(--font-display);font-style:italic; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
-.rsb-sub { font-family:var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+.rsb-left { min-width: 0; margin-right: auto; }
+.rsb-eyebrow {
+  font-family:var(--font-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 2px; color: rgba(255,255,255,0.65); text-transform: uppercase;
+}
+.rsb-race {
+  font-family:var(--font-display);font-style:italic; font-weight: 900;
+  font-size: clamp(16px, 3vw, 22px); letter-spacing: 1px;
+  color: #fff; text-transform: uppercase; line-height: 1.15;
+}
+.rsb-sub { font-family:var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.62); letter-spacing: 1px; margin-top: 2px; }
+.rsb-clock {
+  flex-shrink: 0; text-align: right;
+  background: rgba(0,0,0,0.2); backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius);
+  padding: 7px 14px;
+}
+.rsb-clock-label { font-family:var(--font-mono); font-size: 8px; font-weight: 500; letter-spacing: 2px; color: rgba(255,255,255,0.65); }
+.rsb-clock-time {
+  font-family:var(--font-mono); font-weight: 700; font-size: 17px;
+  color: #fff; letter-spacing: 1px; font-variant-numeric: tabular-nums; line-height: 1.3;
+}
 .rsb-cta {
-  margin-left: auto; flex-shrink: 0;
-  font-family:var(--font-display);font-style:italic; font-size: 9px; letter-spacing: 2px;
-  padding: 6px 14px; background: var(--red); color: white;
-  border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s;
+  flex-shrink: 0; position: relative; overflow: hidden;
+  font-family:var(--font-display);font-style:italic; font-weight: 800;
+  font-size: 10px; letter-spacing: 2px;
+  padding: 10px 18px; background: #0B0B0C; color: white;
+  border: none; border-radius: var(--radius); cursor: pointer; transition: background 0.2s;
 }
-.rsb-cta:hover { background: #c00000; }
-.rsb-countdown {
-  font-family:var(--font-mono); font-size: 11px; color: var(--gold);
-  background: rgba(212,160,0,0.1); border: 1px solid rgba(212,160,0,0.25);
-  padding: 4px 10px; border-radius: 4px;
+.rsb-cta::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%);
+  transform: translateX(-110%);
 }
+.rsb-cta:hover::after { transform: translateX(110%); transition: transform 0.45s ease; }
 .rsb-submitted {
-  font-family:var(--font-mono); font-size: 10px; color: var(--green);
-  background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.25);
-  padding: 4px 10px; border-radius: 4px;
+  flex-shrink: 0;
+  font-family:var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1px; color: #fff;
+  background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2);
+  padding: 5px 10px; border-radius: var(--radius);
+}
+.rsb-progress-wrap { flex-basis: 100%; display: flex; align-items: center; gap: 10px; padding-bottom: 2px; }
+.rsb-progress { flex: 1; height: 1.5px; background: rgba(255,255,255,0.25); position: relative; }
+.rsb-progress-fill {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 0%;
+  background: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.9);
+  transition: width 0.6s ease;
+}
+.rsb-progress-legend {
+  font-family:var(--font-mono); font-size: 9px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.7); text-transform: uppercase; white-space: nowrap;
+}
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rsb-clock-time .sec.flip { animation: rsbFlip 0.4s ease; }
+  @keyframes rsbFlip {
+    0% { transform: translateY(-45%); opacity: 0; }
+    100% { transform: none; opacity: 1; }
+  }
+  .rsb-clock-time .sec { display: inline-block; }
 }
 /* ── PLAYER PROFILE MODAL ── */
 .profile-modal-overlay {
@@ -1394,14 +1438,22 @@ html { scrollbar-color: var(--pit-gray) var(--carbon-black); }
 <!-- RACE STATUS BANNER -->
 <div class="race-status-banner hidden" id="race-status-banner">
   <div class="rsb-inner">
-    <div class="rsb-flag" id="rsb-flag"></div>
-    <div>
+    <div class="rsb-left">
+      <div class="rsb-eyebrow" id="rsb-eyebrow"></div>
       <div class="rsb-race" id="rsb-race-name"></div>
       <div class="rsb-sub" id="rsb-circuit"></div>
     </div>
-    <div class="rsb-countdown" id="rsb-countdown" style="display:none"></div>
     <div class="rsb-submitted" id="rsb-submitted" style="display:none"></div>
-    <button class="rsb-cta" id="rsb-cta" onclick="showPage('draft')">SUBMIT PICKS ▶</button>
+    <div class="rsb-clock">
+      <div class="rsb-clock-label">LIGHTS OUT</div>
+      <div class="rsb-clock-time" id="rsb-countdown" aria-hidden="true">--:--:--:--</div>
+      <span class="visually-hidden" id="rsb-countdown-a11y" aria-live="polite" aria-atomic="true"></span>
+    </div>
+    <button class="rsb-cta" id="rsb-cta" onclick="showPage('draft')">SUBMIT PICKS</button>
+    <div class="rsb-progress-wrap">
+      <div class="rsb-progress"><div class="rsb-progress-fill" id="rsb-progress-fill"></div></div>
+      <span class="rsb-progress-legend" id="rsb-progress-legend"></span>
+    </div>
   </div>
 </div>
 
@@ -6755,34 +6807,32 @@ function updateRaceStatusBanner() {
   const totalPlayers = STATE.players.length;
   const draftResolved = Object.keys(picks).length >= totalPlayers && totalPlayers > 0;
 
-  document.getElementById('rsb-flag').textContent = race.flag;
-  document.getElementById('rsb-race-name').textContent = `R${raceIdx+1} · ${race.name} GRAND PRIX`;
+  document.getElementById('rsb-eyebrow').textContent = `ROUND ${raceIdx+1} / ${RACES.length} · 2026`;
+  document.getElementById('rsb-race-name').textContent = `${race.flag} ${race.name} GRAND PRIX`;
   document.getElementById('rsb-circuit').textContent = `${race.circuit} · ${race.date} 2026${race.sprint ? ' · SPRINT WEEKEND' : ''}`;
+  document.title = `F1 Grid Masters — ${race.name.charAt(0)}${race.name.slice(1).toLowerCase()} GP`;
 
-  const countdownEl = document.getElementById('rsb-countdown');
   const submittedEl = document.getElementById('rsb-submitted');
   const ctaEl = document.getElementById('rsb-cta');
 
   if (submitted) {
-    submittedEl.textContent = '✓ YOUR PICK LOCKED';
+    submittedEl.textContent = '✓ PICK LOCKED';
     submittedEl.style.display = 'block';
   } else {
     submittedEl.style.display = 'none';
   }
-  countdownEl.textContent = `${submittedCount}/${totalPlayers} SUBMITTED`;
-  countdownEl.style.display = 'block';
 
   if (draftResolved) {
-    ctaEl.textContent = 'VIEW STANDINGS ▶';
-    ctaEl.style.background = 'var(--panel3)'; ctaEl.style.color = 'var(--muted)'; ctaEl.style.cursor = 'pointer';
+    ctaEl.textContent = 'VIEW STANDINGS';
+    ctaEl.style.background = 'rgba(0,0,0,0.35)'; ctaEl.style.color = 'rgba(255,255,255,0.8)'; ctaEl.style.cursor = 'pointer';
     ctaEl.onclick = () => showPage('leaderboard');
   } else if (submitted) {
     ctaEl.textContent = `WAITING ${totalPlayers - submittedCount} MORE`;
-    ctaEl.style.background = 'var(--panel3)'; ctaEl.style.color = 'var(--muted)'; ctaEl.style.cursor = 'default';
+    ctaEl.style.background = 'rgba(0,0,0,0.35)'; ctaEl.style.color = 'rgba(255,255,255,0.8)'; ctaEl.style.cursor = 'default';
     ctaEl.onclick = null;
   } else {
-    ctaEl.textContent = 'SUBMIT PICKS ▶';
-    ctaEl.style.background = 'var(--red)'; ctaEl.style.color = 'white'; ctaEl.style.cursor = 'pointer';
+    ctaEl.textContent = 'SUBMIT PICKS';
+    ctaEl.style.background = '#0B0B0C'; ctaEl.style.color = 'white'; ctaEl.style.cursor = 'pointer';
     ctaEl.onclick = () => showPage('draft');
   }
   banner.classList.remove('hidden');
@@ -7936,6 +7986,7 @@ function playSubmitFeedback() {
 // ============================================================
 //  RACE COUNTDOWN TIMER — live countdown to next race day
 // ============================================================
+let _rsbTargetMs = null;
 function updateRaceCountdown() {
   const countdownEl = document.getElementById('rsb-countdown');
   if (!countdownEl || !STATE.started) return;
@@ -7946,28 +7997,51 @@ function updateRaceCountdown() {
   if (!raceDate) return;
   // Set race time to 14:00 local of the user as approximation
   raceDate.setHours(14, 0, 0, 0);
-  const now = new Date();
-  const diff = raceDate.getTime() - now.getTime();
-  const picks = STATE.draftPicks[race.id] || {};
-  const draftResolved = Object.keys(picks).length >= STATE.players.length && STATE.players.length > 0;
+  _rsbTargetMs = raceDate.getTime();
+
+  // grid submissions → hero progress bar
   const submittedCount = Object.keys(STATE.draftSubmitted?.[race.id] || {}).length;
   const totalPlayers = STATE.players.length;
-
-  if (draftResolved) {
-    countdownEl.textContent = `${submittedCount}/${totalPlayers} SUBMITTED`;
-  } else if (diff > 0) {
-    const days = Math.floor(diff / 86400000);
-    const hrs = Math.floor((diff % 86400000) / 3600000);
-    const mins = Math.floor((diff % 3600000) / 60000);
-    const timeStr = days > 0 ? `${days}D ${hrs}H ${mins}M` : hrs > 0 ? `${hrs}H ${mins}M` : `${mins}M`;
-    countdownEl.textContent = `⏱ ${timeStr} TO RACE · ${submittedCount}/${totalPlayers} SUBMITTED`;
-  } else {
-    countdownEl.textContent = `RACE DAY · ${submittedCount}/${totalPlayers} SUBMITTED`;
-  }
-  countdownEl.style.display = 'block';
+  const fill = document.getElementById('rsb-progress-fill');
+  const legend = document.getElementById('rsb-progress-legend');
+  if (fill) fill.style.width = totalPlayers ? `${Math.round(submittedCount / totalPlayers * 100)}%` : '0%';
+  if (legend) legend.textContent = `GRID SUBMISSIONS · ${submittedCount}/${totalPlayers}`;
+  _rsbRenderClock(true);
 }
-// Update countdown every 60 seconds
+
+// Presentation-only clock renderer: DD:HH:MM:SS towards the same target
+// updateRaceCountdown computes. The a11y string updates once per minute.
+let _rsbLastAriaMinute = null;
+function _rsbRenderClock(force) {
+  const el = document.getElementById('rsb-countdown');
+  if (!el || _rsbTargetMs === null) return;
+  const diff = _rsbTargetMs - Date.now();
+  if (diff <= 0) { el.textContent = 'RACE DAY'; return; }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  const pad = n => String(n).padStart(2, '0');
+  const lead = `${pad(d)}:${pad(h)}:${pad(m)}:`;
+  let leadEl = el.querySelector('.cd-lead'), secEl = el.querySelector('.sec');
+  if (!leadEl || !secEl) {
+    el.innerHTML = '<span class="cd-lead"></span><span class="sec"></span>';
+    leadEl = el.querySelector('.cd-lead'); secEl = el.querySelector('.sec');
+  }
+  if (leadEl.textContent !== lead) leadEl.textContent = lead;
+  if (secEl.textContent !== pad(s)) {
+    secEl.textContent = pad(s);
+    secEl.classList.remove('flip'); void secEl.offsetWidth; secEl.classList.add('flip');
+  }
+  const a11y = document.getElementById('rsb-countdown-a11y');
+  if (a11y && (force || _rsbLastAriaMinute !== m)) {
+    _rsbLastAriaMinute = m;
+    a11y.textContent = `Lights out in ${d} days, ${h} hours, ${m} minutes`;
+  }
+}
+// Data refresh every 60s; display tick every second (presentation only)
 setInterval(updateRaceCountdown, 60000);
+setInterval(() => _rsbRenderClock(false), 1000);
 </script>
   <div id="sticky-picks-bar" style="display:none">
     <div class="sticky-picks-inner">
