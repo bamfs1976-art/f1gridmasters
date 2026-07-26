@@ -1662,7 +1662,7 @@ const RACES = [
   { id:'r15', name:'ITALY',            country:'Italy',        flag:'🇮🇹', date:'Sep 6',  circuit:'Autodromo Nazionale Monza',          sprint:false },
   { id:'r16', name:'MADRID',           country:'Spain',        flag:'🇪🇸', date:'Sep 13', circuit:'Madrid Street Circuit (IFEMA)',      sprint:false },
   { id:'r17', name:'AZERBAIJAN',       country:'Azerbaijan',   flag:'🇦🇿', date:'Sep 27', circuit:'Baku City Circuit',                  sprint:false },
-  { id:'r4',  name:'BAHRAIN',          country:'Malaysia',     flag:'🇧🇭', date:'Oct 4',  circuit:'Sepang International Circuit',       sprint:false },
+  { id:'r4',  name:'BAHRAIN',          country:'Malaysia',     flag:'🇧🇭', date:'Oct 4',  circuit:'Sepang International Circuit',       sprint:false, skyFlag:'bhr' },
   { id:'r18', name:'SINGAPORE',        country:'Singapore',    flag:'🇸🇬', date:'Oct 11', circuit:'Marina Bay Street Circuit',          sprint:true  },
   { id:'r19', name:'USA',              country:'USA',          flag:'🇺🇸', date:'Oct 25', circuit:'Circuit of the Americas',            sprint:false },
   { id:'r20', name:'MEXICO CITY',      country:'Mexico',       flag:'🇲🇽', date:'Nov 1',  circuit:'Autódromo Hermanos Rodríguez',       sprint:false },
@@ -7782,7 +7782,7 @@ function renderTVSchedule() {
     const isNext = i === 1;
     const tvData = TV_SESSIONS[race.id];
     const weekend = WEEKENDS[race.id] || {};
-    const flagCode = SKY_FLAGS[race.country] || 'gbr';
+    const flagCode = race.skyFlag || SKY_FLAGS[race.country] || 'gbr';
     const flagUrl = `https://e0.365dm.com/flags/rect/60x32/${flagCode}.png`;
 
     const cardClass = isCurrent ? 'tv-race-card tv-current' : isNext ? 'tv-race-card tv-next' : 'tv-race-card';
@@ -7816,7 +7816,7 @@ function renderTVSchedule() {
 
     return `<div class="${cardClass}${openClass}" id="tv-card-${race.id}">
       <div class="tv-card-header" onclick="document.getElementById('tv-card-${race.id}').classList.toggle('open')" aria-expanded="false">
-        <img class="tv-flag-img" src="${flagUrl}" alt="${race.country} flag" onerror="this.style.display='none'">
+        <img class="tv-flag-img" src="${flagUrl}" alt="${race.name} flag" onerror="this.style.display='none'">
         <div class="tv-race-info">
           <div class="tv-race-name">${race.name} GRAND PRIX</div>
           <div class="tv-race-meta">${race.circuit} · ${weekend.dates || race.date + ' 2026'}</div>
