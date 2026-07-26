@@ -1455,7 +1455,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
             <div class="rule-row"><span class="rule-icon">⚡</span><span class="rule-text"><strong>Auto-resolved</strong> — once everyone submits, draft position decides priority. P1 gets their top choice first, then P2, and so on</span></div>
             <div class="rule-row"><span class="rule-icon">🚫</span><span class="rule-text"><strong>No duplicates</strong> — if your 1st choice is taken, you drop to your next preference. Ranking more drivers means a better safety net</span></div>
             <div class="rule-row"><span class="rule-icon">🏁</span><span class="rule-text"><strong>Real results entered</strong> after each Grand Prix — points awarded instantly</span></div>
-            <div class="rule-row"><span class="rule-icon">🏆</span><span class="rule-text"><strong>Most points</strong> after all 22 races wins the championship!</span></div>
+            <div class="rule-row"><span class="rule-icon">🏆</span><span class="rule-text"><strong>Most points</strong> after all 23 races wins the championship!</span></div>
           </div>
         </div>
 
@@ -1519,7 +1519,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <!-- ===================== SCHEDULE PAGE ===================== -->
 <div class="page" id="page-schedule">
   <div class="z1 animate-in">
-    <div class="section-head">2026 F1 CALENDAR · 22 ROUNDS</div>
+    <div class="section-head">2026 F1 CALENDAR · 23 ROUNDS</div>
     <div class="schedule-list" id="schedule-list"></div>
   </div>
 </div>
@@ -1662,6 +1662,7 @@ const RACES = [
   { id:'r15', name:'ITALY',            country:'Italy',        flag:'🇮🇹', date:'Sep 6',  circuit:'Autodromo Nazionale Monza',          sprint:false },
   { id:'r16', name:'MADRID',           country:'Spain',        flag:'🇪🇸', date:'Sep 13', circuit:'Madrid Street Circuit (IFEMA)',      sprint:false },
   { id:'r17', name:'AZERBAIJAN',       country:'Azerbaijan',   flag:'🇦🇿', date:'Sep 27', circuit:'Baku City Circuit',                  sprint:false },
+  { id:'r4',  name:'BAHRAIN',          country:'Malaysia',     flag:'🇧🇭', date:'Oct 4',  circuit:'Sepang International Circuit',       sprint:false },
   { id:'r18', name:'SINGAPORE',        country:'Singapore',    flag:'🇸🇬', date:'Oct 11', circuit:'Marina Bay Street Circuit',          sprint:true  },
   { id:'r19', name:'USA',              country:'USA',          flag:'🇺🇸', date:'Oct 25', circuit:'Circuit of the Americas',            sprint:false },
   { id:'r20', name:'MEXICO CITY',      country:'Mexico',       flag:'🇲🇽', date:'Nov 1',  circuit:'Autódromo Hermanos Rodríguez',       sprint:false },
@@ -2403,7 +2404,7 @@ function renderDraft() {
       <div class="empty-state">
         <div class="icon">🏁</div>
         <h3>SEASON COMPLETE</h3>
-        <p>All 22 races finished. Check the standings!</p>
+        <p>All ${RACES.length} races finished. Check the standings!</p>
       </div>`;
     return;
   }
@@ -3147,7 +3148,7 @@ function renderLeaderboard() {
         <div style="font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);margin-top:4px;">CURRENT LEADER · ${leaderTotal} PTS</div>
       </div>
       <div class="card" style="padding:16px 20px;text-align:center;">
-        <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;">${racesPlayed}<span style="font-size:12px;color:var(--muted)">/22</span></div>
+        <div style="font-family:Orbitron,sans-serif;font-size:20px;font-weight:700;">${racesPlayed}<span style="font-size:12px;color:var(--muted)">/${RACES.length}</span></div>
         <div style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);">DONE</div>
       </div>
       <div class="card" style="padding:16px 20px;text-align:center;">
@@ -7647,6 +7648,7 @@ function renderTVSchedule() {
     'r15':{ dates:'4–6 Sep 2026' },
     'r16':{ dates:'11–13 Sep 2026' },
     'r17':{ dates:'25–27 Sep 2026' },
+    'r4': { dates:'2–4 Oct 2026' },
     'r18':{ dates:'9–11 Oct 2026' },
     'r19':{ dates:'23–25 Oct 2026' },
     'r20':{ dates:'30 Oct–1 Nov 2026' },
@@ -7712,6 +7714,13 @@ function renderTVSchedule() {
       {day:'SAT', label:'Practice 3',  race:false, time:'11:30'},
       {day:'SAT', label:'Qualifying',  race:false, time:'14:30'},
       {day:'SUN', label:'Race',        race:true,  time:'13:00'},
+    ]},
+    'r4': { confirmed:false, tz:'BST', sessions:[
+      {day:'FRI', label:'Practice 1',  race:false, time:'07:30'},
+      {day:'FRI', label:'Practice 2',  race:false, time:'11:00'},
+      {day:'SAT', label:'Practice 3',  race:false, time:'07:30'},
+      {day:'SAT', label:'Qualifying',  race:false, time:'11:00'},
+      {day:'SUN', label:'Race',        race:true,  time:'08:00'},
     ]},
     'r18': { confirmed:false, tz:'BST', sessions:[
       {day:'FRI', label:'Practice 1',       race:false, time:'10:30'},
