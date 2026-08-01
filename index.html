@@ -1075,6 +1075,8 @@ nav {
   position: sticky; top: 47px; z-index: 89;
 }
 .offline-banner.hidden { display: none; }
+/* WCAG AA: darker red on the pale banner background in light theme */
+html.light .offline-banner { color: #b91c1c; border-bottom-color: rgba(185,28,28,0.4); }
 .rsb-inner {
   max-width: 1300px; margin: 0 auto;
   padding: 8px 20px;
@@ -1337,6 +1339,14 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <div class="offline-banner hidden" id="offline-banner">
   <span style="font-size:14px">⚠</span>
   <span>OFFLINE MODE — changes saved locally, will sync when reconnected</span>
+</div>
+
+<!-- READ-ONLY BANNER — shown when the initial cloud load fails -->
+<div class="offline-banner hidden" id="readonly-banner" role="alert">
+  <span style="font-size:14px" aria-hidden="true">🔒</span>
+  <span>READ-ONLY — cloud unavailable, showing last saved copy. Changes will not be saved.</span>
+  <button onclick="location.reload()" aria-label="Retry cloud connection"
+    style="background:transparent;border:1px solid currentColor;color:inherit;border-radius:6px;padding:2px 10px;font:inherit;cursor:pointer;letter-spacing:1px">RETRY</button>
 </div>
 
 <!-- PLAYER PROFILE MODAL -->
@@ -1852,6 +1862,7 @@ let STATE = {
   activityLog: [],     // [{time, msg, type}]
   predictions: {},     // {playerId: {champion, topTeam, rookieOfYear}}
   notifEnabled: false, // push notification preference
+  stateVersion: 0,     // monotonic counter — bumped on every save, used to reject stale writes
 };
 
 // ============================================================
@@ -1868,38 +1879,165 @@ function getSupabase() {
   return _supabaseClient;
 }
 
+// ------------------------------------------------------------
+// Stale-write protection (added after the 2026-07-16 incident):
+// a client whose initial cloud load failed holds potentially old
+// localStorage data and must NEVER write it back over the cloud row.
+// ------------------------------------------------------------
+let CLOUD_LOAD_FAILED = false;      // initial Supabase fetch failed → read-only mode
+let _lastKnownCloudVersion = 0;     // highest stateVersion seen from the cloud
+let _readOnlyToastShown = false;
+
 let _saveTimer = null;
 function saveState() {
+  if (CLOUD_LOAD_FAILED) {
+    // Read-only mode: this client may hold stale data, so nothing is
+    // persisted — not even localStorage, which stays as the display fallback.
+    console.warn('saveState blocked — cloud load failed, read-only mode');
+    if (!_readOnlyToastShown) {
+      showToast('⚠ Read-only mode — cloud unavailable, changes are NOT saved', 'warn');
+      _readOnlyToastShown = true;
+    }
+    return;
+  }
+  // Math.max covers admin resets that replace STATE wholesale — the version
+  // must never move backwards or the reset would be rejected as stale.
+  STATE.stateVersion = Math.max(STATE.stateVersion || 0, _lastKnownCloudVersion) + 1;
+  STATE.updatedAt = new Date().toISOString();
   try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
   clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(async () => {
-    const sb = getSupabase();
-    if (!sb) return;
-    try {
-      await sb.from('f1_game_state').upsert({ id: 'main', state: STATE, updated_at: new Date().toISOString() });
-    } catch(e) { console.warn('Supabase save failed:', e); }
-  }, 400);
+  _saveTimer = setTimeout(_pushStateToCloud, 400);
+}
+
+async function _pushStateToCloud() {
+  const sb = getSupabase();
+  if (!sb || CLOUD_LOAD_FAILED) return;
+  const localV = STATE.stateVersion || 0;
+  try {
+    // 1. Read the cloud row's version first — never blindly overwrite.
+    const { data: row, error: readErr } = await sb.from('f1_game_state')
+      .select('state').eq('id', 'main').maybeSingle();
+    if (readErr) {
+      console.warn('Supabase save skipped — could not verify cloud version:', readErr);
+      return;
+    }
+    const cloudV = (row && row.state && row.state.stateVersion) || 0;
+    if (row && cloudV > localV) { _handleStaleSave(row.state); return; }
+    if (!row) {
+      // First-ever save: row doesn't exist yet.
+      const { error } = await sb.from('f1_game_state')
+        .insert({ id: 'main', state: STATE, updated_at: new Date().toISOString() });
+      if (error) console.warn('Supabase save failed:', error);
+      else _lastKnownCloudVersion = localV;
+      return;
+    }
+    // 2. Conditional update — only succeeds if the cloud version is still the
+    // one we just read, so a racing newer write makes this match 0 rows.
+    const { data: updated, error } = await sb.from('f1_game_state')
+      .update({ state: STATE, updated_at: new Date().toISOString() })
+      .eq('id', 'main')
+      .or(`state->stateVersion.is.null,state->stateVersion.lte.${cloudV}`)
+      .select('id');
+    if (error) { console.warn('Supabase save failed:', error); return; }
+    if (!updated || updated.length === 0) {
+      // Either a racing client won, or the write landed but PostgREST
+      // returned no representation — re-read the row to tell them apart.
+      const { data: fresh } = await sb.from('f1_game_state')
+        .select('state').eq('id', 'main').maybeSingle();
+      const freshV = (fresh && fresh.state && fresh.state.stateVersion) || 0;
+      if (fresh && fresh.state && freshV > localV) _handleStaleSave(fresh.state);
+      else if (freshV === localV) _lastKnownCloudVersion = localV; // our write landed
+      else console.warn('Supabase save did not land (cloud v' + freshV + ', local v' + localV + ')');
+      return;
+    }
+    _lastKnownCloudVersion = localV;
+  } catch(e) { console.warn('Supabase save failed:', e); }
+}
+
+// The cloud row is newer than this client's state: refuse the write and
+// adopt the cloud state instead, exactly like a realtime update.
+function _handleStaleSave(cloudState) {
+  console.warn('Stale save blocked — cloud v' + (cloudState.stateVersion || 0) +
+               ' is newer than local v' + (STATE.stateVersion || 0));
+  STATE = cloudState;
+  _normaliseState();
+  _lastKnownCloudVersion = STATE.stateVersion || 0;
+  try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
+  _rerenderActivePage();
+  updateIdentityBadge();
+  updateRaceStatusBanner();
+  showToast('⚠ Newer game data found in the cloud — your last change was not saved', 'warn');
 }
 
 async function loadState() {
   const sb = getSupabase();
-  if (sb) {
+  if (!sb) {
+    CLOUD_LOAD_FAILED = true;
+  } else {
     try {
-      const { data, error } = await sb.from('f1_game_state').select('state').eq('id','main').single();
-      if (!error && data && data.state && Object.keys(data.state).length > 0) {
+      const { data, error } = await sb.from('f1_game_state')
+        .select('state').eq('id', 'main').maybeSingle();
+      if (error) throw error;
+      if (data && data.state && Object.keys(data.state).length > 0) {
         STATE = data.state;
         _normaliseState();
+        _lastKnownCloudVersion = STATE.stateVersion || 0;
+        updateReadOnlyBanner();
         return;
       }
-    } catch(e) { console.warn('Supabase load failed, using localStorage:', e); }
+      // Cloud reachable but no row yet — fresh game, stay read-write.
+    } catch(e) {
+      console.warn('Supabase load failed — entering read-only mode:', e);
+      CLOUD_LOAD_FAILED = true;
+    }
   }
+  // localStorage fallback — DISPLAY ONLY when the cloud load failed.
   try {
     const s = localStorage.getItem('f1gm2026');
     if (s) { STATE = JSON.parse(s); _normaliseState(); }
   } catch(e) {}
+  updateReadOnlyBanner();
+}
+
+function updateReadOnlyBanner() {
+  const b = document.getElementById('readonly-banner');
+  if (b) b.classList.toggle('hidden', !CLOUD_LOAD_FAILED);
+}
+
+// Called when the cloud becomes reachable again (realtime reconnect).
+async function _retryCloudLoad() {
+  const sb = getSupabase();
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('f1_game_state')
+      .select('state').eq('id', 'main').maybeSingle();
+    if (error || !data || !data.state) return;
+    STATE = data.state;
+    _normaliseState();
+    _lastKnownCloudVersion = STATE.stateVersion || 0;
+    CLOUD_LOAD_FAILED = false;
+    _readOnlyToastShown = false;
+    updateReadOnlyBanner();
+    _rerenderActivePage();
+    updateIdentityBadge();
+    updateRaceStatusBanner();
+    showToast('✅ Reconnected — live game data restored', 'success');
+  } catch(e) { /* still offline — stay read-only */ }
+}
+
+function _rerenderActivePage() {
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) return;
+  const pageId = activePage.id.replace('page-', '');
+  if (pageId === 'draft') renderDraft();
+  else if (pageId === 'results') renderResults();
+  else if (pageId === 'leaderboard') renderLeaderboard();
+  else if (pageId === 'setup') renderPlayerList();
+  else if (pageId === 'admin') renderAdminPanel();
 }
 
 function _normaliseState() {
+  if (typeof STATE.stateVersion !== 'number') STATE.stateVersion = 0;
   if (!STATE.draftRevealed) STATE.draftRevealed = {};
   if (!STATE.activityLog) STATE.activityLog = [];
   if (!STATE.predictions) STATE.predictions = {};
@@ -1940,17 +2078,19 @@ function subscribeToRealtime() {
       if (!payload.new || !payload.new.state) return;
       // Skip realtime update if a local in-flight edit (e.g. editMyPrefs) is in progress
       if (_localEditLock) return;
+      const incomingV = payload.new.state.stateVersion || 0;
+      if (incomingV > _lastKnownCloudVersion) _lastKnownCloudVersion = incomingV;
+      // Never adopt a state strictly older than what this client already has
+      if (incomingV && incomingV < (STATE.stateVersion || 0)) return;
       STATE = payload.new.state;
       _normaliseState();
-      const activePage = document.querySelector('.page.active');
-      if (activePage) {
-        const pageId = activePage.id.replace('page-','');
-        if (pageId === 'draft') renderDraft();
-        else if (pageId === 'results') renderResults();
-        else if (pageId === 'leaderboard') renderLeaderboard();
-        else if (pageId === 'setup') renderPlayerList();
-        else if (pageId === 'admin') renderAdminPanel();
+      if (CLOUD_LOAD_FAILED) {
+        // A full, current cloud row just arrived — this client is back in sync
+        CLOUD_LOAD_FAILED = false;
+        _readOnlyToastShown = false;
+        updateReadOnlyBanner();
       }
+      _rerenderActivePage();
       updateIdentityBadge();
       updateRaceStatusBanner();
       // Auto-nav to draft if season just started
@@ -1969,6 +2109,9 @@ function subscribeToRealtime() {
         dot.style.background = '#22c55e';
         label.textContent = 'LIVE SYNC ON';
         if (offlineBanner) offlineBanner.classList.add('hidden');
+        // If the initial cloud load failed, the connection is back — re-fetch
+        // so this client can leave read-only mode with fresh data.
+        if (CLOUD_LOAD_FAILED) _retryCloudLoad();
       } else {
         dot.style.background = '#ef4444';
         label.textContent = 'RECONNECTING...';
@@ -4057,6 +4200,8 @@ function adminClearDeadline(raceId) {
 }
 
 function checkDraftDeadlines() {
+  // Never auto-resolve from a client that may hold stale data (2026-07-16 incident)
+  if (CLOUD_LOAD_FAILED) return;
   if (!STATE.started || !STATE.draftDeadlines) return;
   const raceIdx = STATE.currentRaceIdx;
   if (raceIdx >= RACES.length) return;
