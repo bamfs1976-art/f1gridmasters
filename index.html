@@ -2002,6 +2002,88 @@ async function _mergeRemoteState(sb) {
   } catch(e) { /* merge is best-effort; fall back to plain last-write-wins */ }
 }
 
+// ------------------------------------------------------------
+// Compare-and-swap writes (2026-08-01).
+//
+// Every write used to be a blind upsert: last writer wins, whatever it
+// held. A tab left open across a deploy could therefore push its old
+// state over everyone's, which is what happened on 2026-07-16.
+//
+// Writes now go through the f1_state_push database function, which
+// takes the version we believe we are editing and refuses the write if
+// the row has moved on. The check lives in Postgres, so it holds for
+// every client regardless of what its JavaScript does.
+//
+// _cloudVersion is the version last seen from the server. It is only
+// ever set from a server response — never guessed, never incremented
+// locally — so a client that has not successfully read cannot write.
+//
+// The function may not be deployed yet. If it is missing we fall back
+// to the previous upsert and carry on exactly as before, so this is
+// safe to ship ahead of the migration.
+// ------------------------------------------------------------
+let _cloudVersion = null;      // null = not yet read from the server
+let _rpcAvailable = true;      // flipped off if f1_state_push is absent
+let _staleToastShown = false;
+
+function _rpcMissing(err) {
+  if (!err) return false;
+  const code = String(err.code || '');
+  const msg = String(err.message || '');
+  // PGRST202: no such function in the schema cache. 404 covers a proxy
+  // that never reaches PostgREST's error body.
+  return code === 'PGRST202' || code === '404' ||
+         /Could not find the function|does not exist/i.test(msg);
+}
+
+// The server row is ahead of us: take its state rather than clobbering it.
+async function _adoptCloudState(sb, why) {
+  try {
+    const { data } = await sb.from('f1_game_state').select('*').eq('id','main').single();
+    if (!data || !data.state || Object.keys(data.state).length === 0) return;
+    STATE = data.state;
+    _cloudVersion = (typeof data.version === 'number') ? data.version : _cloudVersion;
+    _normaliseState();
+    try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
+    if (typeof renderAll === 'function') renderAll();
+    console.warn('Adopted newer server state (' + why + '), now v' + _cloudVersion);
+    if (!_staleToastShown) {
+      showToast('⚠ Newer game data loaded from the cloud — your last change was not saved', 'warn');
+      _staleToastShown = true;
+      setTimeout(() => { _staleToastShown = false; }, 10000);
+    }
+  } catch(e) { console.warn('Could not adopt server state:', e); }
+}
+
+// One write attempt. Returns 'ok' | 'stale' | 'unavailable' | 'error'.
+async function _pushState(sb) {
+  if (_rpcAvailable && _cloudVersion !== null) {
+    const { data, error } = await sb.rpc('f1_state_push', {
+      p_id: 'main', p_state: STATE, p_expected_version: _cloudVersion
+    });
+    if (error) {
+      if (_rpcMissing(error)) {
+        _rpcAvailable = false;                  // fall through to the upsert below
+        console.warn('f1_state_push not deployed yet — using the legacy upsert');
+      } else {
+        console.warn('f1_state_push failed:', error);
+        return 'error';
+      }
+    } else {
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row && row.ok) { _cloudVersion = row.version; return 'ok'; }
+      console.warn('Write refused:', row && row.message);
+      return 'stale';
+    }
+  }
+  // Legacy path: unchanged behaviour, used until the function is deployed
+  // or if we have never managed to read a version.
+  const { error } = await sb.from('f1_game_state')
+    .upsert({ id: 'main', state: STATE, updated_at: new Date().toISOString() });
+  if (error) { console.warn('Supabase save failed:', error); return 'error'; }
+  return 'ok';
+}
+
 let _saveTimer = null;
 function saveState() {
   try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
@@ -2013,7 +2095,10 @@ function saveState() {
     try {
       if (_skipMergeOnce) _skipMergeOnce = false;
       else await _mergeRemoteState(sb);
-      await sb.from('f1_game_state').upsert({ id: 'main', state: STATE, updated_at: new Date().toISOString() });
+      const res = await _pushState(sb);
+      // Refused because someone else got in first: take their state. The
+      // local edit is lost, which is correct — it was based on stale data.
+      if (res === 'stale') await _adoptCloudState(sb, 'debounced save refused');
     } catch(e) { console.warn('Supabase save failed:', e); }
   }, 400);
 }
@@ -2033,9 +2118,21 @@ async function saveStateCritical() {
   let lastErr = null;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const { error } = await sb.from('f1_game_state').upsert({ id: 'main', state: STATE, updated_at: new Date().toISOString() });
-      if (error) throw error;
-      return true;
+      const res = await _pushState(sb);
+      if (res === 'ok') return true;
+      if (res === 'stale') {
+        // Someone wrote while we were assembling this one. A critical save
+        // carries a real submission, so we must NOT discard it the way a
+        // debounced save does. Re-read the version, merge their changes in
+        // (player-keyed maps merge, ours win on our own keys), and retry.
+        console.warn(`saveStateCritical attempt ${attempt}: refused as stale, re-merging`);
+        await _refreshCloudVersion(sb);
+        await _mergeRemoteState(sb);
+        if (attempt < 3) { await new Promise(r => setTimeout(r, attempt * 300)); continue; }
+        showToast('⚠ Someone else saved at the same time — check your picks and re-submit', 'error');
+        return false;
+      }
+      throw new Error('write failed');
     } catch(e) {
       lastErr = e;
       console.warn(`Supabase saveStateCritical attempt ${attempt} failed:`, e);
@@ -2047,20 +2144,36 @@ async function saveStateCritical() {
   return false;
 }
 
+// Re-read just the version. Never touches STATE, so it is safe to call
+// mid-submission when the local state is the one we want to keep.
+async function _refreshCloudVersion(sb) {
+  try {
+    const { data, error } = await sb.from('f1_game_state').select('*').eq('id','main').single();
+    if (!error && data && typeof data.version === 'number') _cloudVersion = data.version;
+  } catch(e) { /* leave _cloudVersion as it was; the retry will refuse again */ }
+}
+
 async function loadState() {
   const sb = getSupabase();
   if (sb) {
     try {
-      const { data, error } = await sb.from('f1_game_state').select('state').eq('id','main').single();
+      // select('*') rather than select('state') so the row's `version`
+      // comes back too. A superset of the old query — if the column is
+      // not deployed yet the rest of the row is returned exactly as
+      // before and _cloudVersion simply stays null, which keeps writes
+      // on the legacy upsert path.
+      const { data, error } = await sb.from('f1_game_state').select('*').eq('id','main').single();
       if (!error && data && data.state && Object.keys(data.state).length > 0) {
         STATE = data.state;
         _stateLoaded = true;
+        if (typeof data.version === 'number') _cloudVersion = data.version;
         _normaliseState();
         return;
       }
       // PGRST116 = no row exists yet: a genuinely fresh install, safe to
-      // allow writes so the first game can be bootstrapped.
-      if (error && error.code === 'PGRST116') _stateLoaded = true;
+      // allow writes so the first game can be bootstrapped. Version 0
+      // lets the first write take the function's create branch.
+      if (error && error.code === 'PGRST116') { _stateLoaded = true; _cloudVersion = 0; }
     } catch(e) { console.warn('Supabase load failed, using localStorage:', e); }
   }
   try {
@@ -2112,9 +2225,14 @@ function subscribeToRealtime() {
       if (!payload.new || !payload.new.state) return;
       // A realtime payload IS current server state — safe to write from here on
       _stateLoaded = true;
-      // Skip realtime update if a local in-flight edit (e.g. editMyPrefs) is in progress
+      // Skip realtime update if a local in-flight edit (e.g. editMyPrefs) is in progress.
+      // Note _cloudVersion is deliberately NOT updated on this path: we are not
+      // taking their state, so we must stay "behind" and have our next write
+      // refused, rather than overwrite the change we just declined to apply.
       if (_localEditLock) return;
       STATE = payload.new.state;
+      // We have adopted their state, so we are now current with their version.
+      if (typeof payload.new.version === 'number') _cloudVersion = payload.new.version;
       _normaliseState();
       const activePage = document.querySelector('.page.active');
       if (activePage) {
