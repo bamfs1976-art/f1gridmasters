@@ -2762,13 +2762,37 @@
                         "NOR",
                         "PIA",
                         "LEC",
-                        "HAD",
                         "GAS",
                         "COL",
                         "OCO",
                         "LAW",
                         "LIN",
-                        "BOR"
+                        "BOR",
+                        "BEA"
+                    ],
+                    "p1772378295758": [
+                        "HAM",
+                        "VER",
+                        "NOR",
+                        "ANT",
+                        "RUS",
+                        "LEC",
+                        "PIA",
+                        "LAW",
+                        "LIN",
+                        "GAS",
+                        "SAI",
+                        "ALB",
+                        "BEA",
+                        "COL",
+                        "OCO",
+                        "HUL",
+                        "BOR",
+                        "BOT",
+                        "PER",
+                        "ALO",
+                        "STR",
+                        "HAD"
                     ],
                     "p1772378299642": [
                         "LEC",
@@ -2862,6 +2886,20 @@
                         "OCO",
                         "COL"
                     ],
+                    "p1772378311744": [
+                        "ANT",
+                        "RUS",
+                        "HAM",
+                        "VER",
+                        "LEC",
+                        "NOR",
+                        "PIA",
+                        "LAW",
+                        "LIN",
+                        "HAD",
+                        "GAS",
+                        "COL"
+                    ],
                     "p1772378313028": [
                         "HAM",
                         "ANT"
@@ -2932,6 +2970,16 @@
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "18:55",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "08:48",
+                    "type": "good"
+                },
                 {
                     "msg": "Admin unlocked",
                     "time": "17:58",
@@ -3170,16 +3218,6 @@
                 {
                     "msg": "Admin unlocked",
                     "time": "10:18",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "21:50",
-                    "type": "good"
-                },
-                {
-                    "msg": "Deadline set for BRITAIN: 02/07/2026, 21:00:00",
-                    "time": "09:54",
                     "type": "good"
                 }
             ],
@@ -3537,10 +3575,12 @@
                 },
                 "r14": {
                     "p1772378294011": true,
+                    "p1772378295758": true,
                     "p1772378299642": true,
                     "p1772378303461": true,
                     "p1772378306541": true,
                     "p1772378308600": true,
+                    "p1772378311744": true,
                     "p1772378313028": true,
                     "p1772378314501": true,
                     "p1772378316012": true,
@@ -3549,7 +3589,7 @@
                 }
             }
         },
-        "updated_at": "2026-08-18T21:02:42.932+00:00",
+        "updated_at": "2026-08-19T17:55:18.87+00:00",
         "version": 1
     }
 ]
