@@ -2292,8 +2292,8 @@ function getDraftOrderForRace(raceIdx) {
 // then P2, etc. Players who submit last get the leftover driver.
 // The resolved picks are stored in draftPicks as normal.
 
-function resolveDraft(raceId, draftOrder) {
-  const prefs = STATE.draftPrefs[raceId] || {};
+function resolveDraft(raceId, draftOrder, prefsSource) {
+  const prefs = prefsSource || STATE.draftPrefs[raceId] || {};
   const resolved = {};       // {playerId: driverShort}
   const taken = new Set();   // drivers already assigned
 
@@ -4480,8 +4480,20 @@ function adminClearDeadline(raceId) {
   renderAdminDashboard();
 }
 
-function checkDraftDeadlines() {
+// Auto-resolve assigns a driver to EVERY player in one write, so it is the most
+// destructive thing any browser can do unattended. It once ran on a tab whose
+// draftPrefs map was missing four players who had in fact submitted: they were
+// handed fallback drivers off the top of DRIVERS, which stole drivers other
+// players had ranked and shuffled 10 of 16 picks — then overwrote the good row.
+// So: only ever resolve from a freshly-read server copy of the preferences,
+// and if that read fails, do nothing and try again on the next tick.
+let _autoResolveInFlight = false;
+
+async function checkDraftDeadlines() {
   if (!STATE.started || !STATE.draftDeadlines) return;
+  if (!_stateLoaded) return;        // this tab has never seen server state
+  if (_localEditLock) return;       // a local submission is mid-flight
+  if (_autoResolveInFlight) return; // a previous tick is still working
   const raceIdx = STATE.currentRaceIdx;
   if (raceIdx >= RACES.length) return;
   const race = RACES[raceIdx];
@@ -4492,12 +4504,44 @@ function checkDraftDeadlines() {
   // Check if draft already resolved
   const picks = STATE.draftPicks[race.id] || {};
   if (Object.keys(picks).length >= STATE.players.length) return;
-  // Auto-resolve: force resolve for all unsubmitted players
-  const draftOrder = getDraftOrderForRace(raceIdx);
-  resolveDraft(race.id, draftOrder);
-  addLog(`Auto-resolved draft for ${race.name} — deadline passed`, 'warn');
-  showToast(`Draft auto-resolved — deadline passed for ${race.name}`, 'info');
-  renderDraft();
+
+  const sb = getSupabase();
+  if (!sb) return; // offline: never resolve blind, just wait
+
+  _autoResolveInFlight = true;
+  try {
+    const { data, error } = await sb.from('f1_game_state').select('state').eq('id','main').single();
+    if (error || !data || !data.state) return; // could not confirm — retry next tick
+    const remote = data.state;
+
+    // Someone else already resolved it: adopt their picks, never re-resolve.
+    const remotePicks = (remote.draftPicks || {})[race.id] || {};
+    if (Object.keys(remotePicks).length >= STATE.players.length) {
+      if (!STATE.draftPicks[race.id]) STATE.draftPicks[race.id] = {};
+      Object.assign(STATE.draftPicks[race.id], remotePicks);
+      renderDraft();
+      return;
+    }
+    // Re-check the deadline against the server's copy — an admin may have moved it.
+    const remoteDl = (remote.draftDeadlines || {})[race.id];
+    if (!remoteDl || new Date(remoteDl) > new Date()) return;
+
+    // Server preferences are the base; this player's own local entry overlays them,
+    // matching the "local wins" rule _mergeRemoteState already uses.
+    const prefs = {
+      ...((remote.draftPrefs || {})[race.id] || {}),
+      ...((STATE.draftPrefs || {})[race.id] || {}),
+    };
+    const draftOrder = getDraftOrderForRace(raceIdx);
+    resolveDraft(race.id, draftOrder, prefs);
+    addLog(`Auto-resolved draft for ${race.name} — deadline passed`, 'warn');
+    showToast(`Draft auto-resolved — deadline passed for ${race.name}`, 'info');
+    renderDraft();
+  } catch(e) {
+    console.warn('Auto-resolve deferred:', e); // retry on the next tick
+  } finally {
+    _autoResolveInFlight = false;
+  }
 }
 // Check deadlines every 30 seconds
 setInterval(checkDraftDeadlines, 30000);
