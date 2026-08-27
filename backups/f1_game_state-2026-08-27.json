@@ -287,22 +287,40 @@
                     "p1772378383236": "BOR"
                 },
                 "r13": {
-                    "p1772378294011": "GAS",
-                    "p1772378295758": "SAI",
+                    "p1772378294011": "COL",
+                    "p1772378295758": "BOR",
                     "p1772378298046": "LEC",
                     "p1772378299642": "BEA",
                     "p1772378303461": "LIN",
-                    "p1772378306541": "BOR",
+                    "p1772378306541": "ALB",
                     "p1772378308600": "PIA",
-                    "p1772378311744": "ALB",
+                    "p1772378311744": "LAW",
                     "p1772378313028": "HAM",
                     "p1772378314501": "NOR",
                     "p1772378316012": "ANT",
                     "p1772378317986": "RUS",
-                    "p1772378320191": "ALO",
+                    "p1772378320191": "SAI",
                     "p1772378324269": "VER",
                     "p1772378327316": "HAD",
-                    "p1772378383236": "STR"
+                    "p1772378383236": "GAS"
+                },
+                "r14": {
+                    "p1772378294011": "GAS",
+                    "p1772378295758": "LAW",
+                    "p1772378298046": "RUS",
+                    "p1772378299642": "HAD",
+                    "p1772378303461": "ALO",
+                    "p1772378306541": "HUL",
+                    "p1772378308600": "VER",
+                    "p1772378311744": "LIN",
+                    "p1772378313028": "HAM",
+                    "p1772378314501": "LEC",
+                    "p1772378316012": "BEA",
+                    "p1772378317986": "ANT",
+                    "p1772378320191": "SAI",
+                    "p1772378324269": "NOR",
+                    "p1772378327316": "PIA",
+                    "p1772378383236": "BOR"
                 }
             },
             "draftPrefs": {
@@ -2754,6 +2772,97 @@
                     ]
                 },
                 "r14": {
+                    "p1772378294011": [
+                        "ANT",
+                        "HAM",
+                        "RUS",
+                        "VER",
+                        "NOR",
+                        "PIA",
+                        "LEC",
+                        "GAS",
+                        "COL",
+                        "OCO",
+                        "LAW",
+                        "LIN",
+                        "BOR",
+                        "BEA"
+                    ],
+                    "p1772378295758": [
+                        "HAM",
+                        "VER",
+                        "NOR",
+                        "ANT",
+                        "RUS",
+                        "LEC",
+                        "PIA",
+                        "LAW",
+                        "LIN",
+                        "GAS",
+                        "SAI",
+                        "ALB",
+                        "BEA",
+                        "COL",
+                        "OCO",
+                        "HUL",
+                        "BOR",
+                        "BOT",
+                        "PER",
+                        "ALO",
+                        "STR",
+                        "HAD"
+                    ],
+                    "p1772378298046": [
+                        "ANT",
+                        "RUS",
+                        "VER"
+                    ],
+                    "p1772378299642": [
+                        "LEC",
+                        "NOR",
+                        "HAM",
+                        "VER",
+                        "HAD",
+                        "RUS",
+                        "ANT",
+                        "ALB",
+                        "ALO",
+                        "SAI",
+                        "STR",
+                        "GAS",
+                        "BEA",
+                        "COL",
+                        "HUL",
+                        "OCO",
+                        "BOR",
+                        "LIN",
+                        "LAW",
+                        "BOT",
+                        "PER",
+                        "PIA"
+                    ],
+                    "p1772378303461": [
+                        "ANT",
+                        "NOR",
+                        "VER",
+                        "RUS",
+                        "HAM",
+                        "LEC",
+                        "PIA",
+                        "HAD",
+                        "ALO",
+                        "STR",
+                        "ALB",
+                        "HUL",
+                        "BOR",
+                        "GAS",
+                        "COL",
+                        "OCO",
+                        "SAI",
+                        "BEA",
+                        "LAW",
+                        "LIN"
+                    ],
                     "p1772378306541": [
                         "ANT",
                         "RUS",
@@ -2777,10 +2886,198 @@
                         "SAI",
                         "COL",
                         "OCO"
+                    ],
+                    "p1772378308600": [
+                        "ANT",
+                        "NOR",
+                        "HAM",
+                        "RUS",
+                        "LEC",
+                        "VER",
+                        "PIA",
+                        "ALO",
+                        "HAD",
+                        "SAI",
+                        "ALB",
+                        "GAS",
+                        "HUL",
+                        "PER",
+                        "BOT",
+                        "LAW",
+                        "LIN",
+                        "BOR",
+                        "OCO",
+                        "COL"
+                    ],
+                    "p1772378311744": [
+                        "ANT",
+                        "RUS",
+                        "HAM",
+                        "VER",
+                        "LEC",
+                        "NOR",
+                        "PIA",
+                        "LAW",
+                        "LIN",
+                        "HAD",
+                        "GAS",
+                        "COL"
+                    ],
+                    "p1772378313028": [
+                        "HAM",
+                        "ANT"
+                    ],
+                    "p1772378314501": [
+                        "ANT",
+                        "HAM",
+                        "RUS",
+                        "LEC",
+                        "VER",
+                        "NOR",
+                        "PIA",
+                        "HAD",
+                        "GAS",
+                        "LAW",
+                        "LIN",
+                        "COL",
+                        "BEA",
+                        "HUL",
+                        "BOR",
+                        "SAI",
+                        "ALB",
+                        "OCO",
+                        "BOT",
+                        "PER",
+                        "ALO",
+                        "STR"
+                    ],
+                    "p1772378316012": [
+                        "NOR",
+                        "ANT",
+                        "PIA",
+                        "VER",
+                        "HAM",
+                        "LEC",
+                        "RUS",
+                        "HAD",
+                        "LIN",
+                        "LAW",
+                        "HUL",
+                        "BEA",
+                        "OCO",
+                        "BOR",
+                        "GAS",
+                        "COL",
+                        "ALB",
+                        "SAI",
+                        "STR",
+                        "ALO",
+                        "BOT",
+                        "PER"
+                    ],
+                    "p1772378317986": [
+                        "ANT"
+                    ],
+                    "p1772378320191": [
+                        "NOR",
+                        "PIA",
+                        "HAM",
+                        "LEC",
+                        "VER",
+                        "HAD",
+                        "RUS",
+                        "ANT",
+                        "SAI",
+                        "ALB",
+                        "ALO",
+                        "STR"
+                    ],
+                    "p1772378324269": [
+                        "ANT",
+                        "NOR",
+                        "VER",
+                        "HAM",
+                        "PIA",
+                        "LEC",
+                        "RUS",
+                        "HAD",
+                        "LAW",
+                        "GAS"
+                    ],
+                    "p1772378327316": [
+                        "ANT",
+                        "NOR",
+                        "HAM",
+                        "PIA",
+                        "LEC",
+                        "VER",
+                        "RUS",
+                        "LAW",
+                        "BEA",
+                        "GAS",
+                        "COL",
+                        "LIN"
+                    ],
+                    "p1772378383236": [
+                        "NOR",
+                        "PIA",
+                        "HAM",
+                        "LEC",
+                        "VER",
+                        "RUS",
+                        "ANT",
+                        "LAW",
+                        "BOR",
+                        "GAS",
+                        "LIN",
+                        "HUL",
+                        "BEA",
+                        "SAI",
+                        "COL"
                     ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "20:55",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "20:33",
+                    "type": "good"
+                },
+                {
+                    "msg": "Manually entered result for NETHERLANDS",
+                    "time": "16:43",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "16:41",
+                    "type": "good"
+                },
+                {
+                    "msg": "Auto-resolved draft for NETHERLANDS \u2014 deadline passed",
+                    "time": "21:34",
+                    "type": "warn"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "08:48",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "17:58",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "14:01",
+                    "type": "good"
+                },
                 {
                     "msg": "Deadline set for NETHERLANDS: 20/08/2026, 21:00:00",
                     "time": "20:24",
@@ -2990,46 +3287,6 @@
                     "msg": "Admin unlocked",
                     "time": "20:10",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:00",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "19:57",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "12:54",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "10:18",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "21:50",
-                    "type": "good"
-                },
-                {
-                    "msg": "Deadline set for BRITAIN: 02/07/2026, 21:00:00",
-                    "time": "09:54",
-                    "type": "good"
-                },
-                {
-                    "msg": "Advanced to Race 9 (BRITAIN)",
-                    "time": "09:51",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "09:50",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -3165,6 +3422,18 @@
                     "8": "LAW",
                     "9": "HUL",
                     "10": "LIN"
+                },
+                "r14": {
+                    "1": "NOR",
+                    "2": "ANT",
+                    "3": "RUS",
+                    "4": "HAM",
+                    "5": "LEC",
+                    "6": "PIA",
+                    "7": "LAW",
+                    "8": "HUL",
+                    "9": "ALO",
+                    "10": "GAS"
                 }
             },
             "notifEnabled": true,
@@ -3179,7 +3448,8 @@
                 "r10": true,
                 "r11": true,
                 "r12": true,
-                "r13": true
+                "r13": true,
+                "r14": true
             },
             "currentRaceIdx": 11,
             "draftDeadlines": {
@@ -3385,10 +3655,26 @@
                     "p1772378383236": true
                 },
                 "r14": {
-                    "p1772378306541": true
+                    "p1772378294011": true,
+                    "p1772378295758": true,
+                    "p1772378298046": true,
+                    "p1772378299642": true,
+                    "p1772378303461": true,
+                    "p1772378306541": true,
+                    "p1772378308600": true,
+                    "p1772378311744": true,
+                    "p1772378313028": true,
+                    "p1772378314501": true,
+                    "p1772378316012": true,
+                    "p1772378317986": true,
+                    "p1772378320191": true,
+                    "p1772378324269": true,
+                    "p1772378327316": true,
+                    "p1772378383236": true
                 }
             }
         },
-        "updated_at": "2026-07-27T19:59:27.792+00:00"
+        "updated_at": "2026-08-23T19:55:06.589+00:00",
+        "version": 1
     }
 ]
