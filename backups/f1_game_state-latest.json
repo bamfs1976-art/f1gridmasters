@@ -3035,9 +3035,36 @@
                         "SAI",
                         "COL"
                     ]
+                },
+                "r15": {
+                    "p1772378294011": [
+                        "LAW",
+                        "HAD",
+                        "COL",
+                        "ANT",
+                        "NOR",
+                        "VER",
+                        "HAM",
+                        "LEC",
+                        "PIA",
+                        "GAS",
+                        "LIN",
+                        "ALB",
+                        "HUL"
+                    ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Advanced to Race 13 (ITALY)",
+                    "time": "10:42",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "10:42",
+                    "type": "good"
+                },
                 {
                     "msg": "Admin unlocked",
                     "time": "20:55",
@@ -3277,16 +3304,6 @@
                     "msg": "Admin unlocked",
                     "time": "20:54",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:19",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:10",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -3451,7 +3468,7 @@
                 "r13": true,
                 "r14": true
             },
-            "currentRaceIdx": 11,
+            "currentRaceIdx": 12,
             "draftDeadlines": {
                 "r7": "2026-05-21T20:00:00.000Z",
                 "r8": "2026-06-04T20:00:00.000Z",
@@ -3671,10 +3688,13 @@
                     "p1772378324269": true,
                     "p1772378327316": true,
                     "p1772378383236": true
+                },
+                "r15": {
+                    "p1772378294011": true
                 }
             }
         },
-        "updated_at": "2026-08-23T19:55:06.589+00:00",
+        "updated_at": "2026-08-31T09:44:56.518+00:00",
         "version": 1
     }
 ]
