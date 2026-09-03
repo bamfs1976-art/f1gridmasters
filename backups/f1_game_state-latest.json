@@ -3052,6 +3052,27 @@
                         "ALB",
                         "HUL"
                     ],
+                    "p1772378298046": [
+                        "RUS",
+                        "NOR"
+                    ],
+                    "p1772378303461": [
+                        "HAM",
+                        "LEC",
+                        "ANT",
+                        "VER",
+                        "RUS",
+                        "NOR",
+                        "PIA",
+                        "HAD",
+                        "HUL",
+                        "BOR",
+                        "LAW",
+                        "LIN",
+                        "ALO",
+                        "GAS",
+                        "COL"
+                    ],
                     "p1772378306541": [
                         "ANT",
                         "LEC",
@@ -3071,6 +3092,41 @@
                         "ALB",
                         "STR"
                     ],
+                    "p1772378311744": [
+                        "ANT",
+                        "HAM",
+                        "LEC",
+                        "RUS",
+                        "NOR",
+                        "VER",
+                        "PIA",
+                        "HAD",
+                        "LAW",
+                        "LIN",
+                        "GAS",
+                        "BOR"
+                    ],
+                    "p1772378313028": [
+                        "NOR"
+                    ],
+                    "p1772378317986": [
+                        "ANT",
+                        "LEC",
+                        "RUS",
+                        "NOR",
+                        "HAM",
+                        "PIA",
+                        "VER",
+                        "BEA",
+                        "OCO",
+                        "LAW",
+                        "LIN",
+                        "GAS",
+                        "HAD",
+                        "COL",
+                        "ALO",
+                        "BOR"
+                    ],
                     "p1772378324269": [
                         "NOR",
                         "ANT",
@@ -3086,6 +3142,16 @@
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "22:38",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "17:57",
+                    "type": "good"
+                },
                 {
                     "msg": "Advanced to Race 13 (ITALY)",
                     "time": "10:42",
@@ -3324,16 +3390,6 @@
                 {
                     "msg": "Admin unlocked",
                     "time": "21:01",
-                    "type": "good"
-                },
-                {
-                    "msg": "Auto-resolved draft for BRITAIN \u2014 deadline passed",
-                    "time": "21:00",
-                    "type": "warn"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:54",
                     "type": "good"
                 }
             ],
@@ -3722,12 +3778,17 @@
                 },
                 "r15": {
                     "p1772378294011": true,
+                    "p1772378298046": true,
+                    "p1772378303461": true,
                     "p1772378306541": true,
+                    "p1772378311744": true,
+                    "p1772378313028": true,
+                    "p1772378317986": true,
                     "p1772378324269": true
                 }
             }
         },
-        "updated_at": "2026-09-01T19:43:01.064+00:00",
+        "updated_at": "2026-09-02T21:38:03.443+00:00",
         "version": 1
     }
 ]
