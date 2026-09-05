@@ -1256,6 +1256,12 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0;
 }
 
+/* DRAFT PAGE FORM GUIDE (compact reuse of the leaderboard table) */
+.form-guide-table th, .form-guide-table td { padding: 6px 8px; white-space: nowrap; font-size: 13px; }
+.form-guide-table th { letter-spacing: 1px; }
+.form-guide-table td.num { font-family: 'Share Tech Mono', monospace; text-align: right; }
+.form-guide-table th.num { text-align: right; }
+
 </style>
 </head>
 <body>
@@ -1662,6 +1668,7 @@ const RACES = [
   { id:'r15', name:'ITALY',            country:'Italy',        flag:'🇮🇹', date:'Sep 6',  circuit:'Autodromo Nazionale Monza',          sprint:false },
   { id:'r16', name:'MADRID',           country:'Spain',        flag:'🇪🇸', date:'Sep 13', circuit:'Madrid Street Circuit (IFEMA)',      sprint:false },
   { id:'r17', name:'AZERBAIJAN',       country:'Azerbaijan',   flag:'🇦🇿', date:'Sep 27', circuit:'Baku City Circuit',                  sprint:false },
+  // Bahrain is a relocated round held at Sepang on 4 October, so the r4 id (official round number) sits here in date order between r17 and r18.
   { id:'r4',  name:'BAHRAIN',          country:'Malaysia',     flag:'🇧🇭', date:'Oct 4',  circuit:'Sepang International Circuit',       sprint:false, skyFlag:'bhr' },
   { id:'r18', name:'SINGAPORE',        country:'Singapore',    flag:'🇸🇬', date:'Oct 11', circuit:'Marina Bay Street Circuit',          sprint:true  },
   { id:'r19', name:'USA',              country:'USA',          flag:'🇺🇸', date:'Oct 25', circuit:'Circuit of the Americas',            sprint:false },
@@ -1677,7 +1684,7 @@ const DRIVERS = [
   { num:4,   name:'Oscar Piastri',      short:'PIA', team:'McLaren',       teamColor:'#FF8000' },
   { num:44,  name:'Lewis Hamilton',     short:'HAM', team:'Ferrari',       teamColor:'#DC0000' },
   { num:16,  name:'Charles Leclerc',    short:'LEC', team:'Ferrari',       teamColor:'#DC0000' },
-  { num:1,   name:'Max Verstappen',     short:'VER', team:'Red Bull',      teamColor:'#0600EF' },
+  { num:3,   name:'Max Verstappen',     short:'VER', team:'Red Bull',      teamColor:'#0600EF' },
   { num:6,   name:'Isack Hadjar',       short:'HAD', team:'Red Bull',      teamColor:'#0600EF' },
   { num:63,  name:'George Russell',     short:'RUS', team:'Mercedes',      teamColor:'#00D2BE' },
   { num:12,  name:'Kimi Antonelli',     short:'ANT', team:'Mercedes',      teamColor:'#00D2BE' },
@@ -1870,10 +1877,61 @@ const S2025_DRIVER_ANALYSIS = {
   },
 };
 
-// Fix Verstappen number conflict
-DRIVERS[4].num = 33; // VER uses 1 (champion) or 33
-
 const POINTS_MAP = {1:10, 2:9, 3:8, 4:7, 5:6, 6:5, 7:4, 8:3, 9:2, 10:1};
+
+// 2025 championship points per driver, used only as a prior for the Elo
+// driver ratings below. sim.html DRIVERS[].prior holds the same numbers
+// (rookies and returnees are estimates) — edit both files together.
+const PRIOR = {
+  NOR:389, PIA:291, HAM:143, LEC:158, VER:342, HAD:20,  RUS:245, ANT:162,
+  SAI:115, ALB:42,  ALO:95,  STR:48,  GAS:62,  COL:14,  OCO:58,  BEA:54,
+  HUL:37,  BOR:8,   LAW:84,  LIN:12,  PER:55,  BOT:28,
+};
+
+// ── ELO DRIVER RATINGS (read-only, derived from recorded results) ──
+// Every driver starts at 1500 plus a prior scaled so the strongest 2025
+// scorer adds 150 and the weakest adds 0. Each counted race (result
+// recorded AND draft revealed, as calcPlayerPoints() counts) is scored
+// pairwise: the better recorded position wins the pair, a top-10 driver
+// beats every driver outside it, and two drivers both outside the top 10
+// are not compared (their order is unknown). All pair updates for a race
+// use the pre-race ratings and are committed together, so the order of
+// pairs within a race does not matter. K = 24.
+const ELO_K = 24;
+function buildEloRatings() {
+  const priors = DRIVERS.map(d => PRIOR[d.short] ?? 0);
+  const pMin = Math.min(...priors), pMax = Math.max(...priors);
+  const ratings = {};
+  DRIVERS.forEach(d => {
+    const pr = PRIOR[d.short] ?? 0;
+    ratings[d.short] = 1500 + (pMax > pMin ? 150 * (pr - pMin) / (pMax - pMin) : 0);
+  });
+  const shorts = DRIVERS.map(d => d.short);
+  const counted = RACES.filter(r => STATE.raceResults?.[r.id] && STATE.draftRevealed?.[r.id] === true);
+  counted.forEach(race => {
+    const pos = {}; // short -> recorded position (1..10)
+    Object.entries(STATE.raceResults[race.id] || {}).forEach(([p, short]) => {
+      const n = parseInt(p);
+      if (short && n >= 1 && n <= 10 && ratings[short] !== undefined) pos[short] = n;
+    });
+    const delta = {};
+    shorts.forEach(sh => delta[sh] = 0);
+    for (let i = 0; i < shorts.length; i++) {
+      for (let j = i + 1; j < shorts.length; j++) {
+        const a = shorts[i], b = shorts[j];
+        const pa = pos[a], pb = pos[b];
+        if (!pa && !pb) continue; // both outside the top 10: unknown order
+        const aWins = pa && (!pb || pa < pb);
+        const expA = 1 / (1 + Math.pow(10, (ratings[b] - ratings[a]) / 400));
+        const change = ELO_K * ((aWins ? 1 : 0) - expA);
+        delta[a] += change;
+        delta[b] -= change;
+      }
+    }
+    shorts.forEach(sh => ratings[sh] += delta[sh]);
+  });
+  return { ratings, racesCounted: counted.length };
+}
 
 // Escape user-supplied strings (player names) before innerHTML interpolation.
 // State is writable via the shared Supabase row, so names cannot be trusted.
@@ -2305,6 +2363,9 @@ function resolveDraft(raceId, draftOrder) {
       if (!taken.has(short)) { chosen = short; break; }
     }
     // Fallback: first available driver not taken by anyone (sorted by DRIVERS order)
+    // TODO (league rules decision): a player with no available preference gets
+    // the first free driver in DRIVERS array order, which is McLaren-first and
+    // ignores form. Left as-is on purpose; change only with the league's agreement.
     if (!chosen) {
       for (const d of DRIVERS) {
         if (!taken.has(d.short)) { chosen = d.short; break; }
@@ -2383,6 +2444,110 @@ function updateStickyPicksBar(myPrefs, iHaveSubmitted, picksResolved) {
     lockBtn.disabled = false;
     lockBtn.textContent = `🔒 LOCK IN ${myPrefs.length}`;
   }
+}
+
+// ── FORM GUIDE (read-only, derived from recorded results) ─────
+// A race counts once it has a result AND its draft is revealed, the same
+// filter calcPlayerPoints() applies. Results only ever hold P1–P10, so a
+// driver outside the top 10 has no recorded position: last3 keeps null for
+// it (shown as "–") and avgFinish treats it as 11. Nothing here writes to
+// STATE or Supabase.
+function _countedRaces() {
+  return RACES.filter(r => STATE.raceResults?.[r.id] && STATE.draftRevealed?.[r.id] === true);
+}
+
+// {driverShort: position} for the recorded top 10 of one race
+function _recordedPositions(raceId) {
+  const out = {};
+  Object.entries(STATE.raceResults?.[raceId] || {}).forEach(([pos, short]) => {
+    const p = parseInt(pos);
+    if (short && p >= 1 && p <= 10) out[short] = p;
+  });
+  return out;
+}
+
+function buildFormGuide() {
+  const counted = _countedRaces();
+  const posByRace = counted.map(r => _recordedPositions(r.id));
+  const rows = DRIVERS.map(d => {
+    const mate = DRIVERS.find(o => o.team === d.team && o.short !== d.short);
+    let seasonPts = 0, finishSum = 0, teammateDelta = 0;
+    posByRace.forEach(pm => {
+      const p = pm[d.short] || null;
+      seasonPts += p ? (POINTS_MAP[p] || 0) : 0;
+      finishSum += p || 11; // unrecorded finish counted as 11 for the average only
+      if (mate) {
+        const mp = pm[mate.short] || null;
+        if (p && (!mp || p < mp)) teammateDelta++;       // driver ahead of teammate
+        else if (mp && (!p || mp < p)) teammateDelta--;  // teammate ahead
+        // both outside the top 10 = tie, no change
+      }
+    });
+    const last3 = posByRace.slice(-3).map(pm => pm[d.short] || null);
+    while (last3.length < 3) last3.unshift(null); // fewer than 3 races counted so far
+    return {
+      short: d.short, team: d.team, seasonPts, last3, teammateDelta,
+      avgFinish: counted.length ? finishSum / counted.length : null,
+    };
+  });
+  rows.sort((a, b) => b.seasonPts - a.seasonPts || (a.avgFinish ?? 11) - (b.avgFinish ?? 11));
+  return rows;
+}
+
+// Remembered for this page view only, so re-renders after each tap keep
+// the panel where the player left it. Closed by default (mobile length).
+let _formGuideOpen = false;
+
+function renderFormGuidePanel() {
+  const counted = _countedRaces();
+  const guide = buildFormGuide();
+  const elo = buildEloRatings();
+  const lastRaces = counted.slice(-3);
+  while (lastRaces.length < 3) lastRaces.unshift(null);
+  const posCell = (p, raceExists) => {
+    if (!raceExists) return '<td class="num"></td>';
+    if (!p) return '<td class="num" style="color:var(--muted)">–</td>';
+    const col = p === 1 ? 'var(--gold)' : p === 2 ? 'var(--silver)' : p === 3 ? 'var(--bronze)' : 'var(--text)';
+    return `<td class="num" style="color:${col};font-weight:${p <= 3 ? 700 : 400}">P${p}</td>`;
+  };
+  const rows = guide.map((g, i) => {
+    const d = DRIVERS.find(x => x.short === g.short);
+    const deltaCol = g.teammateDelta > 0 ? 'var(--green)' : g.teammateDelta < 0 ? 'var(--red)' : 'var(--muted)';
+    const deltaTxt = g.teammateDelta > 0 ? `+${g.teammateDelta}` : String(g.teammateDelta);
+    return `<tr>
+      <td class="num" style="color:${getRankColor(i)}">${i+1}</td>
+      <td><span style="font-family:Orbitron,sans-serif;font-size:11px;font-weight:700">${g.short}</span> <span style="color:var(--muted);font-size:12px">${d?.name || ''}</span></td>
+      <td style="color:${d?.teamColor || 'var(--text)'};font-weight:600">${g.team}</td>
+      <td class="num" style="font-weight:700">${g.seasonPts}</td>
+      ${g.last3.map((p, j) => posCell(p, !!lastRaces[j])).join('')}
+      <td class="num" style="color:${deltaCol}">${deltaTxt}</td>
+      <td class="num">${g.avgFinish === null ? '–' : g.avgFinish.toFixed(1)}</td>
+      <td class="num" style="color:var(--accent)">${Math.round(elo.ratings[g.short] ?? 1500)}</td>
+    </tr>`;
+  }).join('');
+  const body = counted.length === 0
+    ? '<div style="padding:12px 0;color:var(--muted);font-size:13px">No revealed race results yet — the guide fills in after the first race is scored.</div>'
+    : `<div style="overflow-x:auto">
+        <table class="leaderboard-table form-guide-table">
+          <thead><tr>
+            <th class="num">#</th><th>DRIVER</th><th>TEAM</th>
+            <th class="num" title="Grid Masters points (10 to 1 for P1 to P10) over counted races">PTS</th>
+            ${lastRaces.map(r => `<th class="num" title="${r ? r.name : ''}">${r ? r.flag : ''}</th>`).join('')}
+            <th class="num" title="Races finished ahead of teammate minus races behind (both outside top 10 = tie)">VS TM</th>
+            <th class="num">AVG (11 IF OUTSIDE TOP 10)</th>
+            <th class="num" title="Results-based Elo rating: 1500 plus a 2025 prior, updated pairwise per counted race">ELO</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted)">Built from the ${counted.length} race${counted.length === 1 ? '' : 's'} scored so far. Only the top 10 is recorded each race, so "–" means outside the top 10.</div>`;
+  return `
+    <details class="status-details" id="form-guide-details" ${_formGuideOpen ? 'open' : ''} ontoggle="_formGuideOpen = this.open">
+      <summary style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);cursor:pointer;padding:10px 0;list-style:none;display:flex;align-items:center;gap:8px;">
+        <span>▶</span> FORM GUIDE · ${counted.length} RACE${counted.length === 1 ? '' : 'S'} SCORED
+      </summary>
+      <div class="card" style="padding:12px 14px;margin-top:8px;">${body}</div>
+    </details>`;
 }
 
 function renderDraft() {
@@ -2619,6 +2784,11 @@ function renderDraft() {
           ${prefDrivers.length > 0 ? `<div style="font-size:22px">🏎</div>` : `<div style="font-size:22px;opacity:0.3">🏎</div>`}
         </div>
 
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <button id="suggest-order-btn" class="btn btn-outline btn-sm" onclick="applySuggestedOrder()" title="Fill your list with all ${DRIVERS.length} drivers ranked by results-based Elo rating">✨ SUGGESTED ORDER</button>
+          ${_suggestedOrderRace === race.id ? `<span style="font-size:11px;color:var(--muted)">Ranked by results-based rating. Edit before you submit.</span>` : ''}
+        </div>
+
         ${prefDrivers.length === 0 ? `
           <div style="display:flex;align-items:center;gap:12px;padding:16px;border:2px dashed var(--border);border-radius:8px;color:var(--muted)">
             <div style="font-size:32px">👆</div>
@@ -2691,6 +2861,9 @@ function renderDraft() {
       ${/* ── MY PICKS TRAY (always at top) ── */ ''}
       ${myPickPanel}
 
+      ${/* ── FORM GUIDE (collapsible, above the driver grid) ── */ ''}
+      ${!picksResolved ? `<div style="margin-top:12px;">${renderFormGuidePanel()}</div>` : ''}
+
       ${/* ── DRIVER GRID ── */ ''}
       ${!picksResolved ? `
       <div class="section-head" style="margin-top:20px;margin-bottom:12px;">
@@ -2741,6 +2914,39 @@ function renderDraft() {
 }
 
 // ── PREFERENCE MANAGEMENT ─────────────────────────────────────
+// Race id the suggested order was last applied to in this browser, so the
+// tray can show its note. Never persisted.
+let _suggestedOrderRace = null;
+
+// Fills the player's ranked list with every driver sorted by Elo rating.
+// This only populates the same in-memory list the player edits by hand:
+// no saveState(), no submit, nothing marked as submitted. The next tap or
+// the submit button persists it exactly as a hand-built list would.
+function applySuggestedOrder() {
+  if (!SESSION_PLAYER_ID) { showIdentityOverlay(); return; }
+  const raceId = RACES[STATE.currentRaceIdx].id;
+  if (STATE.draftSubmitted?.[raceId]?.[SESSION_PLAYER_ID]) {
+    showToast('Your picks are locked — use Edit preferences first', 'info'); return;
+  }
+  const apply = () => {
+    const { ratings } = buildEloRatings();
+    const order = DRIVERS.map(d => d.short).sort((a, b) => (ratings[b] ?? 0) - (ratings[a] ?? 0));
+    if (!STATE.draftPrefs[raceId]) STATE.draftPrefs[raceId] = {};
+    STATE.draftPrefs[raceId][SESSION_PLAYER_ID] = order;
+    _suggestedOrderRace = raceId;
+    renderDraft();
+    showToast('Ranked by results-based rating. Edit before you submit.', 'info');
+  };
+  const existing = STATE.draftPrefs[raceId]?.[SESSION_PLAYER_ID] || [];
+  if (existing.length > 0) {
+    openModal('Replace your current picks?',
+      `This replaces your ${existing.length} ranked pick${existing.length === 1 ? '' : 's'} with all ${DRIVERS.length} drivers ordered by rating. You can still edit before submitting.`,
+      apply);
+  } else {
+    apply();
+  }
+}
+
 function togglePref(short) {
   if (!SESSION_PLAYER_ID) { showIdentityOverlay(); return; }
   const raceId = RACES[STATE.currentRaceIdx].id;

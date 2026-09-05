@@ -104,6 +104,14 @@ tr.sim-row:hover td { background:rgba(255,255,255,0.03); }
         </select>
       </div>
       <div class="ctl">
+        <label>RATING METHOD</label>
+        <select id="ctl-method">
+          <option value="points" selected>Points per race (default)</option>
+          <option value="elo">Elo from results</option>
+        </select>
+        <label>elo = pairwise results-based rating, ignores form weight</label>
+      </div>
+      <div class="ctl">
         <label>2026 FORM WEIGHT <span class="val" id="lbl-form">60%</span></label>
         <input type="range" id="ctl-form" min="0" max="100" value="60">
         <label>0% = 2025 ratings only · 100% = this season only</label>
@@ -191,6 +199,7 @@ const RACES = [
   { id:'r23', name:'QATAR',       flag:'🇶🇦', sprint:false }, { id:'r24', name:'ABU DHABI', flag:'🇦🇪', sprint:false },
 ];
 
+// prior = 2025 championship points. index.html PRIOR holds the same numbers — edit both together.
 const DRIVERS = [
   { short:'NOR', name:'Lando Norris',      team:'McLaren',      teamColor:'#FF8000', prior:389 },
   { short:'PIA', name:'Oscar Piastri',     team:'McLaren',      teamColor:'#FF8000', prior:291 },
@@ -258,7 +267,7 @@ async function loadGame() {
 // ============================================================
 //  RATINGS
 // ============================================================
-function buildRatings(formWeight) {
+function buildRatings(formWeight, method = 'points') {
   // 2026 championship points so far, from the recorded top-10s
   const pts26 = {}; let racesDone = 0;
   DRIVERS.forEach(d => pts26[d.short] = 0);
@@ -272,8 +281,23 @@ function buildRatings(formWeight) {
       });
     });
   }
-  const w = racesDone > 0 ? formWeight : 0; // no 2026 data → prior only
   const ratings = {};
+  if (method === 'elo') {
+    // Elo → per-race points expectation. Monotonic in rating, and rescaled so the
+    // top driver lands near the best points prior and the bottom at the same
+    // 0.15 floor, so sampleRaceOrder() and simulatePicks() work unchanged.
+    const { ratings: elo } = buildEloRatings();
+    const vals = Object.values(elo);
+    const eMin = Math.min(...vals), eMax = Math.max(...vals);
+    const top = Math.max(...DRIVERS.map(d => d.prior)) / 24, floor = 0.15;
+    const span = Math.pow(10, (eMax - eMin) / 400) - 1 || 1;
+    DRIVERS.forEach(d => {
+      const t = (Math.pow(10, (elo[d.short] - eMin) / 400) - 1) / span; // 0..1
+      ratings[d.short] = floor + (top - floor) * t;
+    });
+    return { ratings, pts26, racesDone };
+  }
+  const w = racesDone > 0 ? formWeight : 0; // no 2026 data → prior only
   DRIVERS.forEach(d => {
     const perRacePrior = d.prior / 24;
     const perRaceNow   = racesDone > 0 ? pts26[d.short] / racesDone : 0;
@@ -281,6 +305,50 @@ function buildRatings(formWeight) {
     ratings[d.short] = Math.max(blended, 0.15); // floor so backmarkers can still surprise
   });
   return { ratings, pts26, racesDone };
+}
+
+// ── ELO DRIVER RATINGS — ported from index.html buildEloRatings() ──
+// Keep the two copies identical apart from reading GAME instead of STATE
+// and DRIVERS[].prior instead of PRIOR. Start = 1500 + prior scaled so the
+// strongest 2025 scorer adds 150 and the weakest 0. A race counts when it
+// has a result and its draft is revealed. Pairwise: better recorded position
+// wins, top-10 beats outside-top-10, both outside are not compared. Updates
+// for a race use pre-race ratings and commit together. K = 24.
+const ELO_K = 24;
+function buildEloRatings() {
+  const priors = DRIVERS.map(d => d.prior ?? 0);
+  const pMin = Math.min(...priors), pMax = Math.max(...priors);
+  const ratings = {};
+  DRIVERS.forEach(d => {
+    ratings[d.short] = 1500 + (pMax > pMin ? 150 * ((d.prior ?? 0) - pMin) / (pMax - pMin) : 0);
+  });
+  const shorts = DRIVERS.map(d => d.short);
+  const counted = GAME
+    ? RACES.filter(r => GAME.raceResults?.[r.id] && GAME.draftRevealed?.[r.id] === true)
+    : [];
+  counted.forEach(race => {
+    const pos = {};
+    Object.entries(GAME.raceResults[race.id] || {}).forEach(([p, short]) => {
+      const n = parseInt(p);
+      if (short && n >= 1 && n <= 10 && ratings[short] !== undefined) pos[short] = n;
+    });
+    const delta = {};
+    shorts.forEach(sh => delta[sh] = 0);
+    for (let i = 0; i < shorts.length; i++) {
+      for (let j = i + 1; j < shorts.length; j++) {
+        const a = shorts[i], b = shorts[j];
+        const pa = pos[a], pb = pos[b];
+        if (!pa && !pb) continue;
+        const aWins = pa && (!pb || pa < pb);
+        const expA = 1 / (1 + Math.pow(10, (ratings[b] - ratings[a]) / 400));
+        const change = ELO_K * ((aWins ? 1 : 0) - expA);
+        delta[a] += change;
+        delta[b] -= change;
+      }
+    }
+    shorts.forEach(sh => ratings[sh] += delta[sh]);
+  });
+  return { ratings, racesCounted: counted.length };
 }
 
 // ============================================================
@@ -342,8 +410,9 @@ async function runSimulation() {
   const formWeight = parseInt(document.getElementById('ctl-form').value) / 100;
   const chaos = parseInt(document.getElementById('ctl-chaos').value) / 100;
   const discipline = parseInt(document.getElementById('ctl-pick').value) / 100;
+  const method = document.getElementById('ctl-method')?.value || 'points';
 
-  const { ratings, pts26, racesDone } = buildRatings(formWeight);
+  const { ratings, pts26, racesDone } = buildRatings(formWeight, method);
 
   // Remaining races = those without a recorded result
   const remaining = RACES.map((r, i) => ({ ...r, idx: i }))
