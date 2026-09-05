@@ -1256,6 +1256,12 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0;
 }
 
+/* DRAFT PAGE FORM GUIDE (compact reuse of the leaderboard table) */
+.form-guide-table th, .form-guide-table td { padding: 6px 8px; white-space: nowrap; font-size: 13px; }
+.form-guide-table th { letter-spacing: 1px; }
+.form-guide-table td.num { font-family: 'Share Tech Mono', monospace; text-align: right; }
+.form-guide-table th.num { text-align: right; }
+
 </style>
 </head>
 <body>
@@ -2383,6 +2389,107 @@ function updateStickyPicksBar(myPrefs, iHaveSubmitted, picksResolved) {
   }
 }
 
+// ── FORM GUIDE (read-only, derived from recorded results) ─────
+// A race counts once it has a result AND its draft is revealed, the same
+// filter calcPlayerPoints() applies. Results only ever hold P1–P10, so a
+// driver outside the top 10 has no recorded position: last3 keeps null for
+// it (shown as "–") and avgFinish treats it as 11. Nothing here writes to
+// STATE or Supabase.
+function _countedRaces() {
+  return RACES.filter(r => STATE.raceResults?.[r.id] && STATE.draftRevealed?.[r.id] === true);
+}
+
+// {driverShort: position} for the recorded top 10 of one race
+function _recordedPositions(raceId) {
+  const out = {};
+  Object.entries(STATE.raceResults?.[raceId] || {}).forEach(([pos, short]) => {
+    const p = parseInt(pos);
+    if (short && p >= 1 && p <= 10) out[short] = p;
+  });
+  return out;
+}
+
+function buildFormGuide() {
+  const counted = _countedRaces();
+  const posByRace = counted.map(r => _recordedPositions(r.id));
+  const rows = DRIVERS.map(d => {
+    const mate = DRIVERS.find(o => o.team === d.team && o.short !== d.short);
+    let seasonPts = 0, finishSum = 0, teammateDelta = 0;
+    posByRace.forEach(pm => {
+      const p = pm[d.short] || null;
+      seasonPts += p ? (POINTS_MAP[p] || 0) : 0;
+      finishSum += p || 11; // unrecorded finish counted as 11 for the average only
+      if (mate) {
+        const mp = pm[mate.short] || null;
+        if (p && (!mp || p < mp)) teammateDelta++;       // driver ahead of teammate
+        else if (mp && (!p || mp < p)) teammateDelta--;  // teammate ahead
+        // both outside the top 10 = tie, no change
+      }
+    });
+    const last3 = posByRace.slice(-3).map(pm => pm[d.short] || null);
+    while (last3.length < 3) last3.unshift(null); // fewer than 3 races counted so far
+    return {
+      short: d.short, team: d.team, seasonPts, last3, teammateDelta,
+      avgFinish: counted.length ? finishSum / counted.length : null,
+    };
+  });
+  rows.sort((a, b) => b.seasonPts - a.seasonPts || (a.avgFinish ?? 11) - (b.avgFinish ?? 11));
+  return rows;
+}
+
+// Remembered for this page view only, so re-renders after each tap keep
+// the panel where the player left it. Closed by default (mobile length).
+let _formGuideOpen = false;
+
+function renderFormGuidePanel() {
+  const counted = _countedRaces();
+  const guide = buildFormGuide();
+  const lastRaces = counted.slice(-3);
+  while (lastRaces.length < 3) lastRaces.unshift(null);
+  const posCell = (p, raceExists) => {
+    if (!raceExists) return '<td class="num"></td>';
+    if (!p) return '<td class="num" style="color:var(--muted)">–</td>';
+    const col = p === 1 ? 'var(--gold)' : p === 2 ? 'var(--silver)' : p === 3 ? 'var(--bronze)' : 'var(--text)';
+    return `<td class="num" style="color:${col};font-weight:${p <= 3 ? 700 : 400}">P${p}</td>`;
+  };
+  const rows = guide.map((g, i) => {
+    const d = DRIVERS.find(x => x.short === g.short);
+    const deltaCol = g.teammateDelta > 0 ? 'var(--green)' : g.teammateDelta < 0 ? 'var(--red)' : 'var(--muted)';
+    const deltaTxt = g.teammateDelta > 0 ? `+${g.teammateDelta}` : String(g.teammateDelta);
+    return `<tr>
+      <td class="num" style="color:${getRankColor(i)}">${i+1}</td>
+      <td><span style="font-family:Orbitron,sans-serif;font-size:11px;font-weight:700">${g.short}</span> <span style="color:var(--muted);font-size:12px">${d?.name || ''}</span></td>
+      <td style="color:${d?.teamColor || 'var(--text)'};font-weight:600">${g.team}</td>
+      <td class="num" style="font-weight:700">${g.seasonPts}</td>
+      ${g.last3.map((p, j) => posCell(p, !!lastRaces[j])).join('')}
+      <td class="num" style="color:${deltaCol}">${deltaTxt}</td>
+      <td class="num">${g.avgFinish === null ? '–' : g.avgFinish.toFixed(1)}</td>
+    </tr>`;
+  }).join('');
+  const body = counted.length === 0
+    ? '<div style="padding:12px 0;color:var(--muted);font-size:13px">No revealed race results yet — the guide fills in after the first race is scored.</div>'
+    : `<div style="overflow-x:auto">
+        <table class="leaderboard-table form-guide-table">
+          <thead><tr>
+            <th class="num">#</th><th>DRIVER</th><th>TEAM</th>
+            <th class="num" title="Grid Masters points (10 to 1 for P1 to P10) over counted races">PTS</th>
+            ${lastRaces.map(r => `<th class="num" title="${r ? r.name : ''}">${r ? r.flag : ''}</th>`).join('')}
+            <th class="num" title="Races finished ahead of teammate minus races behind (both outside top 10 = tie)">VS TM</th>
+            <th class="num">AVG (11 IF OUTSIDE TOP 10)</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted)">Built from the ${counted.length} race${counted.length === 1 ? '' : 's'} scored so far. Only the top 10 is recorded each race, so "–" means outside the top 10.</div>`;
+  return `
+    <details class="status-details" id="form-guide-details" ${_formGuideOpen ? 'open' : ''} ontoggle="_formGuideOpen = this.open">
+      <summary style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;color:var(--muted);cursor:pointer;padding:10px 0;list-style:none;display:flex;align-items:center;gap:8px;">
+        <span>▶</span> FORM GUIDE · ${counted.length} RACE${counted.length === 1 ? '' : 'S'} SCORED
+      </summary>
+      <div class="card" style="padding:12px 14px;margin-top:8px;">${body}</div>
+    </details>`;
+}
+
 function renderDraft() {
   if (!STATE.started) {
     document.getElementById('draft-header-area').innerHTML = '';
@@ -2688,6 +2795,9 @@ function renderDraft() {
 
       ${/* ── MY PICKS TRAY (always at top) ── */ ''}
       ${myPickPanel}
+
+      ${/* ── FORM GUIDE (collapsible, above the driver grid) ── */ ''}
+      ${!picksResolved ? `<div style="margin-top:12px;">${renderFormGuidePanel()}</div>` : ''}
 
       ${/* ── DRIVER GRID ── */ ''}
       ${!picksResolved ? `
