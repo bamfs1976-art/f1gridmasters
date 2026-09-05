@@ -1662,6 +1662,7 @@ const RACES = [
   { id:'r15', name:'ITALY',            country:'Italy',        flag:'🇮🇹', date:'Sep 6',  circuit:'Autodromo Nazionale Monza',          sprint:false },
   { id:'r16', name:'MADRID',           country:'Spain',        flag:'🇪🇸', date:'Sep 13', circuit:'Madrid Street Circuit (IFEMA)',      sprint:false },
   { id:'r17', name:'AZERBAIJAN',       country:'Azerbaijan',   flag:'🇦🇿', date:'Sep 27', circuit:'Baku City Circuit',                  sprint:false },
+  // Bahrain is a relocated round held at Sepang on 4 October, so the r4 id (official round number) sits here in date order between r17 and r18.
   { id:'r4',  name:'BAHRAIN',          country:'Malaysia',     flag:'🇧🇭', date:'Oct 4',  circuit:'Sepang International Circuit',       sprint:false, skyFlag:'bhr' },
   { id:'r18', name:'SINGAPORE',        country:'Singapore',    flag:'🇸🇬', date:'Oct 11', circuit:'Marina Bay Street Circuit',          sprint:true  },
   { id:'r19', name:'USA',              country:'USA',          flag:'🇺🇸', date:'Oct 25', circuit:'Circuit of the Americas',            sprint:false },
@@ -1677,7 +1678,7 @@ const DRIVERS = [
   { num:4,   name:'Oscar Piastri',      short:'PIA', team:'McLaren',       teamColor:'#FF8000' },
   { num:44,  name:'Lewis Hamilton',     short:'HAM', team:'Ferrari',       teamColor:'#DC0000' },
   { num:16,  name:'Charles Leclerc',    short:'LEC', team:'Ferrari',       teamColor:'#DC0000' },
-  { num:1,   name:'Max Verstappen',     short:'VER', team:'Red Bull',      teamColor:'#0600EF' },
+  { num:3,   name:'Max Verstappen',     short:'VER', team:'Red Bull',      teamColor:'#0600EF' },
   { num:6,   name:'Isack Hadjar',       short:'HAD', team:'Red Bull',      teamColor:'#0600EF' },
   { num:63,  name:'George Russell',     short:'RUS', team:'Mercedes',      teamColor:'#00D2BE' },
   { num:12,  name:'Kimi Antonelli',     short:'ANT', team:'Mercedes',      teamColor:'#00D2BE' },
@@ -1869,9 +1870,6 @@ const S2025_DRIVER_ANALYSIS = {
     color: '#FF87BC'
   },
 };
-
-// Fix Verstappen number conflict
-DRIVERS[4].num = 33; // VER uses 1 (champion) or 33
 
 const POINTS_MAP = {1:10, 2:9, 3:8, 4:7, 5:6, 6:5, 7:4, 8:3, 9:2, 10:1};
 
