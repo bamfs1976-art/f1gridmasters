@@ -287,6 +287,14 @@ nav {
 }
 .mobile-menu-close:hover { border-color: var(--red); color: var(--red); }
 
+/* Laptops: twelve tabs no longer fit on one row, and the strip's scrollbar
+   is hidden, so the last tabs (Admin, 2026 GP, 2025 Season) were unreachable
+   below roughly 1750px. Wrap onto a second row instead of clipping. */
+@media (min-width: 769px) and (max-width: 1750px) {
+  .nav-tabs { flex-wrap: wrap; overflow: visible; }
+  .nav-tab { padding: 12px 14px; }
+}
+
 /* Responsive: switch to hamburger below 768px */
 @media (max-width: 768px) {
   .nav-logo { border-right: none; margin-right: 0; padding-right: 0; }
