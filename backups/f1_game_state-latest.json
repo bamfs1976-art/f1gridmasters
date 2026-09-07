@@ -3307,9 +3307,68 @@
                         "ALB",
                         "STR"
                     ]
+                },
+                "r16": {
+                    "p1772378294011": [
+                        "LEC",
+                        "LAW",
+                        "COL",
+                        "LIN",
+                        "ANT",
+                        "RUS",
+                        "GAS",
+                        "VER",
+                        "NOR",
+                        "PIA",
+                        "HAM",
+                        "OCO"
+                    ],
+                    "p1772378299642": [
+                        "ANT",
+                        "RUS",
+                        "HAM",
+                        "NOR",
+                        "PIA",
+                        "VER",
+                        "LEC",
+                        "HAD",
+                        "ALB",
+                        "SAI",
+                        "ALO",
+                        "COL",
+                        "GAS",
+                        "OCO",
+                        "BEA",
+                        "HUL",
+                        "LAW",
+                        "LIN",
+                        "BOT",
+                        "PER",
+                        "STR"
+                    ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Advanced to Race 14 (MADRID)",
+                    "time": "20:06",
+                    "type": "good"
+                },
+                {
+                    "msg": "Manually entered result for ITALY",
+                    "time": "20:00",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:59",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:44",
+                    "type": "good"
+                },
                 {
                     "msg": "Admin force-resolved draft for r15",
                     "time": "21:19",
@@ -3539,26 +3598,6 @@
                     "msg": "Admin unlocked",
                     "time": "16:42",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "10:27",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:13",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "10:20",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "11:31",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -3706,6 +3745,18 @@
                     "8": "HUL",
                     "9": "ALO",
                     "10": "GAS"
+                },
+                "r15": {
+                    "1": "ANT",
+                    "2": "RUS",
+                    "3": "VER",
+                    "4": "NOR",
+                    "5": "PIA",
+                    "6": "HAM",
+                    "7": "GAS",
+                    "8": "LIN",
+                    "9": "COL",
+                    "10": "LAW"
                 }
             },
             "notifEnabled": true,
@@ -3721,9 +3772,10 @@
                 "r11": true,
                 "r12": true,
                 "r13": true,
-                "r14": true
+                "r14": true,
+                "r15": true
             },
-            "currentRaceIdx": 12,
+            "currentRaceIdx": 13,
             "draftDeadlines": {
                 "r7": "2026-05-21T20:00:00.000Z",
                 "r8": "2026-06-04T20:00:00.000Z",
@@ -3960,10 +4012,14 @@
                     "p1772378324269": true,
                     "p1772378327316": true,
                     "p1772378383236": true
+                },
+                "r16": {
+                    "p1772378294011": true,
+                    "p1772378299642": true
                 }
             }
         },
-        "updated_at": "2026-09-03T20:19:01.905+00:00",
+        "updated_at": "2026-09-06T20:36:28.626+00:00",
         "version": 1
     }
 ]
