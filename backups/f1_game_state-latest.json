@@ -339,6 +339,24 @@
                     "p1772378324269": "ANT",
                     "p1772378327316": "PIA",
                     "p1772378383236": "BOR"
+                },
+                "r16": {
+                    "p1772378294011": "COL",
+                    "p1772378295758": "LIN",
+                    "p1772378298046": "ANT",
+                    "p1772378299642": "HAM",
+                    "p1772378303461": "LEC",
+                    "p1772378306541": "GAS",
+                    "p1772378308600": "NOR",
+                    "p1772378311744": "HAD",
+                    "p1772378313028": "BEA",
+                    "p1772378314501": "RUS",
+                    "p1772378316012": "HUL",
+                    "p1772378317986": "BOR",
+                    "p1772378320191": "SAI",
+                    "p1772378324269": "VER",
+                    "p1772378327316": "PIA",
+                    "p1772378383236": "LAW"
                 }
             },
             "draftPrefs": {
@@ -3321,7 +3339,26 @@
                         "NOR",
                         "PIA",
                         "HAM",
-                        "OCO"
+                        "ALO"
+                    ],
+                    "p1772378295758": [
+                        "ANT",
+                        "RUS",
+                        "HAM",
+                        "NOR",
+                        "LEC",
+                        "PIA",
+                        "VER",
+                        "LIN",
+                        "GAS",
+                        "OCO",
+                        "HAD",
+                        "COL",
+                        "LAW",
+                        "BEA",
+                        "ALB",
+                        "HUL",
+                        "BOR"
                     ],
                     "p1772378298046": [
                         "ANT"
@@ -3382,6 +3419,59 @@
                         "BEA",
                         "BOR"
                     ],
+                    "p1772378308600": [
+                        "ANT",
+                        "NOR",
+                        "RUS",
+                        "PIA",
+                        "VER",
+                        "HAM",
+                        "LEC",
+                        "GAS",
+                        "LAW",
+                        "SAI",
+                        "HAD",
+                        "ALO",
+                        "PER",
+                        "BOT",
+                        "LIN",
+                        "HUL",
+                        "OCO",
+                        "COL",
+                        "STR",
+                        "ALB",
+                        "BEA",
+                        "BOR"
+                    ],
+                    "p1772378311744": [
+                        "ANT",
+                        "RUS",
+                        "VER",
+                        "HAM",
+                        "LEC",
+                        "NOR",
+                        "PIA",
+                        "HAD",
+                        "LIN"
+                    ],
+                    "p1772378313028": [
+                        "ANT",
+                        "NOR",
+                        "RUS",
+                        "LEC",
+                        "VER",
+                        "PIA",
+                        "HAD",
+                        "LIN",
+                        "LAW",
+                        "BEA",
+                        "COL",
+                        "GAS",
+                        "ALB",
+                        "SAI",
+                        "BOR",
+                        "HUL"
+                    ],
                     "p1772378314501": [
                         "ANT",
                         "RUS",
@@ -3390,7 +3480,21 @@
                         "HAM",
                         "LEC",
                         "PIA",
-                        "HAD"
+                        "HAD",
+                        "COL",
+                        "GAS",
+                        "LIN",
+                        "LAW",
+                        "BEA",
+                        "HUL",
+                        "OCO",
+                        "BOR",
+                        "ALB",
+                        "SAI",
+                        "BOT",
+                        "PER",
+                        "STR",
+                        "ALO"
                     ],
                     "p1772378316012": [
                         "ANT",
@@ -3428,10 +3532,69 @@
                         "LIN",
                         "LAW",
                         "HUL"
+                    ],
+                    "p1772378324269": [
+                        "ANT",
+                        "VER",
+                        "NOR",
+                        "PIA",
+                        "LEC",
+                        "HAD",
+                        "RUS",
+                        "HAM"
+                    ],
+                    "p1772378327316": [
+                        "ANT",
+                        "VER",
+                        "NOR",
+                        "RUS",
+                        "PIA",
+                        "HAM",
+                        "LEC",
+                        "HAD"
+                    ],
+                    "p1772378383236": [
+                        "RUS",
+                        "ANT",
+                        "NOR",
+                        "PIA",
+                        "HAM",
+                        "LEC",
+                        "VER",
+                        "HAD",
+                        "LIN",
+                        "LAW",
+                        "GAS",
+                        "COL"
                     ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin force-resolved draft for r16",
+                    "time": "21:35",
+                    "type": "warn"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "21:35",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "20:13",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "16:41",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "09:31",
+                    "type": "good"
+                },
                 {
                     "msg": "Admin unlocked",
                     "time": "08:42",
@@ -3655,31 +3818,6 @@
                 {
                     "msg": "Admin unlocked",
                     "time": "18:40",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:49",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:13",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:09",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "19:59",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "19:12",
                     "type": "good"
                 }
             ],
@@ -4098,16 +4236,24 @@
                 },
                 "r16": {
                     "p1772378294011": true,
+                    "p1772378295758": true,
                     "p1772378298046": true,
                     "p1772378299642": true,
                     "p1772378303461": true,
                     "p1772378306541": true,
+                    "p1772378308600": true,
+                    "p1772378311744": true,
+                    "p1772378313028": true,
+                    "p1772378314501": true,
                     "p1772378316012": true,
-                    "p1772378317986": true
+                    "p1772378317986": true,
+                    "p1772378324269": true,
+                    "p1772378327316": true,
+                    "p1772378383236": true
                 }
             }
         },
-        "updated_at": "2026-09-10T08:13:47.416+00:00",
+        "updated_at": "2026-09-10T20:35:53.018+00:00",
         "version": 1
     }
 ]
