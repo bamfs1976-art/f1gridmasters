@@ -1693,7 +1693,12 @@ const DRIVERS = [
   { num:44,  name:'Lewis Hamilton',     short:'HAM', team:'Ferrari',       teamColor:'#DC0000' },
   { num:16,  name:'Charles Leclerc',    short:'LEC', team:'Ferrari',       teamColor:'#DC0000' },
   { num:3,   name:'Max Verstappen',     short:'VER', team:'Red Bull',      teamColor:'#0600EF' },
-  { num:6,   name:'Isack Hadjar',       short:'HAD', team:'Red Bull',      teamColor:'#0600EF' },
+  { num:30,  name:'Liam Lawson',        short:'LAW', team:'Red Bull',      teamColor:'#0600EF' },
+  // Hadjar out from Netherlands (r14); Lawson took the Red Bull seat and Tsunoda
+  // took Lawson's at Racing Bulls. Hadjar stays in this list so past picks,
+  // results, images and stats still resolve — active:false keeps him out of new
+  // drafts only. Restore him by deleting the flag if he returns to the grid.
+  { num:6,   name:'Isack Hadjar',       short:'HAD', team:'Red Bull',      teamColor:'#0600EF', active:false },
   { num:63,  name:'George Russell',     short:'RUS', team:'Mercedes',      teamColor:'#00D2BE' },
   { num:12,  name:'Kimi Antonelli',     short:'ANT', team:'Mercedes',      teamColor:'#00D2BE' },
   { num:55,  name:'Carlos Sainz',       short:'SAI', team:'Williams',      teamColor:'#005AFF' },
@@ -1706,11 +1711,16 @@ const DRIVERS = [
   { num:87,  name:'Oliver Bearman',     short:'BEA', team:'Haas',          teamColor:'#B6BABD' },
   { num:27,  name:'Nico Hülkenberg',    short:'HUL', team:'Audi',          teamColor:'#999999' },
   { num:5,   name:'Gabriel Bortoleto',  short:'BOR', team:'Audi',          teamColor:'#999999' },
-  { num:30,  name:'Liam Lawson',        short:'LAW', team:'Racing Bulls',  teamColor:'#1E41FF' },
+  { num:22,  name:'Yuki Tsunoda',       short:'TSU', team:'Racing Bulls',  teamColor:'#1E41FF' },
   { num:2,   name:'Arvid Lindblad',     short:'LIN', team:'Racing Bulls',  teamColor:'#1E41FF' },
   { num:11,  name:'Sergio Pérez',       short:'PER', team:'Cadillac',      teamColor:'#CC0033' },
   { num:77,  name:'Valtteri Bottas',    short:'BOT', team:'Cadillac',      teamColor:'#CC0033' },
 ];
+
+// Drivers currently on the grid. DRIVERS keeps every driver who has raced this
+// season so historical picks, results and stats always resolve; anything a
+// player can still pick or be assigned must go through activeDrivers().
+function activeDrivers() { return DRIVERS.filter(d => d.active !== false); }
 
 
 // ============================================================
@@ -1893,7 +1903,7 @@ const POINTS_MAP = {1:10, 2:9, 3:8, 4:7, 5:6, 6:5, 7:4, 8:3, 9:2, 10:1};
 const PRIOR = {
   NOR:389, PIA:291, HAM:143, LEC:158, VER:342, HAD:20,  RUS:245, ANT:162,
   SAI:115, ALB:42,  ALO:95,  STR:48,  GAS:62,  COL:14,  OCO:58,  BEA:54,
-  HUL:37,  BOR:8,   LAW:84,  LIN:12,  PER:55,  BOT:28,
+  HUL:37,  BOR:8,   LAW:84,  LIN:12,  PER:55,  BOT:28,  TSU:32,
 };
 
 // ── ELO DRIVER RATINGS (read-only, derived from recorded results) ──
@@ -1971,6 +1981,7 @@ const DRIVER_IMAGES = {
   'RUS': 'https://media.formula1.com/image/upload/f_auto,c_limit,q_auto,w_1320/content/dam/fom-website/drivers/G/GEORUS01_George_Russell/georus01.png',
   'SAI': 'https://media.formula1.com/image/upload/f_auto,c_limit,q_auto,w_1320/content/dam/fom-website/drivers/C/CARSAI01_Carlos_Sainz/carsai01.png',
   'STR': 'https://media.formula1.com/image/upload/f_auto,c_limit,q_auto,w_1320/content/dam/fom-website/drivers/L/LANSTR01_Lance_Stroll/lanstr01.png',
+  'TSU': 'https://media.formula1.com/image/upload/f_auto,c_limit,q_auto,w_1320/content/dam/fom-website/drivers/Y/YUKTSU01_Yuki_Tsunoda/yuktsu01.png',
   'VER': 'https://media.formula1.com/image/upload/f_auto,c_limit,q_auto,w_1320/content/dam/fom-website/drivers/M/MAXVER01_Max_Verstappen/maxver01.png',
 };
 
@@ -1979,7 +1990,7 @@ const DRIVER_NATIONS = {
   'BOT': '🇫🇮', 'COL': '🇦🇷', 'GAS': '🇫🇷', 'HAD': '🇫🇷', 'HAM': '🇬🇧',
   'HUL': '🇩🇪', 'LAW': '🇳🇿', 'LEC': '🇲🇨', 'LIN': '🇬🇧', 'NOR': '🇬🇧',
   'OCO': '🇫🇷', 'PER': '🇲🇽', 'PIA': '🇦🇺', 'RUS': '🇬🇧', 'SAI': '🇪🇸',
-  'STR': '🇨🇦', 'VER': '🇳🇱',
+  'STR': '🇨🇦', 'TSU': '🇯🇵', 'VER': '🇳🇱',
 };
 
 // ============================================================
@@ -2375,7 +2386,7 @@ function resolveDraft(raceId, draftOrder) {
     // the first free driver in DRIVERS array order, which is McLaren-first and
     // ignores form. Left as-is on purpose; change only with the league's agreement.
     if (!chosen) {
-      for (const d of DRIVERS) {
+      for (const d of activeDrivers()) {
         if (!taken.has(d.short)) { chosen = d.short; break; }
       }
     }
@@ -2477,8 +2488,8 @@ function _recordedPositions(raceId) {
 function buildFormGuide() {
   const counted = _countedRaces();
   const posByRace = counted.map(r => _recordedPositions(r.id));
-  const rows = DRIVERS.map(d => {
-    const mate = DRIVERS.find(o => o.team === d.team && o.short !== d.short);
+  const rows = activeDrivers().map(d => {
+    const mate = activeDrivers().find(o => o.team === d.team && o.short !== d.short);
     let seasonPts = 0, finishSum = 0, teammateDelta = 0;
     posByRace.forEach(pm => {
       const p = pm[d.short] || null;
@@ -2632,7 +2643,7 @@ function renderDraft() {
 
   // ── DRIVER SELECTION GRID ────────────────────────────────────
   // Before resolution: players rank their preferences. After: locked.
-  const driverCards = DRIVERS.map(d => {
+  const driverCards = activeDrivers().map(d => {
     const resolvedTaken = picksResolved && Object.values(picks).includes(d.short);
     const myPrefRank = myPrefs.indexOf(d.short); // -1 if not in prefs
     const isMyPick = myPick === d.short;          // resolved pick for me
@@ -2660,7 +2671,7 @@ function renderDraft() {
         const rankTextColor = rank <= 3 ? '#000' : '#fff';
         label = `<div class="taken-label" style="background:${rankColor};color:${rankTextColor};font-size:11px;font-weight:700;padding:2px 5px;border-radius:3px">#${rank}</div>`;
         clickAttr = `onclick="togglePref('${d.short}')"`;
-      } else if (myPrefs.length < DRIVERS.length) {
+      } else if (myPrefs.length < activeDrivers().length) {
         clickAttr = `onclick="togglePref('${d.short}')"`;
       } else {
         clickAttr = `onclick="togglePref('${d.short}')"`;
@@ -2793,7 +2804,7 @@ function renderDraft() {
         </div>
 
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-          <button id="suggest-order-btn" class="btn btn-outline btn-sm" onclick="applySuggestedOrder()" title="Fill your list with all ${DRIVERS.length} drivers ranked by results-based Elo rating">✨ SUGGESTED ORDER</button>
+          <button id="suggest-order-btn" class="btn btn-outline btn-sm" onclick="applySuggestedOrder()" title="Fill your list with all ${activeDrivers().length} drivers ranked by results-based Elo rating">✨ SUGGESTED ORDER</button>
           ${_suggestedOrderRace === race.id ? `<span style="font-size:11px;color:var(--muted)">Ranked by results-based rating. Edit before you submit.</span>` : ''}
         </div>
 
@@ -2938,7 +2949,7 @@ function applySuggestedOrder() {
   }
   const apply = () => {
     const { ratings } = buildEloRatings();
-    const order = DRIVERS.map(d => d.short).sort((a, b) => (ratings[b] ?? 0) - (ratings[a] ?? 0));
+    const order = activeDrivers().map(d => d.short).sort((a, b) => (ratings[b] ?? 0) - (ratings[a] ?? 0));
     if (!STATE.draftPrefs[raceId]) STATE.draftPrefs[raceId] = {};
     STATE.draftPrefs[raceId][SESSION_PLAYER_ID] = order;
     _suggestedOrderRace = raceId;
@@ -2948,7 +2959,7 @@ function applySuggestedOrder() {
   const existing = STATE.draftPrefs[raceId]?.[SESSION_PLAYER_ID] || [];
   if (existing.length > 0) {
     openModal('Replace your current picks?',
-      `This replaces your ${existing.length} ranked pick${existing.length === 1 ? '' : 's'} with all ${DRIVERS.length} drivers ordered by rating. You can still edit before submitting.`,
+      `This replaces your ${existing.length} ranked pick${existing.length === 1 ? '' : 's'} with all ${activeDrivers().length} drivers ordered by rating. You can still edit before submitting.`,
       apply);
   } else {
     apply();
@@ -2966,7 +2977,7 @@ function togglePref(short) {
   if (idx >= 0) {
     myPrefs.splice(idx, 1);
   } else {
-    if (myPrefs.length >= DRIVERS.length) {
+    if (myPrefs.length >= activeDrivers().length) {
       showToast('You\'ve ranked all available drivers!', 'info'); return;
     }
     myPrefs.push(short);
@@ -3466,11 +3477,11 @@ function showToast(msg, type = 'info') {
 let activeTeamFilter = 'ALL';
 
 function renderDrivers() {
-  const teams = [...new Set(DRIVERS.map(d => d.team))].sort();
+  const teams = [...new Set(activeDrivers().map(d => d.team))].sort();
 
   // Build team filter pills
   const filterHtml = ['ALL', ...teams].map(t => {
-    const teamDriver = DRIVERS.find(d => d.team === t);
+    const teamDriver = activeDrivers().find(d => d.team === t);
     const color = teamDriver ? teamDriver.teamColor : 'var(--muted)';
     return `<button onclick="filterByTeam('${t}')" id="filter-${t.replace(/\s/g,'_')}"
       style="padding:6px 12px;border-radius:20px;border:1px solid ${t===activeTeamFilter ? color : 'var(--border)'};
@@ -3483,7 +3494,7 @@ function renderDrivers() {
   }).join('');
   document.getElementById('team-filters').innerHTML = filterHtml;
 
-  const filtered = activeTeamFilter === 'ALL' ? DRIVERS : DRIVERS.filter(d => d.team === activeTeamFilter);
+  const filtered = activeTeamFilter === 'ALL' ? activeDrivers() : activeDrivers().filter(d => d.team === activeTeamFilter);
 
   // Group by team
   const byTeam = {};
@@ -3500,7 +3511,7 @@ function renderDrivers() {
     const teamColor = teamDrivers[0]?.teamColor || 'var(--red)';
     grid.innerHTML = teamDrivers.map(d => driverCard(d)).join('');
   } else {
-    grid.innerHTML = DRIVERS.map(d => driverCard(d)).join('');
+    grid.innerHTML = activeDrivers().map(d => driverCard(d)).join('');
   }
 }
 
