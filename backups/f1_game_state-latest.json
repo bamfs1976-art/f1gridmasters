@@ -306,9 +306,9 @@
                 },
                 "r14": {
                     "p1772378294011": "GAS",
-                    "p1772378295758": "LAW",
+                    "p1772378295758": "TSU",
                     "p1772378298046": "RUS",
-                    "p1772378299642": "HAD",
+                    "p1772378299642": "LAW",
                     "p1772378303461": "ALO",
                     "p1772378306541": "HUL",
                     "p1772378308600": "VER",
@@ -327,10 +327,10 @@
                     "p1772378295758": "LIN",
                     "p1772378298046": "RUS",
                     "p1772378299642": "VER",
-                    "p1772378303461": "HAD",
+                    "p1772378303461": "LAW",
                     "p1772378306541": "HUL",
                     "p1772378308600": "LEC",
-                    "p1772378311744": "LAW",
+                    "p1772378311744": "TSU",
                     "p1772378313028": "NOR",
                     "p1772378314501": "HAM",
                     "p1772378316012": "GAS",
@@ -348,7 +348,7 @@
                     "p1772378303461": "LEC",
                     "p1772378306541": "GAS",
                     "p1772378308600": "NOR",
-                    "p1772378311744": "HAD",
+                    "p1772378311744": "LAW",
                     "p1772378313028": "BEA",
                     "p1772378314501": "RUS",
                     "p1772378316012": "HUL",
@@ -356,7 +356,7 @@
                     "p1772378320191": "SAI",
                     "p1772378324269": "VER",
                     "p1772378327316": "PIA",
-                    "p1772378383236": "LAW"
+                    "p1772378383236": "TSU"
                 }
             },
             "draftPrefs": {
@@ -3571,6 +3571,41 @@
             },
             "activityLog": [
                 {
+                    "msg": "Advanced to Race 15 (AZERBAIJAN)",
+                    "time": "19:27",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:26",
+                    "type": "good"
+                },
+                {
+                    "msg": "Driver change: Hadjar out from Netherlands, Lawson to Red Bull, Tsunoda to Racing Bulls",
+                    "time": "19:19",
+                    "type": "warn"
+                },
+                {
+                    "msg": "Picks r14-r16 reassigned: Hadjar picks became Lawson, Lawson picks became Tsunoda",
+                    "time": "19:19",
+                    "type": "warn"
+                },
+                {
+                    "msg": "Italy P10 corrected from Lawson to Tsunoda",
+                    "time": "19:19",
+                    "type": "warn"
+                },
+                {
+                    "msg": "Manually entered result for MADRID",
+                    "time": "15:57",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "15:55",
+                    "type": "good"
+                },
+                {
                     "msg": "Admin force-resolved draft for r16",
                     "time": "21:35",
                     "type": "warn"
@@ -3784,41 +3819,6 @@
                     "msg": "Admin unlocked",
                     "time": "08:23",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "21:47",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "21:37",
-                    "type": "good"
-                },
-                {
-                    "msg": "Advanced to Race 11 (HUNGARY)",
-                    "time": "21:37",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "21:36",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "19:19",
-                    "type": "good"
-                },
-                {
-                    "msg": "Manually entered result for BELGIUM",
-                    "time": "18:41",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "18:40",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -3977,7 +3977,19 @@
                     "7": "GAS",
                     "8": "LIN",
                     "9": "COL",
-                    "10": "LAW"
+                    "10": "TSU"
+                },
+                "r16": {
+                    "1": "ANT",
+                    "2": "VER",
+                    "3": "NOR",
+                    "4": "LEC",
+                    "5": "RUS",
+                    "6": "LAW",
+                    "7": "COL",
+                    "8": "PIA",
+                    "9": "LIN",
+                    "10": "HUL"
                 }
             },
             "notifEnabled": true,
@@ -3994,9 +4006,10 @@
                 "r12": true,
                 "r13": true,
                 "r14": true,
-                "r15": true
+                "r15": true,
+                "r16": true
             },
-            "currentRaceIdx": 13,
+            "currentRaceIdx": 14,
             "draftDeadlines": {
                 "r7": "2026-05-21T20:00:00.000Z",
                 "r8": "2026-06-04T20:00:00.000Z",
@@ -4253,7 +4266,7 @@
                 }
             }
         },
-        "updated_at": "2026-09-10T20:35:53.018+00:00",
+        "updated_at": "2026-09-13T18:27:20.057+00:00",
         "version": 1
     }
 ]
