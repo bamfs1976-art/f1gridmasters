@@ -1283,7 +1283,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       <div class="hex">F1</div>
       <div>
         <h1>GRID MASTERS</h1>
-        <p>2026 FANTASY LEAGUE</p>
+        <p id="brand-sub">2026 FANTASY LEAGUE</p>
       </div>
     </div>
     <div class="nav-tabs">
@@ -1297,7 +1297,8 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
       <button class="nav-tab" onclick="showPage('stats')">📈 STATS</button>
       <button class="nav-tab" onclick="window.open('sim.html','_blank')" title="Season simulator">🎲 SIM</button>
       <button class="nav-tab" onclick="showPage('admin')" id="nav-admin" style="color:#ffa500;">🔐 ADMIN</button>
-      <button class="nav-tab" onclick="showPage('2026gp')">🏁 2026 GP</button>
+      <button class="nav-tab" id="nav-nextseason" onclick="showPage('nextseason')" style="display:none">🔭 NEXT SEASON</button>
+      <button class="nav-tab" id="nav-seasongp" onclick="showPage('2026gp')">🏁 2026 GP</button>
       <button class="nav-tab" onclick="showPage('2025')">🗂 2025 SEASON</button>
     </div>
     <!-- Theme toggle + Identity badge + Hamburger button (mobile only) -->
@@ -1357,13 +1358,16 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
   <button class="mobile-nav-tab admin-tab" id="mob-admin" onclick="mobileNav('admin')">
     <span class="mob-icon">🔐</span> ADMIN
   </button>
+  <button class="mobile-nav-tab" id="mob-nextseason" onclick="mobileNav('nextseason')" style="display:none">
+    <span class="mob-icon">🔭</span> <span id="mob-nextseason-label">NEXT SEASON</span>
+  </button>
   <button class="mobile-nav-tab" id="mob-2026gp" onclick="mobileNav('2026gp')">
-    <span class="mob-icon">🏁</span> 2026 GP
+    <span class="mob-icon">🏁</span> <span id="mob-seasongp-label">2026 GP</span>
   </button>
   <button class="mobile-nav-tab" id="mob-2025" onclick="mobileNav('2025')">
     <span class="mob-icon">🗂</span> 2025 SEASON
   </button>
-  <div style="padding:20px 28px 0;font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);letter-spacing:1px;">
+  <div id="mob-brand-sub" style="padding:20px 28px 0;font-family:Share Tech Mono,monospace;font-size:12px;color:var(--muted);letter-spacing:1px;">
     2026 FANTASY LEAGUE
   </div>
   <div style="padding:10px 28px 0;">
@@ -1442,7 +1446,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
     </div>
 
     <div class="setup-hero gap-lg">
-      <h2>F1 GRID MASTERS 2026</h2>
+      <h2 id="brand-title">F1 GRID MASTERS 2026</h2>
       <p>Up to 22 players · Rotating draft · Real race results · Season-long championship</p>
     </div>
 
@@ -1533,15 +1537,24 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <!-- ===================== SCHEDULE PAGE ===================== -->
 <div class="page" id="page-schedule">
   <div class="z1 animate-in">
-    <div class="section-head">2026 F1 CALENDAR · 23 ROUNDS</div>
+    <div class="section-head" id="calendar-head">2026 F1 CALENDAR · 23 ROUNDS</div>
     <div class="schedule-list" id="schedule-list"></div>
+  </div>
+</div>
+
+<!-- ===================== NEXT SEASON FIXTURES PAGE ===================== -->
+<div class="page" id="page-nextseason">
+  <div class="z1 animate-in">
+    <div class="section-head" id="nextseason-head">NEXT SEASON FIXTURES</div>
+    <p id="nextseason-sub" style="font-size:13px;color:var(--muted);margin-bottom:20px"></p>
+    <div class="schedule-list" id="nextseason-list"></div>
   </div>
 </div>
 
 <!-- ===================== TV GUIDE PAGE ===================== -->
 <div class="page" id="page-tv">
   <div class="z1 animate-in">
-    <div class="section-head">📺 SKY SPORTS F1 · 2026 TV GUIDE</div>
+    <div class="section-head" id="tv-head">📺 SKY SPORTS F1 · 2026 TV GUIDE</div>
     <div class="tv-guide-banner">
       <div class="tv-brand">
         <div class="tv-brand-logo">
@@ -1559,7 +1572,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <div class="page" id="page-drivers">
   <div class="z1 animate-in">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-      <div class="section-head" style="margin:0;flex:1;">2026 F1 GRID · 22 DRIVERS · 11 TEAMS</div>
+      <div class="section-head" id="grid-head" style="margin:0;flex:1;">2026 F1 GRID · 22 DRIVERS · 11 TEAMS</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;" id="team-filters"></div>
     </div>
     <div id="drivers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;"></div>
@@ -1586,8 +1599,8 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <!-- ===================== 2026 GP RESULTS PAGE ===================== -->
 <div class="page" id="page-2026gp">
   <div class="z1 animate-in">
-    <div class="section-head" style="margin-bottom:6px">🏁 2026 GRAND PRIX RESULTS · LIVE SEASON DATA</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Official race results for the 2026 F1 season. Driver &amp; constructor standings updated after each Grand Prix.</p>
+    <div class="section-head" id="seasongp-head" style="margin-bottom:6px">🏁 2026 GRAND PRIX RESULTS · LIVE SEASON DATA</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px"><span id="seasongp-sub">Official race results for the 2026 F1 season.</span> Driver &amp; constructor standings updated after each Grand Prix.</p>
     <div style="display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap;" id="gp26-subtabs">
       <button class="stats-sub active" onclick="showGP26Sub('standings')">🏆 Driver Standings</button>
       <button class="stats-sub" onclick="showGP26Sub('constructors')">🏎 Constructors</button>
@@ -1602,7 +1615,7 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 <div class="page" id="page-2025">
   <div class="z1 animate-in">
     <div class="section-head" style="margin-bottom:6px">🗂 2025 F1 SEASON · REFERENCE &amp; RESEARCH HUB</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Use last season's data to inform your 2026 picks. All stats from the completed 2025 championship.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px"><span id="s2025-sub">Use last season's data to inform your 2026 picks.</span> All stats from the completed 2025 championship.</p>
     <div style="display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap;" id="ref-subtabs">
       <button class="stats-sub active" onclick="showRefSub('standings')">🏆 Final Standings</button>
       <button class="stats-sub" onclick="showRefSub('races')">🏁 Race Results</button>
@@ -1660,7 +1673,26 @@ html.light .identity-overlay { background: rgba(240,240,245,0.97); }
 // ============================================================
 //  DATA
 // ============================================================
-const RACES = [
+// ── SEASON SWITCH ─────────────────────────────────────────────────────────────
+// The one place the app rolls over to a new season. Changing SEASON_YEAR swaps
+// the calendar, every on-screen year label, the share-card titles, the
+// pick-deadline date maths and the localStorage key.
+//
+// Saved picks and results are keyed by race id ONLY ('r1'...'r24') with no
+// season dimension, so a new season's data would land on top of the old one.
+// The finished season must be archived and the live game reset BEFORE flipping
+// this — the full procedure is in docs/season-changeover.md. Do not flip it
+// mid-season: RACES drives currentRaceIdx, round counts and every share card.
+const SEASON_YEAR = 2026;
+const NEXT_SEASON_YEAR = SEASON_YEAR + 1;
+
+// localStorage key for the cached STATE. Season-stamped on purpose: flipping
+// SEASON_YEAR gives every browser a clean local cache instead of rehydrating
+// last season's picks. The theme and identity keys are NOT season-stamped, so
+// preferences and "who am I" survive the rollover.
+const STATE_CACHE_KEY = `f1gm${SEASON_YEAR}`;
+
+const RACES_2026 = [
   { id:'r1',  name:'AUSTRALIA',        country:'Australia',    flag:'🇦🇺', date:'Mar 8',  circuit:'Albert Park Circuit',               sprint:false },
   { id:'r2',  name:'CHINA',            country:'China',        flag:'🇨🇳', date:'Mar 15', circuit:'Shanghai International Circuit',     sprint:true  },
   { id:'r3',  name:'JAPAN',            country:'Japan',        flag:'🇯🇵', date:'Mar 29', circuit:'Suzuka Circuit',                     sprint:false },
@@ -1686,6 +1718,45 @@ const RACES = [
   { id:'r23', name:'QATAR',            country:'Qatar',        flag:'🇶🇦', date:'Nov 29', circuit:'Lusail International Circuit',       sprint:false },
   { id:'r24', name:'ABU DHABI',        country:'UAE',          flag:'🇦🇪', date:'Dec 6',  circuit:'Yas Marina Circuit',                 sprint:false },
 ];
+
+// 2027 FIA Formula One World Championship — 24 rounds, 10 sprint weekends.
+// Pre-season testing runs 24–27 Feb 2027 at Sakhir (not a points round).
+// Zandvoort drops off; Portimão and Istanbul return. Istanbul carries an
+// asterisk on the published calendar, so it is flagged provisional until the
+// FIA confirms it.
+const RACES_2027 = [
+  { id:'r1',  name:'BAHRAIN',          country:'Bahrain',      flag:'🇧🇭', date:'Mar 14', circuit:'Bahrain International Circuit',      sprint:true  },
+  { id:'r2',  name:'SAUDI ARABIA',     country:'Saudi Arabia', flag:'🇸🇦', date:'Mar 21', circuit:'Jeddah Corniche Circuit',            sprint:false },
+  { id:'r3',  name:'AUSTRALIA',        country:'Australia',    flag:'🇦🇺', date:'Apr 4',  circuit:'Albert Park Circuit',                sprint:true  },
+  { id:'r4',  name:'JAPAN',            country:'Japan',        flag:'🇯🇵', date:'Apr 11', circuit:'Suzuka Circuit',                     sprint:true  },
+  { id:'r5',  name:'CHINA',            country:'China',        flag:'🇨🇳', date:'Apr 18', circuit:'Shanghai International Circuit',     sprint:false },
+  { id:'r6',  name:'MIAMI',            country:'USA',          flag:'🇺🇸', date:'May 2',  circuit:'Miami International Autodrome',      sprint:false },
+  { id:'r7',  name:'CANADA',           country:'Canada',       flag:'🇨🇦', date:'May 23', circuit:'Circuit Gilles Villeneuve',          sprint:true  },
+  { id:'r8',  name:'MONACO',           country:'Monaco',       flag:'🇲🇨', date:'Jun 6',  circuit:'Circuit de Monaco',                  sprint:true  },
+  { id:'r9',  name:'PORTUGAL',         country:'Portugal',     flag:'🇵🇹', date:'Jun 20', circuit:'Autódromo Internacional do Algarve', sprint:false },
+  { id:'r10', name:'BRITAIN',          country:'UK',           flag:'🇬🇧', date:'Jul 4',  circuit:'Silverstone Circuit',                sprint:true  },
+  { id:'r11', name:'AUSTRIA',          country:'Austria',      flag:'🇦🇹', date:'Jul 11', circuit:'Red Bull Ring',                      sprint:false },
+  { id:'r12', name:'BELGIUM',          country:'Belgium',      flag:'🇧🇪', date:'Jul 25', circuit:'Circuit de Spa-Francorchamps',       sprint:false },
+  { id:'r13', name:'HUNGARY',          country:'Hungary',      flag:'🇭🇺', date:'Aug 1',  circuit:'Hungaroring',                        sprint:false },
+  { id:'r14', name:'ITALY',            country:'Italy',        flag:'🇮🇹', date:'Sep 5',  circuit:'Autodromo Nazionale Monza',          sprint:true  },
+  { id:'r15', name:'SPAIN',            country:'Spain',        flag:'🇪🇸', date:'Sep 12', circuit:'Madrid Street Circuit (IFEMA)',      sprint:false },
+  { id:'r16', name:'AZERBAIJAN',       country:'Azerbaijan',   flag:'🇦🇿', date:'Sep 26', circuit:'Baku City Circuit',                  sprint:false },
+  { id:'r17', name:'TÜRKIYE',          country:'Türkiye',      flag:'🇹🇷', date:'Oct 3',  circuit:'Istanbul Park',                      sprint:false, provisional:true },
+  { id:'r18', name:'SINGAPORE',        country:'Singapore',    flag:'🇸🇬', date:'Oct 10', circuit:'Marina Bay Street Circuit',          sprint:false },
+  { id:'r19', name:'USA',              country:'USA',          flag:'🇺🇸', date:'Oct 24', circuit:'Circuit of the Americas',            sprint:false },
+  { id:'r20', name:'MEXICO CITY',      country:'Mexico',       flag:'🇲🇽', date:'Oct 31', circuit:'Autódromo Hermanos Rodríguez',       sprint:false },
+  { id:'r21', name:'SAO PAULO',        country:'Brazil',       flag:'🇧🇷', date:'Nov 7',  circuit:'Autódromo José Carlos Pace',         sprint:true  },
+  // Las Vegas races on the Saturday night, as it does every year.
+  { id:'r22', name:'LAS VEGAS',        country:'USA',          flag:'🇺🇸', date:'Nov 20', circuit:'Las Vegas Strip Circuit',            sprint:false },
+  { id:'r23', name:'QATAR',            country:'Qatar',        flag:'🇶🇦', date:'Dec 5',  circuit:'Lusail International Circuit',       sprint:true  },
+  { id:'r24', name:'ABU DHABI',        country:'UAE',          flag:'🇦🇪', date:'Dec 12', circuit:'Yas Marina Circuit',                 sprint:true  },
+];
+
+const SEASON_CALENDARS = { 2026: RACES_2026, 2027: RACES_2027 };
+
+// The live season's calendar. Everything downstream reads this, not the
+// per-year arrays above.
+const RACES = SEASON_CALENDARS[SEASON_YEAR];
 
 const DRIVERS = [
   { num:1,   name:'Lando Norris',       short:'NOR', team:'McLaren',       teamColor:'#FF8000' },
@@ -2081,7 +2152,7 @@ async function _mergeRemoteState(sb) {
 
 let _saveTimer = null;
 function saveState() {
-  try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
+  try { localStorage.setItem(STATE_CACHE_KEY, JSON.stringify(STATE)); } catch(e) {}
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
     if (!_canWriteToSupabase()) return;
@@ -2100,7 +2171,7 @@ function saveState() {
 // response error actually checked — supabase-js reports API failures via the
 // returned error, it does not throw. Returns true only on a confirmed write.
 async function saveStateCritical() {
-  try { localStorage.setItem('f1gm2026', JSON.stringify(STATE)); } catch(e) {}
+  try { localStorage.setItem(STATE_CACHE_KEY, JSON.stringify(STATE)); } catch(e) {}
   clearTimeout(_saveTimer); // supersede any pending debounced save
   if (!_canWriteToSupabase()) return false;
   const sb = getSupabase();
@@ -2141,7 +2212,7 @@ async function loadState() {
     } catch(e) { console.warn('Supabase load failed, using localStorage:', e); }
   }
   try {
-    const s = localStorage.getItem('f1gm2026');
+    const s = localStorage.getItem(STATE_CACHE_KEY);
     if (s) { STATE = JSON.parse(s); _normaliseState(); }
   } catch(e) {}
 }
@@ -2262,6 +2333,7 @@ function showPage(id) {
   if (id === 'tv') renderTVSchedule();
   if (id === 'drivers') renderDrivers();
   if (id === 'stats') renderStats();
+  if (id === 'nextseason') renderNextSeason();
   if (id === '2026gp') render2026GP();
   if (id === '2025') render2025();
   if (id === 'admin') renderAdmin();
@@ -2302,7 +2374,7 @@ function renderPlayerList() {
   startBtn.disabled = count < 2 || STATE.started;
   if (STATE.started) hint.textContent = 'Season in progress';
   else if (count < 2) hint.textContent = 'Add at least 2 players to begin';
-  else hint.textContent = `Ready! ${count} player${count>1?'s':''} — click to start the 2026 season`;
+  else hint.textContent = `Ready! ${count} player${count>1?'s':''} — click to start the ${SEASON_YEAR} season`;
 
   list.innerHTML = STATE.players.map((p, i) => `
     <div class="player-list-item">
@@ -2629,7 +2701,7 @@ function renderDraft() {
         <div class="draft-race-flag">${race.flag}</div>
         <div>
           <div class="draft-race-name">R${raceIdx+1} · ${race.name} GRAND PRIX</div>
-          <div class="draft-race-sub">${race.circuit} · ${race.date} 2026 ${race.sprint ? '· 🏃 SPRINT WEEKEND' : ''}</div>
+          <div class="draft-race-sub">${race.circuit} · ${race.date} ${SEASON_YEAR} ${race.sprint ? '· 🏃 SPRINT WEEKEND' : ''}</div>
         </div>
       </div>
       ${headerStatus}
@@ -3432,13 +3504,51 @@ function renderSchedule() {
           ${myPickHtml}
         </div>
         ${r.sprint ? '<div class="si-sprint">SPRINT</div>' : '<div></div>'}
-        <div class="si-date">${r.date} 2026</div>
+        <div class="si-date">${r.date} ${SEASON_YEAR}</div>
         <div class="si-status ${isDone ? 'done' : hasDraft ? 'upcoming' : 'future'}">
           ${isDone ? '✓ DONE' : hasDraft ? '◉ DRAFTED' : '○ PENDING'}
         </div>
       </div>`;
   }).join('');
   document.getElementById('schedule-list').innerHTML = html;
+}
+
+// Read-only preview of next season's calendar, shown while the current season
+// is still running. Purely informational — it reads SEASON_CALENDARS directly
+// and never touches STATE, so nothing here can affect the live game.
+function renderNextSeason() {
+  const races = SEASON_CALENDARS[NEXT_SEASON_YEAR];
+  const list = document.getElementById('nextseason-list');
+  if (!races) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">🔭</div>
+      <h3>NO CALENDAR YET</h3><p>Next season's fixtures haven't been added.</p></div>`;
+    return;
+  }
+  const sprints = races.filter(r => r.sprint).length;
+  const provisional = races.filter(r => r.provisional).length;
+  document.getElementById('nextseason-head').textContent =
+    `🔭 ${NEXT_SEASON_YEAR} F1 CALENDAR · ${races.length} ROUNDS · ${sprints} SPRINTS`;
+  document.getElementById('nextseason-sub').innerHTML =
+    `Provisional fixture list for ${NEXT_SEASON_YEAR}, shown for planning only. `
+    + `The ${SEASON_YEAR} season is still running, so picks are unaffected.`
+    + (provisional
+        ? ` ${provisional} round${provisional === 1 ? ' is' : 's are'} marked * pending FIA confirmation.`
+        : '');
+
+  list.innerHTML = races.map((r, i) => `
+      <div class="schedule-item">
+        <div class="si-num">R${i+1}</div>
+        <div class="si-flag">${r.flag}</div>
+        <div class="si-info">
+          <div class="si-name">${esc(r.name)} GRAND PRIX${r.provisional
+            ? ' <span style="color:var(--muted);font-family:Share Tech Mono,monospace;font-size:11px">* PROVISIONAL</span>'
+            : ''}</div>
+          <div class="si-circuit">${esc(r.circuit)}</div>
+        </div>
+        ${r.sprint ? '<div class="si-sprint">SPRINT</div>' : '<div></div>'}
+        <div class="si-date">${r.date} ${NEXT_SEASON_YEAR}</div>
+        <div class="si-status future">○ ${NEXT_SEASON_YEAR}</div>
+      </div>`).join('');
 }
 // ============================================================
 //  MODAL / TOAST
@@ -4247,7 +4357,7 @@ function renderPickCard(raceId) {
 
       <div style="background:linear-gradient(135deg,#E10600,#a00000);padding:18px 20px;position:relative;overflow:hidden">
         <div style="position:absolute;top:-20px;right:-30px;width:110px;height:110px;background:rgba(255,255,255,0.06);border-radius:50%"></div>
-        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;margin-bottom:4px">F1 Grid Masters 2026 · Race Picks</div>
+        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;margin-bottom:4px">F1 Grid Masters ${SEASON_YEAR} · Race Picks</div>
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:30px;line-height:1">${race.flag}</span>
           <div>
@@ -4357,10 +4467,10 @@ function sharePickCardWhatsApp(raceId) {
   const sprintTag = race.sprint ? ' · 🏃 Sprint' : '';
 
   const lines = [
-    '🏎 F1 GRID MASTERS 2026',
+    `🏎 F1 GRID MASTERS ${SEASON_YEAR}`,
     '',
     `${race.flag} ${race.name} GRAND PRIX — ${upcoming ? 'RACE PICKS' : 'RESULTS'}`,
-    `${race.circuit} · ${race.date} 2026${sprintTag}`,
+    `${race.circuit} · ${race.date} ${SEASON_YEAR}${sprintTag}`,
     '',
   ];
 
@@ -4818,7 +4928,7 @@ function adminResetSeason() {
     STATE = { players:[], started:false, currentRaceIdx:0, draftOrder:[], draftPicks:{}, raceResults:{}, baseOrder:[], draftRevealed:{}, activityLog:[], predictions:{}, notifEnabled:false, draftPrefs:{}, draftSubmitted:{} };
     _skipMergeOnce = true; // full reset must overwrite, not merge
     saveState();
-    localStorage.removeItem('f1gm2026');
+    localStorage.removeItem(STATE_CACHE_KEY);
     adminUnlocked = false;
     renderPlayerList();
     showPage('setup');
@@ -4864,7 +4974,7 @@ async function importResultsFromJolpica() {
   if (statusEl) statusEl.innerHTML = '<div class="import-status loading"><span class="import-spin">⟳</span> Fetching from Jolpica API...</div>';
 
   try {
-    const url = `https://api.jolpi.ca/ergast/f1/2026/${round}/results/?limit=10`;
+    const url = `https://api.jolpi.ca/ergast/f1/${SEASON_YEAR}/${round}/results/?limit=10`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('API error ' + resp.status);
     const data = await resp.json();
@@ -5490,7 +5600,7 @@ function renderPredictions(el) {
             <select id="pred-player" onchange="prefillPrediction()">${playerOptions}</select>
           </div>
           <div class="pred-field">
-            <label>PREDICTED 2026 CHAMPION</label>
+            <label>PREDICTED ${SEASON_YEAR} CHAMPION</label>
             <select id="pred-champion">${champOptions}</select>
           </div>
           <div class="pred-field">
@@ -5609,7 +5719,7 @@ function exportToPrint() {
       tr:nth-child(even){background:#f9f9f9}
       tr:first-child td{font-weight:bold;background:rgba(212,160,0,0.08)}
     </style></head><body>
-    <h2>F1 GRID MASTERS 2026 — STANDINGS</h2>
+    <h2>F1 GRID MASTERS ${SEASON_YEAR} — STANDINGS</h2>
     <p style="color:#666;font-size:12px;margin-bottom:12px">Printed: ${new Date().toLocaleDateString()}</p>
     <table><thead><tr><th>#</th><th>Player</th>
       ${revealedRaces.map(r => `<th>${r.flag}</th>`).join('')}
@@ -5698,7 +5808,7 @@ function scheduleDraftReminders() {
   RACES.forEach((race, i) => {
     if (i < STATE.currentRaceIdx) return;
     // Parse date - races are like "Mar 8"
-    const raceDate = parseRaceDate(race.date + ' 2026');
+    const raceDate = parseRaceDate(race.date + ' ' + SEASON_YEAR);
     if (!raceDate) return;
     const reminderTime = new Date(raceDate);
     reminderTime.setDate(reminderTime.getDate() - 1); // Day before
@@ -5876,7 +5986,7 @@ function renderGP26Standings(el, completedRaces) {
 
   el.innerHTML = `
     <div class="card" style="margin-bottom:20px;padding:20px">
-      <div style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:16px">2026 WORLD CHAMPIONSHIP · AFTER ${completedRaces.length} RACE${completedRaces.length>1?'S':''}</div>
+      <div style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:16px">${SEASON_YEAR} WORLD CHAMPIONSHIP · AFTER ${completedRaces.length} RACE${completedRaces.length>1?'S':''}</div>
       <div style="display:flex;gap:10px;align-items:flex-end;justify-content:center">${podiumHtml}</div>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
@@ -5929,7 +6039,7 @@ function renderGP26Constructors(el, completedRaces) {
 
   el.innerHTML = `
     <div class="card" style="margin-bottom:20px;padding:20px;text-align:center">
-      <div style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">2026 CONSTRUCTORS' CHAMPIONSHIP · ${completedRaces.length} RACE${completedRaces.length>1?'S':''}</div>
+      <div style="font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">${SEASON_YEAR} CONSTRUCTORS' CHAMPIONSHIP · ${completedRaces.length} RACE${completedRaces.length>1?'S':''}</div>
       <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
         ${teams.slice(0,3).map((t,i) => `
           <div style="text-align:center">
@@ -6013,7 +6123,7 @@ function renderGP26Races(el, completedRaces) {
           <div>
             <div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">CIRCUIT</div>
             <div style="font-size:13px">${race.circuit}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px">${race.date} 2026${race.sprint ? ' · Sprint Weekend' : ''}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">${race.date} ${SEASON_YEAR}${race.sprint ? ' · Sprint Weekend' : ''}</div>
           </div>
         </div>
         <div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">FULL RESULT (TOP 10)</div>
@@ -6255,7 +6365,7 @@ function render2025Standings(el) {
           <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">W</th>
           <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">P</th>
           <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">POD</th>
-          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">IN 2026?</th>
+          <th style="padding:9px 10px;font-family:Share Tech Mono,monospace;font-size:11px;letter-spacing:1px;color:var(--muted);text-align:center">IN ${SEASON_YEAR}?</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -6401,7 +6511,7 @@ function render2025DriverProfiles(el) {
 
     const notIn2026Tag = !in2026 ? `
       <div style="margin:8px 0;padding:7px 10px;background:rgba(225,6,0,0.08);border:1px solid rgba(225,6,0,0.2);border-radius:5px;font-size:11px;color:var(--red)">
-        ❌ NOT ON 2026 GRID
+        ❌ NOT ON ${SEASON_YEAR} GRID
       </div>` : '';
 
     return `
@@ -6456,7 +6566,7 @@ function render2025Teams(el) {
           <div style="flex:1">
             <div style="font-weight:600;font-size:13px">${d.name}
               ${changed?`<span style="font-size:12px;color:#ffa500"> → ${d2026.team}</span>`:''}
-              ${!d2026?`<span style="font-size:12px;color:var(--red)"> (not in 2026)</span>`:''}
+              ${!d2026?`<span style="font-size:12px;color:var(--red)"> (not in ${SEASON_YEAR})</span>`:''}
             </div>
             <div style="font-size:12px;color:var(--muted)">${d.pts} pts · ${d.wins} wins · ${d.podiums} podiums</div>
           </div>
@@ -6712,7 +6822,7 @@ function resetGame() {
     STATE = { players:[], started:false, currentRaceIdx:0, draftOrder:[], draftPicks:{}, raceResults:{}, baseOrder:[], draftRevealed:{}, activityLog:[], predictions:{}, notifEnabled:false, draftPrefs:{}, draftSubmitted:{} };
     _skipMergeOnce = true; // full reset must overwrite, not merge
     saveState();
-    localStorage.removeItem('f1gm2026');
+    localStorage.removeItem(STATE_CACHE_KEY);
     renderPlayerList();
     showPage('setup');
     showToast('Season reset', 'info');
@@ -6795,7 +6905,8 @@ function syncMobileNav(id) {
 const PAGE_LABELS = {
   setup:'SETUP', draft:'DRAFT', results:'RESULTS', leaderboard:'STANDINGS',
   schedule:'CALENDAR', tv:'TV GUIDE', drivers:'DRIVERS', stats:'STATS',
-  admin:'ADMIN', '2026gp':'2026 GP', '2025':'2025 SEASON'
+  admin:'ADMIN', nextseason:`${NEXT_SEASON_YEAR} FIXTURES`,
+  '2026gp':`${SEASON_YEAR} GP`, '2025':'2025 SEASON'
 };
 
 async function logPageView(page) {
@@ -6963,7 +7074,7 @@ function updateRaceStatusBanner() {
 
   document.getElementById('rsb-flag').textContent = race.flag;
   document.getElementById('rsb-race-name').textContent = `R${raceIdx+1} · ${race.name} GRAND PRIX`;
-  document.getElementById('rsb-circuit').textContent = `${race.circuit} · ${race.date} 2026${race.sprint ? ' · SPRINT WEEKEND' : ''}`;
+  document.getElementById('rsb-circuit').textContent = `${race.circuit} · ${race.date} ${SEASON_YEAR}${race.sprint ? ' · SPRINT WEEKEND' : ''}`;
 
   const countdownEl = document.getElementById('rsb-countdown');
   const submittedEl = document.getElementById('rsb-submitted');
@@ -7103,7 +7214,7 @@ function _buildRaceReportData() {
 function _buildRaceReportText() {
   const { completedRaces, lastRace, standings, raceRanked, nextRace, nextOrder } = _buildRaceReportData();
   const medals = ['🥇','🥈','🥉'];
-  const lines = ['🏎 *F1 GRID MASTERS 2026*'];
+  const lines = [`🏎 *F1 GRID MASTERS ${SEASON_YEAR}*`];
 
   if (lastRace) {
     lines.push('');
@@ -7216,7 +7327,7 @@ function _buildRaceReportCanvas(theme) {
 
   ctx.font = '900 24px Orbitron, sans-serif';
   ctx.fillStyle = P.title; ctx.textAlign = 'left';
-  ctx.fillText('F1 GRID MASTERS 2026', PAD, 44);
+  ctx.fillText(`F1 GRID MASTERS ${SEASON_YEAR}`, PAD, 44);
   ctx.font = '700 12px Orbitron, sans-serif';
   ctx.fillStyle = '#E10600';
   ctx.fillText(
@@ -7348,7 +7459,7 @@ function _buildRaceReportCanvas(theme) {
   ctx.fillStyle = '#E10600'; ctx.fillRect(0, H - FTR_H, W, FTR_H);
   ctx.font = 'bold 13px Orbitron, sans-serif';
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
-  ctx.fillText('F1 GRID MASTERS 2026  ·  f1gridmasters.netlify.app', W / 2, H - FTR_H / 2 + 5);
+  ctx.fillText(`F1 GRID MASTERS ${SEASON_YEAR}  ·  f1gridmasters.netlify.app`, W / 2, H - FTR_H / 2 + 5);
 
   return canvas;
 }
@@ -7387,7 +7498,7 @@ function _pickDeadlineLabel(raceDateStr) {
   const parts = raceDateStr.trim().split(' ');
   const mon = months[parts[0]]; const day = parseInt(parts[1]);
   if (mon === undefined || isNaN(day)) return '9PM THURSDAY BEFORE RACE';
-  const raceDate = new Date(2026, mon, day);
+  const raceDate = new Date(SEASON_YEAR, mon, day);
   const dow = raceDate.getDay();
   const daysBack = dow === 4 ? 0 : ((dow + 3) % 7);
   const thu = new Date(raceDate); thu.setDate(raceDate.getDate() - daysBack);
@@ -7416,7 +7527,7 @@ function _buildPickOrderCanvas(raceIdx) {
   let y = 24;
   ctx.font = '900 13px Orbitron, sans-serif';
   ctx.fillStyle = '#E10600'; ctx.textAlign = 'center';
-  ctx.fillText('F1 GRID MASTERS 2026', W / 2, y);
+  ctx.fillText(`F1 GRID MASTERS ${SEASON_YEAR}`, W / 2, y);
 
   y += 24;
   ctx.font = '32px serif'; ctx.textAlign = 'center';
@@ -7428,7 +7539,7 @@ function _buildPickOrderCanvas(raceIdx) {
   y += 18;
   ctx.font = '500 11px Rajdhani, sans-serif';
   ctx.fillStyle = '#555566'; ctx.textAlign = 'center';
-  ctx.fillText(`${race.circuit}  ·  ${race.date} 2026${race.sprint ? '  ·  SPRINT WEEKEND' : ''}`, W / 2, y);
+  ctx.fillText(`${race.circuit}  ·  ${race.date} ${SEASON_YEAR}${race.sprint ? '  ·  SPRINT WEEKEND' : ''}`, W / 2, y);
 
   y += 16;
   ctx.fillStyle = 'rgba(200,150,0,0.10)';
@@ -7491,7 +7602,7 @@ function _buildPickOrderCanvas(raceIdx) {
   ctx.fillStyle = '#E10600'; ctx.fillRect(0, footerY, W, FOOTER_H);
   ctx.font = 'bold 13px Orbitron, sans-serif';
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
-  ctx.fillText('F1 GRID MASTERS 2026  ·  f1gridmasters.netlify.app', W / 2, footerY + FOOTER_H / 2 + 5);
+  ctx.fillText(`F1 GRID MASTERS ${SEASON_YEAR}  ·  f1gridmasters.netlify.app`, W / 2, footerY + FOOTER_H / 2 + 5);
 
   return canvas;
 }
@@ -7583,10 +7694,10 @@ async function previewPickOrder(raceIdx) {
 
   const medals = ['🥇','🥈','🥉'];
   const lines = [
-    '🏎 F1 GRID MASTERS 2026',
+    `🏎 F1 GRID MASTERS ${SEASON_YEAR}`,
     '',
     `${race.flag} ${race.name} GRAND PRIX — PICK ORDER`,
-    `${race.circuit} · ${race.date} 2026${race.sprint ? ' · 🏃 SPRINT WEEKEND' : ''}`,
+    `${race.circuit} · ${race.date} ${SEASON_YEAR}${race.sprint ? ' · 🏃 SPRINT WEEKEND' : ''}`,
     ''
   ];
   draftOrder.forEach((pid, i) => {
@@ -7647,10 +7758,10 @@ function sharePickOrderWhatsApp(raceIdx) {
 
   const medals = ['🥇','🥈','🥉'];
   const lines = [
-    '🏎 F1 GRID MASTERS 2026',
+    `🏎 F1 GRID MASTERS ${SEASON_YEAR}`,
     '',
     `${race.flag} ${race.name} GRAND PRIX — PICK ORDER`,
-    `${race.circuit} · ${race.date} 2026${race.sprint ? ' · 🏃 SPRINT WEEKEND' : ''}`,
+    `${race.circuit} · ${race.date} ${SEASON_YEAR}${race.sprint ? ' · 🏃 SPRINT WEEKEND' : ''}`,
     ''
   ];
 
@@ -7674,7 +7785,7 @@ function _pickDeadlineDate(raceDateStr) {
   const parts = raceDateStr.trim().split(' ');
   const mon = months[parts[0]]; const day = parseInt(parts[1]);
   if (mon === undefined || isNaN(day)) return null;
-  const raceDate = new Date(2026, mon, day);
+  const raceDate = new Date(SEASON_YEAR, mon, day);
   const dow = raceDate.getDay();
   const daysBack = dow === 4 ? 0 : ((dow + 3) % 7);
   const thu = new Date(raceDate); thu.setDate(raceDate.getDate() - daysBack);
@@ -7738,7 +7849,7 @@ function _buildPickReminderCanvas(raceIdx, theme) {
   let y = 28;
   ctx.font = '900 13px Orbitron, sans-serif';
   ctx.fillStyle = '#E10600'; ctx.textAlign = 'center';
-  ctx.fillText('F1 GRID MASTERS 2026', W / 2, y);
+  ctx.fillText(`F1 GRID MASTERS ${SEASON_YEAR}`, W / 2, y);
 
   y += 36;
   ctx.font = '34px serif';
@@ -7750,7 +7861,7 @@ function _buildPickReminderCanvas(raceIdx, theme) {
   y += 20;
   ctx.font = '600 12px Rajdhani, sans-serif';
   ctx.fillStyle = P.sub;
-  ctx.fillText(`${race.circuit} · ${race.date} 2026${race.sprint ? ' · SPRINT WEEKEND' : ''}`, W / 2, y);
+  ctx.fillText(`${race.circuit} · ${race.date} ${SEASON_YEAR}${race.sprint ? ' · SPRINT WEEKEND' : ''}`, W / 2, y);
 
   // deadline box
   y = HEADER_H;
@@ -7815,7 +7926,7 @@ function _buildPickReminderCanvas(raceIdx, theme) {
   ctx.fillStyle = '#E10600'; ctx.fillRect(0, H - FOOTER_H, W, FOOTER_H);
   ctx.font = 'bold 13px Orbitron, sans-serif';
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
-  ctx.fillText('F1 GRID MASTERS 2026  ·  f1gridmasters.netlify.app', W / 2, H - FOOTER_H / 2 + 5);
+  ctx.fillText(`F1 GRID MASTERS ${SEASON_YEAR}  ·  f1gridmasters.netlify.app`, W / 2, H - FOOTER_H / 2 + 5);
 
   return canvas;
 }
@@ -7828,7 +7939,7 @@ async function previewPickReminder(raceIdx) {
   const countdown = _pickDeadlineCountdown(race.date);
 
   const lines = [
-    '🏎 *F1 GRID MASTERS 2026*',
+    `🏎 *F1 GRID MASTERS ${SEASON_YEAR}*`,
     '',
     `⏰ *PICK REMINDER — ${race.flag} ${race.name} GP*`,
     `📍 ${race.circuit} · ${race.date}${race.sprint ? ' · 🏃 Sprint weekend' : ''}`,
@@ -7862,10 +7973,11 @@ function renderTVSchedule() {
     'Monaco':'mco','Spain':'esp','Austria':'aut','UK':'gbr','Belgium':'bel',
     'Hungary':'hun','Netherlands':'nld','Italy':'ita','Azerbaijan':'aze',
     'Singapore':'sgp','Mexico':'mex','Brazil':'bra','Qatar':'qat','UAE':'are',
-    'Malaysia':'mys'
+    'Malaysia':'mys','Bahrain':'bhr','Saudi Arabia':'sau','Portugal':'prt',
+    'Türkiye':'tur'
   };
 
-  const WEEKENDS = {
+  const WEEKENDS_2026 = {
     'r10':{ dates:'26–28 Jun 2026' },
     'r11':{ dates:'3–5 Jul 2026' },
     'r12':{ dates:'17–19 Jul 2026' },
@@ -7884,7 +7996,7 @@ function renderTVSchedule() {
     'r24':{ dates:'4–6 Dec 2026' },
   };
 
-  const TV_SESSIONS = {
+  const TV_SESSIONS_2026 = {
     'r10': { confirmed:false, tz:'BST', sessions:[
       {day:'FRI', label:'Practice 1',  race:false, time:'12:30'},
       {day:'FRI', label:'Practice 2',  race:false, time:'16:00'},
@@ -7999,6 +8111,41 @@ function renderTVSchedule() {
     ]},
   };
 
+  // 2027 weekend dates from the published FIA calendar. Sky has not released
+  // 2027 session times yet, so TV_SESSIONS_2027 stays empty — the cards below
+  // fall back to "times to be confirmed" when a race has no session data.
+  // Fill these in per weekend using .claude/skills/race-weekend-update.
+  const WEEKENDS_2027 = {
+    'r1': { dates:'12–14 Mar 2027' },
+    'r2': { dates:'19–21 Mar 2027' },
+    'r3': { dates:'2–4 Apr 2027' },
+    'r4': { dates:'9–11 Apr 2027' },
+    'r5': { dates:'16–18 Apr 2027' },
+    'r6': { dates:'30 Apr–2 May 2027' },
+    'r7': { dates:'21–23 May 2027' },
+    'r8': { dates:'4–6 Jun 2027' },
+    'r9': { dates:'18–20 Jun 2027' },
+    'r10':{ dates:'2–4 Jul 2027' },
+    'r11':{ dates:'9–11 Jul 2027' },
+    'r12':{ dates:'23–25 Jul 2027' },
+    'r13':{ dates:'30 Jul–1 Aug 2027' },
+    'r14':{ dates:'3–5 Sep 2027' },
+    'r15':{ dates:'10–12 Sep 2027' },
+    'r16':{ dates:'24–26 Sep 2027' },
+    'r17':{ dates:'1–3 Oct 2027' },
+    'r18':{ dates:'8–10 Oct 2027' },
+    'r19':{ dates:'22–24 Oct 2027' },
+    'r20':{ dates:'29–31 Oct 2027' },
+    'r21':{ dates:'5–7 Nov 2027' },
+    'r22':{ dates:'18–20 Nov 2027' },
+    'r23':{ dates:'3–5 Dec 2027' },
+    'r24':{ dates:'10–12 Dec 2027' },
+  };
+  const TV_SESSIONS_2027 = {};
+
+  const WEEKENDS     = ({ 2026: WEEKENDS_2026,     2027: WEEKENDS_2027     })[SEASON_YEAR] || {};
+  const TV_SESSIONS  = ({ 2026: TV_SESSIONS_2026,  2027: TV_SESSIONS_2027  })[SEASON_YEAR] || {};
+
   const currentIdx = STATE.currentRaceIdx;
   const remainingRaces = RACES.slice(currentIdx);
 
@@ -8017,7 +8164,7 @@ function renderTVSchedule() {
       ? '<span class="tv-status-badge tv-badge-live">LIVE WEEKEND</span>'
       : isNext
         ? '<span class="tv-status-badge tv-badge-next">NEXT RACE</span>'
-        : `<span class="tv-status-badge tv-badge-upcoming">${race.date} 2026</span>`;
+        : `<span class="tv-status-badge tv-badge-upcoming">${race.date} ${SEASON_YEAR}</span>`;
 
     const sprintBadge = race.sprint ? '<span class="tv-status-badge tv-badge-sprint">SPRINT</span>' : '';
 
@@ -8044,7 +8191,7 @@ function renderTVSchedule() {
         <img class="tv-flag-img" src="${flagUrl}" alt="${race.name} flag" onerror="this.style.display='none'">
         <div class="tv-race-info">
           <div class="tv-race-name">${race.name} GRAND PRIX</div>
-          <div class="tv-race-meta">${race.circuit} · ${weekend.dates || race.date + ' 2026'}</div>
+          <div class="tv-race-meta">${race.circuit} · ${weekend.dates || race.date + ' ' + SEASON_YEAR}</div>
         </div>
         <div class="tv-badges">${sprintBadge}${badgeHtml}</div>
         <span class="tv-chevron">▼</span>
@@ -8085,6 +8232,46 @@ async function initApp() {
   const loader = document.getElementById('sb-loading');
   if (loader) loader.remove();
 }
+
+// Stamp SEASON_YEAR over every label baked into the static markup, so rolling
+// the season over stays a one-line change. Runs before initApp() so the first
+// paint is already correct.
+function applySeasonLabels() {
+  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  const teamCount = new Set(activeDrivers().map(d => d.team)).size;
+
+  document.title = `F1 GRID MASTERS ${SEASON_YEAR}`;
+  set('brand-title',        `F1 GRID MASTERS ${SEASON_YEAR}`);
+  set('brand-sub',          `${SEASON_YEAR} FANTASY LEAGUE`);
+  set('mob-brand-sub',      `${SEASON_YEAR} FANTASY LEAGUE`);
+  set('nav-seasongp',       `🏁 ${SEASON_YEAR} GP`);
+  set('mob-seasongp-label', `${SEASON_YEAR} GP`);
+  set('calendar-head',      `${SEASON_YEAR} F1 CALENDAR · ${RACES.length} ROUNDS`);
+  set('tv-head',            `📺 SKY SPORTS F1 · ${SEASON_YEAR} TV GUIDE`);
+  set('grid-head',          `${SEASON_YEAR} F1 GRID · ${activeDrivers().length} DRIVERS · ${teamCount} TEAMS`);
+  set('seasongp-head',      `🏁 ${SEASON_YEAR} GRAND PRIX RESULTS · LIVE SEASON DATA`);
+  set('seasongp-sub',       `Official race results for the ${SEASON_YEAR} F1 season.`);
+  set('s2025-sub',          `Use last season's data to inform your ${SEASON_YEAR} picks.`);
+
+  // The next-season preview tab only exists while a future calendar is loaded.
+  // Once SEASON_YEAR catches up to it, the tab disappears on its own.
+  const hasNext = !!SEASON_CALENDARS[NEXT_SEASON_YEAR];
+  const navNext = document.getElementById('nav-nextseason');
+  const mobNext = document.getElementById('mob-nextseason');
+  if (navNext) {
+    navNext.style.display = hasNext ? '' : 'none';
+    navNext.textContent = `🔭 ${NEXT_SEASON_YEAR} FIXTURES`;
+  }
+  if (mobNext) mobNext.style.display = hasNext ? '' : 'none';
+  set('mob-nextseason-label', `${NEXT_SEASON_YEAR} FIXTURES`);
+
+  const desc = document.querySelector('meta[name="description"]');
+  if (desc) desc.setAttribute('content',
+    `Fantasy F1 draft league for the ${SEASON_YEAR} season. Pick drivers, earn points, compete with friends.`);
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) ogTitle.setAttribute('content', `F1 Grid Masters ${SEASON_YEAR}`);
+}
+applySeasonLabels();
 
 initApp();
 
@@ -8157,7 +8344,7 @@ function updateRaceCountdown() {
   const raceIdx = STATE.currentRaceIdx;
   if (raceIdx >= RACES.length) return;
   const race = RACES[raceIdx];
-  const raceDate = parseRaceDate(race.date + ' 2026');
+  const raceDate = parseRaceDate(race.date + ' ' + SEASON_YEAR);
   if (!raceDate) return;
   // Set race time to 14:00 local of the user as approximation
   raceDate.setHours(14, 0, 0, 0);

@@ -66,6 +66,25 @@ Hard rules, learned from real incidents:
 bottom). TV times carry `confirmed: true/false` flags and a `tz: 'BST'` label.
 Use `.claude/skills/race-weekend-update` for the update procedure.
 
+## Seasons
+
+- `SEASON_YEAR` (top of the script) is the single season switch. `RACES` is derived
+  from it via `SEASON_CALENDARS`, which holds `RACES_2026` and `RACES_2027`;
+  `WEEKENDS`/`TV_SESSIONS` select per season the same way inside `renderTVSchedule()`.
+  `applySeasonLabels()` (end of the script) stamps the year over every label baked
+  into the static markup, so year strings should not be hardcoded in new code.
+- **Saved state has no season dimension** — picks and results are keyed by race id
+  (`r1`…`r24`) only, so a new season's data would overwrite the old season's. Never
+  flip `SEASON_YEAR` without archiving and resetting first: see
+  `docs/season-changeover.md`. Never flip it mid-season — `RACES` drives
+  `currentRaceIdx`, round counts, the draft rotation and every share card.
+- A driver kept for history but no longer pickable gets `active:false`; anything a
+  player can pick or be assigned must read `activeDrivers()`, not `DRIVERS`.
+- The theme and player-identity storage keys are intentionally *not* season-stamped,
+  so preferences and identity survive a rollover. The state cache key is.
+- 2025-season prose on the 2025 page is a period document written in 2026 terms —
+  leave it alone; only the three labels that test the live grid are templated.
+
 ## Working conventions
 
 - **Small commits, one concern each.** A six-fix batch commit (`bbc98ea`) was fully
