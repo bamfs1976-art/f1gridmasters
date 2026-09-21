@@ -2977,13 +2977,17 @@ function renderDraft() {
           <div class="pick-order-list">${sidebarRows}</div>
           ${picksResolved ? `
             <div style="margin-top:16px;">
-              ${picksRevealed
-                ? `<button class="btn btn-green btn-sm" style="width:100%" onclick="goToNextRace()">
-                    ADVANCE TO RACE ${raceIdx+2 <= RACES.length ? raceIdx+2 : '—'} DRAFT ▶
-                   </button>`
-                : `<div style="padding:10px;background:rgba(255,165,0,0.05);border:1px solid rgba(255,165,0,0.2);border-radius:6px;text-align:center;font-size:12px;color:#ffa500;font-family:Share Tech Mono,monospace;">
+              ${!picksRevealed
+                ? `<div style="padding:10px;background:rgba(255,165,0,0.05);border:1px solid rgba(255,165,0,0.2);border-radius:6px;text-align:center;font-size:12px;color:#ffa500;font-family:Share Tech Mono,monospace;">
                     ⏳ AWAITING ADMIN REVEAL
-                   </div>`}
+                   </div>`
+                : adminUnlocked
+                  ? `<button class="btn btn-green btn-sm" style="width:100%" onclick="goToNextRace()">
+                      ADVANCE TO RACE ${raceIdx+2 <= RACES.length ? raceIdx+2 : '—'} DRAFT ▶
+                     </button>`
+                  : `<div style="padding:10px;background:rgba(255,165,0,0.05);border:1px solid rgba(255,165,0,0.2);border-radius:6px;text-align:center;font-size:12px;color:#ffa500;font-family:Share Tech Mono,monospace;">
+                      ⏳ AWAITING ADMIN TO OPEN THE NEXT DRAFT
+                     </div>`}
             </div>` : ''}
         </div>
       </details>
@@ -3145,6 +3149,13 @@ function pickDriver(short) {
 }
 
 function goToNextRace() {
+  // Advancing the round moves the whole league on and is written to the shared
+  // Supabase row, so it is an admin action. The button in renderDraft is already
+  // admin-only; this guard stops a stale DOM or a console call getting past it.
+  if (!adminUnlocked) {
+    showToast('Only the admin can open the next race draft', 'error');
+    return;
+  }
   STATE.currentRaceIdx++;
   if (STATE.currentRaceIdx < RACES.length) {
     STATE.draftOrder = getDraftOrderForRace(STATE.currentRaceIdx);
