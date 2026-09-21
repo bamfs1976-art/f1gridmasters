@@ -3161,6 +3161,13 @@ function goToNextRace() {
     STATE.draftOrder = getDraftOrderForRace(STATE.currentRaceIdx);
   }
   saveState();
+  // Mirror adminAdvanceRace and log it: an advance moves the whole league on,
+  // and an unlogged one leaves no way to tell later who moved the round or when.
+  // RACES[idx] is undefined once the season runs past the final round.
+  const next = RACES[STATE.currentRaceIdx];
+  addLog(next
+    ? `Advanced to Race ${STATE.currentRaceIdx + 1} (${next.name})`
+    : 'Advanced past the final race \u2014 season complete', 'good');
   renderDraft();
   showToast(`Moving to Race ${STATE.currentRaceIdx + 1}`, 'info');
 }
