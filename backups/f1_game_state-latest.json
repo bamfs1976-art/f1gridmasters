@@ -3582,6 +3582,30 @@
                         "GAS",
                         "LIN"
                     ],
+                    "p1772378299642": [
+                        "ANT",
+                        "RUS",
+                        "VER",
+                        "HAM",
+                        "NOR",
+                        "LEC",
+                        "PIA",
+                        "LAW",
+                        "ALO",
+                        "ALB",
+                        "STR",
+                        "SAI",
+                        "GAS",
+                        "COL",
+                        "BEA",
+                        "OCO",
+                        "HUL",
+                        "PER",
+                        "BOR",
+                        "BOT",
+                        "TSU",
+                        "LIN"
+                    ],
                     "p1772378303461": [
                         "ANT",
                         "RUS",
@@ -3621,6 +3645,22 @@
                         "NOR",
                         "PIA",
                         "LAW"
+                    ],
+                    "p1772378316012": [
+                        "ANT",
+                        "HAM",
+                        "LEC",
+                        "RUS",
+                        "NOR",
+                        "VER",
+                        "PIA",
+                        "GAS",
+                        "LAW",
+                        "COL",
+                        "LIN",
+                        "TSU",
+                        "HUL",
+                        "BOR"
                     ],
                     "p1772378317986": [
                         "ANT",
@@ -3663,6 +3703,11 @@
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "17:39",
+                    "type": "good"
+                },
                 {
                     "msg": "Deadline set for AZERBAIJAN: 24/09/2026, 21:00:00",
                     "time": "10:08",
@@ -3906,11 +3951,6 @@
                 {
                     "msg": "Deadline set for HUNGARY: 23/07/2026, 21:00:00",
                     "time": "08:24",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "08:23",
                     "type": "good"
                 }
             ],
@@ -4360,16 +4400,18 @@
                 },
                 "r17": {
                     "p1772378294011": true,
+                    "p1772378299642": true,
                     "p1772378303461": true,
                     "p1772378306541": true,
                     "p1772378311744": true,
+                    "p1772378316012": true,
                     "p1772378317986": true,
                     "p1772378324269": true,
                     "p1772378383236": true
                 }
             }
         },
-        "updated_at": "2026-09-21T21:29:46.404+00:00",
+        "updated_at": "2026-09-23T07:35:00.943+00:00",
         "version": 1
     }
 ]
