@@ -2445,13 +2445,17 @@ function resolveDraft(raceId, draftOrder) {
   const prefs = STATE.draftPrefs[raceId] || {};
   const resolved = {};       // {playerId: driverShort}
   const taken = new Set();   // drivers already assigned
+  // A ranked list can outlive the grid it was built against: a driver who was
+  // pickable at submission time may have been stood down before the draft
+  // resolves. Skip those, or a player is assigned someone who is not racing.
+  const active = new Set(activeDrivers().map(d => d.short));
 
   draftOrder.forEach(pid => {
     const playerPrefs = prefs[pid] || [];
-    // Find first preference not yet taken
+    // Find first preference that is still on the grid and not yet taken
     let chosen = null;
     for (const short of playerPrefs) {
-      if (!taken.has(short)) { chosen = short; break; }
+      if (!taken.has(short) && active.has(short)) { chosen = short; break; }
     }
     // Fallback: first available driver not taken by anyone (sorted by DRIVERS order)
     // TODO (league rules decision): a player with no available preference gets
