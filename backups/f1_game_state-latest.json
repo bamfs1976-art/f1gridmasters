@@ -3705,6 +3705,11 @@
             "activityLog": [
                 {
                     "msg": "Admin unlocked",
+                    "time": "13:54",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
                     "time": "17:39",
                     "type": "good"
                 },
@@ -3945,11 +3950,6 @@
                 },
                 {
                     "msg": "Admin unlocked",
-                    "time": "08:24",
-                    "type": "good"
-                },
-                {
-                    "msg": "Deadline set for HUNGARY: 23/07/2026, 21:00:00",
                     "time": "08:24",
                     "type": "good"
                 }
@@ -4411,7 +4411,7 @@
                 }
             }
         },
-        "updated_at": "2026-09-23T07:35:00.943+00:00",
+        "updated_at": "2026-09-23T12:54:20.791+00:00",
         "version": 1
     }
 ]
