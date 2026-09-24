@@ -1764,12 +1764,7 @@ const DRIVERS = [
   { num:44,  name:'Lewis Hamilton',     short:'HAM', team:'Ferrari',       teamColor:'#DC0000' },
   { num:16,  name:'Charles Leclerc',    short:'LEC', team:'Ferrari',       teamColor:'#DC0000' },
   { num:3,   name:'Max Verstappen',     short:'VER', team:'Red Bull',      teamColor:'#0600EF' },
-  { num:30,  name:'Liam Lawson',        short:'LAW', team:'Red Bull',      teamColor:'#0600EF' },
-  // Hadjar out from Netherlands (r14); Lawson took the Red Bull seat and Tsunoda
-  // took Lawson's at Racing Bulls. Hadjar stays in this list so past picks,
-  // results, images and stats still resolve — active:false keeps him out of new
-  // drafts only. Restore him by deleting the flag if he returns to the grid.
-  { num:6,   name:'Isack Hadjar',       short:'HAD', team:'Red Bull',      teamColor:'#0600EF', active:false },
+  { num:6,   name:'Isack Hadjar',       short:'HAD', team:'Red Bull',      teamColor:'#0600EF' },
   { num:63,  name:'George Russell',     short:'RUS', team:'Mercedes',      teamColor:'#00D2BE' },
   { num:12,  name:'Kimi Antonelli',     short:'ANT', team:'Mercedes',      teamColor:'#00D2BE' },
   { num:55,  name:'Carlos Sainz',       short:'SAI', team:'Williams',      teamColor:'#005AFF' },
@@ -1782,8 +1777,13 @@ const DRIVERS = [
   { num:87,  name:'Oliver Bearman',     short:'BEA', team:'Haas',          teamColor:'#B6BABD' },
   { num:27,  name:'Nico Hülkenberg',    short:'HUL', team:'Audi',          teamColor:'#999999' },
   { num:5,   name:'Gabriel Bortoleto',  short:'BOR', team:'Audi',          teamColor:'#999999' },
-  { num:22,  name:'Yuki Tsunoda',       short:'TSU', team:'Racing Bulls',  teamColor:'#1E41FF' },
+  { num:30,  name:'Liam Lawson',        short:'LAW', team:'Racing Bulls',  teamColor:'#1E41FF' },
   { num:2,   name:'Arvid Lindblad',     short:'LIN', team:'Racing Bulls',  teamColor:'#1E41FF' },
+  // Hadjar returned to Red Bull for Azerbaijan (r17) and Lawson went back to
+  // Racing Bulls, so Tsunoda's cover spell ends here. He keeps his entry so any
+  // pick, result, image or stat referencing TSU still resolves — active:false
+  // keeps him out of new drafts only. Restore him by deleting the flag.
+  { num:22,  name:'Yuki Tsunoda',       short:'TSU', team:'Racing Bulls',  teamColor:'#1E41FF', active:false },
   { num:11,  name:'Sergio Pérez',       short:'PER', team:'Cadillac',      teamColor:'#CC0033' },
   { num:77,  name:'Valtteri Bottas',    short:'BOT', team:'Cadillac',      teamColor:'#CC0033' },
 ];
