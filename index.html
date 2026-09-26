@@ -2442,6 +2442,18 @@ function getDraftOrderForRace(raceIdx) {
 // The resolved picks are stored in draftPicks as normal.
 
 function resolveDraft(raceId, draftOrder) {
+  // A race whose result is already recorded is history. Re-resolving it would
+  // overwrite the stored picks from whatever driver grid the calling browser
+  // happens to hold, wiping any admin amendment with it. That is how the
+  // Netherlands and Madrid picks got reverted: a stale tab still on an old
+  // round re-ran this for a race that finished weeks earlier.
+  if (STATE.raceResults[raceId]) {
+    console.warn(`resolveDraft: refusing to re-resolve ${raceId} \u2014 result already recorded`);
+    if (typeof showToast === 'function') {
+      showToast('That race already has a result \u2014 picks left as they are. Use Amend Pick to change one.', 'error');
+    }
+    return STATE.draftPicks[raceId] || {};
+  }
   const prefs = STATE.draftPrefs[raceId] || {};
   const resolved = {};       // {playerId: driverShort}
   const taken = new Set();   // drivers already assigned
