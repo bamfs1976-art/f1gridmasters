@@ -306,9 +306,9 @@
                 },
                 "r14": {
                     "p1772378294011": "GAS",
-                    "p1772378295758": "LAW",
+                    "p1772378295758": "HAD",
                     "p1772378298046": "RUS",
-                    "p1772378299642": "HAD",
+                    "p1772378299642": "LAW",
                     "p1772378303461": "ALO",
                     "p1772378306541": "HUL",
                     "p1772378308600": "VER",
@@ -348,7 +348,7 @@
                     "p1772378303461": "LEC",
                     "p1772378306541": "GAS",
                     "p1772378308600": "NOR",
-                    "p1772378311744": "HAD",
+                    "p1772378311744": "LAW",
                     "p1772378313028": "BEA",
                     "p1772378314501": "RUS",
                     "p1772378316012": "HUL",
@@ -356,7 +356,7 @@
                     "p1772378320191": "SAI",
                     "p1772378324269": "VER",
                     "p1772378327316": "PIA",
-                    "p1772378383236": "LAW"
+                    "p1772378383236": "TSU"
                 },
                 "r17": {
                     "p1772378294011": "COL",
@@ -1101,6 +1101,23 @@
                         "HAD",
                         "NOR",
                         "PIA"
+                    ]
+                },
+                "r4": {
+                    "p1772378306541": [
+                        "ANT",
+                        "RUS",
+                        "HAM",
+                        "NOR",
+                        "LEC",
+                        "VER",
+                        "PIA",
+                        "HAD",
+                        "LAW",
+                        "GAS",
+                        "LIN",
+                        "BEA",
+                        "COL"
                     ]
                 },
                 "r6": {
@@ -3829,6 +3846,36 @@
             },
             "activityLog": [
                 {
+                    "msg": "Restored Hadjar/Lawson picks in r14 and r16 (Kevin, Adam, Richard, Joe) \u2014 a re-resolve had reverted them",
+                    "time": "21:01",
+                    "type": "warn"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "20:50",
+                    "type": "good"
+                },
+                {
+                    "msg": "Advanced to Race 16 (BAHRAIN)",
+                    "time": "17:05",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "17:04",
+                    "type": "good"
+                },
+                {
+                    "msg": "Manually entered result for AZERBAIJAN",
+                    "time": "15:23",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "15:22",
+                    "type": "good"
+                },
+                {
                     "msg": "Auto-resolved draft for AZERBAIJAN \u2014 deadline passed",
                     "time": "21:16",
                     "type": "warn"
@@ -4047,36 +4094,6 @@
                     "msg": "Admin unlocked",
                     "time": "08:48",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "17:58",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "14:01",
-                    "type": "good"
-                },
-                {
-                    "msg": "Deadline set for NETHERLANDS: 20/08/2026, 21:00:00",
-                    "time": "20:24",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:24",
-                    "type": "good"
-                },
-                {
-                    "msg": "Advanced to Race 12 (NETHERLANDS)",
-                    "time": "20:23",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:23",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -4248,6 +4265,18 @@
                     "8": "PIA",
                     "9": "LIN",
                     "10": "HUL"
+                },
+                "r17": {
+                    "1": "RUS",
+                    "2": "VER",
+                    "3": "HAD",
+                    "4": "LEC",
+                    "5": "ANT",
+                    "6": "HAM",
+                    "7": "LIN",
+                    "8": "OCO",
+                    "9": "BEA",
+                    "10": "SAI"
                 }
             },
             "notifEnabled": true,
@@ -4265,9 +4294,10 @@
                 "r13": true,
                 "r14": true,
                 "r15": true,
-                "r16": true
+                "r16": true,
+                "r17": true
             },
-            "currentRaceIdx": 14,
+            "currentRaceIdx": 15,
             "draftDeadlines": {
                 "r7": "2026-05-21T20:00:00.000Z",
                 "r8": "2026-06-04T20:00:00.000Z",
@@ -4333,6 +4363,9 @@
                     "p1772378324269": true,
                     "p1772378327316": true,
                     "p1772378383236": true
+                },
+                "r4": {
+                    "p1772378306541": true
                 },
                 "r6": {
                     "p1772378294011": true,
@@ -4542,7 +4575,7 @@
                 }
             }
         },
-        "updated_at": "2026-09-24T20:16:19.874+00:00",
+        "updated_at": "2026-09-26T20:01:47.864958+00:00",
         "version": 1
     }
 ]
