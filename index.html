@@ -2441,6 +2441,21 @@ function getDraftOrderForRace(raceIdx) {
 // then P2, etc. Players who submit last get the leftover driver.
 // The resolved picks are stored in draftPicks as normal.
 
+// League rule: a player who misses the deadline keeps the list they last
+// submitted, rather than dropping to the leftover-driver fallback. Walks the
+// calendar backwards from the race being resolved and returns the most recent
+// non-empty list that player submitted, however many rounds ago that was.
+// Returns [] for a player who has never submitted.
+function _lastSubmittedPrefs(playerId, raceId) {
+  const idx = RACES.findIndex(r => r.id === raceId);
+  if (idx < 0) return [];
+  for (let i = idx - 1; i >= 0; i--) {
+    const list = STATE.draftPrefs?.[RACES[i].id]?.[playerId];
+    if (Array.isArray(list) && list.length > 0) return list;
+  }
+  return [];
+}
+
 function resolveDraft(raceId, draftOrder) {
   // A race whose result is already recorded is history. Re-resolving it would
   // overwrite the stored picks from whatever driver grid the calling browser
@@ -2463,16 +2478,20 @@ function resolveDraft(raceId, draftOrder) {
   const active = new Set(activeDrivers().map(d => d.short));
 
   draftOrder.forEach(pid => {
-    const playerPrefs = prefs[pid] || [];
+    // Nothing submitted for this race falls back to the player's last submitted
+    // list, so missing a deadline costs them their place in the order, not their
+    // preferences. An empty list here means they have never submitted at all.
+    const playerPrefs = (prefs[pid] && prefs[pid].length > 0)
+      ? prefs[pid]
+      : _lastSubmittedPrefs(pid, raceId);
     // Find first preference that is still on the grid and not yet taken
     let chosen = null;
     for (const short of playerPrefs) {
       if (!taken.has(short) && active.has(short)) { chosen = short; break; }
     }
-    // Fallback: first available driver not taken by anyone (sorted by DRIVERS order)
-    // TODO (league rules decision): a player with no available preference gets
-    // the first free driver in DRIVERS array order, which is McLaren-first and
-    // ignores form. Left as-is on purpose; change only with the league's agreement.
+    // Last resort, for a player with no list at all or one entirely taken:
+    // first free driver in DRIVERS order. McLaren-first and blind to form, so
+    // it should now be reached only by someone who has never submitted.
     if (!chosen) {
       for (const d of activeDrivers()) {
         if (!taken.has(d.short)) { chosen = d.short; break; }
@@ -2833,10 +2852,18 @@ function renderDraft() {
     const myDriver = picks[myPlayerId] ? DRIVERS.find(d => d.short === picks[myPlayerId]) : null;
     const draftPos = draftOrder.indexOf(myPlayerId) + 1;
     const resolvedChoiceIdx = myDriver ? myPrefs.indexOf(myDriver.short) : -1;
+    // A pick can come from the list carried over from the last race the player
+    // submitted, so do not label that as an unmatched auto-assignment.
+    const carriedPrefs = (resolvedChoiceIdx < 0 && myPrefs.length === 0 && myDriver)
+      ? _lastSubmittedPrefs(myPlayerId, race.id) : [];
+    const carriedIdx = myDriver ? carriedPrefs.indexOf(myDriver.short) : -1;
+    const ordinal = i => (i+1) + (['st','nd','rd'][i] || 'th');
     const resolvedChoiceLabel = resolvedChoiceIdx >= 0
       ? (resolvedChoiceIdx === 0 ? '✅ Got 1st choice'
-        : 'Got ' + (resolvedChoiceIdx+1) + (['st','nd','rd'][resolvedChoiceIdx] || 'th') + ' choice')
-      : 'Auto-assigned (no prefs matched)';
+        : 'Got ' + ordinal(resolvedChoiceIdx) + ' choice')
+      : carriedIdx >= 0
+        ? 'No picks submitted — ' + ordinal(carriedIdx) + ' choice from your last list'
+        : 'Auto-assigned (no prefs matched)';
     const resolvedChoiceColor = resolvedChoiceIdx === 0 ? 'var(--green)'
       : resolvedChoiceIdx === 1 ? 'var(--gold)'
       : resolvedChoiceIdx === 2 ? 'var(--silver)'
