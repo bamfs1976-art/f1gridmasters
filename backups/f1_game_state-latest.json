@@ -4038,9 +4038,62 @@
                         "BOR",
                         "GAS"
                     ]
+                },
+                "r18": {
+                    "p1772378299642": [
+                        "ANT",
+                        "RUS",
+                        "VER",
+                        "HAM",
+                        "LEC",
+                        "PIA",
+                        "NOR",
+                        "HAD",
+                        "SAI",
+                        "ALB",
+                        "ALO",
+                        "GAS",
+                        "STR",
+                        "COL",
+                        "OCO",
+                        "BEA",
+                        "BOR",
+                        "HUL",
+                        "LIN",
+                        "LAW",
+                        "BOT",
+                        "PER"
+                    ],
+                    "p1772378306541": [
+                        "VER",
+                        "HAM",
+                        "RUS",
+                        "ANT",
+                        "LEC",
+                        "PIA",
+                        "NOR",
+                        "HAD",
+                        "LAW",
+                        "GAS"
+                    ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Advanced to Race 17 (SINGAPORE)",
+                    "time": "16:45",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "16:45",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "16:39",
+                    "type": "good"
+                },
                 {
                     "msg": "Admin unlocked",
                     "time": "22:33",
@@ -4275,21 +4328,6 @@
                     "msg": "Admin unlocked",
                     "time": "19:51",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "19:01",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "18:32",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "18:13",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -4329,6 +4367,18 @@
                     "8": "VER",
                     "9": "LAW",
                     "10": "OCO"
+                },
+                "r4": {
+                    "1": "VER",
+                    "2": "ANT",
+                    "3": "HAM",
+                    "4": "LEC",
+                    "5": "HAD",
+                    "6": "PIA",
+                    "7": "LAW",
+                    "8": "ALO",
+                    "9": "NOR",
+                    "10": "LIN"
                 },
                 "r6": {
                     "1": "ANT",
@@ -4480,6 +4530,7 @@
                 "r1": true,
                 "r2": true,
                 "r3": true,
+                "r4": true,
                 "r6": true,
                 "r7": true,
                 "r8": true,
@@ -4493,7 +4544,7 @@
                 "r16": true,
                 "r17": true
             },
-            "currentRaceIdx": 15,
+            "currentRaceIdx": 16,
             "draftDeadlines": {
                 "r4": "2026-10-01T21:30:00.000Z",
                 "r7": "2026-05-21T20:00:00.000Z",
@@ -4780,10 +4831,14 @@
                     "p1772378324269": true,
                     "p1772378327316": true,
                     "p1772378383236": true
+                },
+                "r18": {
+                    "p1772378299642": true,
+                    "p1772378306541": true
                 }
             }
         },
-        "updated_at": "2026-10-01T21:33:36.013+00:00",
+        "updated_at": "2026-10-04T20:11:13.939+00:00",
         "version": 1
     }
 ]
