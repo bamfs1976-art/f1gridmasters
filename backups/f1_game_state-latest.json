@@ -4075,6 +4075,17 @@
                         "BOT",
                         "PER"
                     ],
+                    "p1772378303461": [
+                        "VER",
+                        "ANT",
+                        "HAM",
+                        "LEC",
+                        "HAD",
+                        "NOR",
+                        "PIA",
+                        "RUS",
+                        "GAS"
+                    ],
                     "p1772378306541": [
                         "VER",
                         "HAM",
@@ -4086,10 +4097,44 @@
                         "HAD",
                         "LAW",
                         "GAS"
+                    ],
+                    "p1772378324269": [
+                        "NOR",
+                        "HAM",
+                        "PIA",
+                        "LEC",
+                        "VER",
+                        "HAD",
+                        "RUS",
+                        "ANT",
+                        "SAI",
+                        "GAS",
+                        "LAW",
+                        "LIN",
+                        "BEA",
+                        "COL",
+                        "HUL",
+                        "ALB"
+                    ]
+                },
+                "r19": {
+                    "p1772378383236": [
+                        "VER",
+                        "ANT",
+                        "HAM",
+                        "RUS",
+                        "NOR",
+                        "PIA",
+                        "LEC"
                     ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:31",
+                    "type": "good"
+                },
                 {
                     "msg": "Advanced to Race 17 (SINGAPORE)",
                     "time": "16:45",
@@ -4334,11 +4379,6 @@
                     "msg": "Admin unlocked",
                     "time": "20:49",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "19:51",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -4555,6 +4595,7 @@
                 "r16": true,
                 "r17": true
             },
+            "adminUndoStack": [],
             "currentRaceIdx": 16,
             "draftDeadlines": {
                 "r4": "2026-10-01T21:30:00.000Z",
@@ -4846,11 +4887,13 @@
                 "r18": {
                     "p1772378294011": true,
                     "p1772378299642": true,
-                    "p1772378306541": true
+                    "p1772378303461": true,
+                    "p1772378306541": true,
+                    "p1772378324269": true
                 }
             }
         },
-        "updated_at": "2026-10-06T07:30:35.477+00:00",
+        "updated_at": "2026-10-07T10:22:29.019+00:00",
         "version": 1
     }
 ]
