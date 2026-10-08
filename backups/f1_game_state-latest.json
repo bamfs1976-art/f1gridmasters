@@ -4051,6 +4051,22 @@
                         "COL",
                         "GAS"
                     ],
+                    "p1772378298046": [
+                        "ANT",
+                        "VER",
+                        "RUS",
+                        "HAM",
+                        "LEC",
+                        "HAD",
+                        "NOR",
+                        "PIA",
+                        "LAW",
+                        "LIN",
+                        "GAS",
+                        "COL",
+                        "OCO",
+                        "ALO"
+                    ],
                     "p1772378299642": [
                         "ANT",
                         "RUS",
@@ -4098,6 +4114,44 @@
                         "LAW",
                         "GAS"
                     ],
+                    "p1772378311744": [
+                        "VER",
+                        "ANT",
+                        "HAM",
+                        "RUS",
+                        "LEC",
+                        "NOR",
+                        "HAD",
+                        "PIA"
+                    ],
+                    "p1772378316012": [
+                        "ANT",
+                        "NOR",
+                        "VER",
+                        "HAM",
+                        "PIA",
+                        "LEC",
+                        "HAD",
+                        "RUS",
+                        "LIN",
+                        "LAW",
+                        "GAS",
+                        "COL"
+                    ],
+                    "p1772378317986": [
+                        "RUS",
+                        "VER",
+                        "LEC",
+                        "ANT",
+                        "HAM",
+                        "NOR",
+                        "PIA",
+                        "HAD",
+                        "LAW",
+                        "ALO",
+                        "GAS",
+                        "LIN"
+                    ],
                     "p1772378324269": [
                         "NOR",
                         "HAM",
@@ -4125,11 +4179,22 @@
                         "RUS",
                         "NOR",
                         "PIA",
-                        "LEC"
+                        "LEC",
+                        "HAD"
                     ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "21:44",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "18:31",
+                    "type": "good"
+                },
                 {
                     "msg": "Admin unlocked",
                     "time": "19:31",
@@ -4369,16 +4434,6 @@
                     "msg": "Admin unlocked",
                     "time": "21:18",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:56",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:49",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -4595,7 +4650,6 @@
                 "r16": true,
                 "r17": true
             },
-            "adminUndoStack": [],
             "currentRaceIdx": 16,
             "draftDeadlines": {
                 "r4": "2026-10-01T21:30:00.000Z",
@@ -4886,14 +4940,21 @@
                 },
                 "r18": {
                     "p1772378294011": true,
+                    "p1772378298046": true,
                     "p1772378299642": true,
                     "p1772378303461": true,
                     "p1772378306541": true,
+                    "p1772378311744": true,
+                    "p1772378316012": true,
+                    "p1772378317986": true,
                     "p1772378324269": true
+                },
+                "r19": {
+                    "p1772378383236": true
                 }
             }
         },
-        "updated_at": "2026-10-07T10:22:29.019+00:00",
+        "updated_at": "2026-10-08T06:16:03.44+00:00",
         "version": 1
     }
 ]
