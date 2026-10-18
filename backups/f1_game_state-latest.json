@@ -4270,6 +4270,16 @@
                     ]
                 },
                 "r19": {
+                    "p1772378294011": [
+                        "ANT",
+                        "VER",
+                        "HAM",
+                        "HAD",
+                        "LEC",
+                        "NOR",
+                        "LAW",
+                        "PIA"
+                    ],
                     "p1772378311744": [
                         "VER",
                         "LEC",
@@ -4290,6 +4300,11 @@
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "10:23",
+                    "type": "good"
+                },
                 {
                     "msg": "Advanced to Race 18 (USA)",
                     "time": "18:05",
@@ -4533,11 +4548,6 @@
                 {
                     "msg": "Admin unlocked",
                     "time": "19:23",
-                    "type": "good"
-                },
-                {
-                    "msg": "Manually entered result for MADRID",
-                    "time": "15:57",
                     "type": "good"
                 }
             ],
@@ -5075,12 +5085,13 @@
                     "p1772378383236": true
                 },
                 "r19": {
+                    "p1772378294011": true,
                     "p1772378311744": true,
                     "p1772378383236": true
                 }
             }
         },
-        "updated_at": "2026-10-15T08:15:17.669+00:00",
+        "updated_at": "2026-10-17T09:23:17.49+00:00",
         "version": 1
     }
 ]
