@@ -4452,6 +4452,21 @@
             },
             "activityLog": [
                 {
+                    "msg": "Advanced to Race 19 (MEXICO CITY)",
+                    "time": "08:09",
+                    "type": "good"
+                },
+                {
+                    "msg": "Manually entered result for USA",
+                    "time": "08:07",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "08:06",
+                    "type": "good"
+                },
+                {
                     "msg": "Admin force-resolved draft for r19",
                     "time": "21:10",
                     "type": "warn"
@@ -4685,21 +4700,6 @@
                     "msg": "Admin unlocked",
                     "time": "13:54",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "17:39",
-                    "type": "good"
-                },
-                {
-                    "msg": "Deadline set for AZERBAIJAN: 24/09/2026, 21:00:00",
-                    "time": "10:08",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "19:25",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -4907,6 +4907,18 @@
                     "8": "HUL",
                     "9": "RUS",
                     "10": "HAD"
+                },
+                "r19": {
+                    "1": "ANT",
+                    "2": "LEC",
+                    "3": "VER",
+                    "4": "HAM",
+                    "5": "NOR",
+                    "6": "HAD",
+                    "7": "PIA",
+                    "8": "RUS",
+                    "9": "LAW",
+                    "10": "GAS"
                 }
             },
             "notifEnabled": true,
@@ -4927,9 +4939,10 @@
                 "r15": true,
                 "r16": true,
                 "r17": true,
-                "r18": true
+                "r18": true,
+                "r19": true
             },
-            "currentRaceIdx": 17,
+            "currentRaceIdx": 18,
             "draftDeadlines": {
                 "r4": "2026-10-01T21:30:00.000Z",
                 "r7": "2026-05-21T20:00:00.000Z",
@@ -5252,7 +5265,7 @@
                 }
             }
         },
-        "updated_at": "2026-10-22T20:10:25.271+00:00",
+        "updated_at": "2026-10-26T08:09:20.816+00:00",
         "version": 1
     }
 ]
