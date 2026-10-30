@@ -429,6 +429,24 @@
                     "p1772378324269": "OCO",
                     "p1772378327316": "ANT",
                     "p1772378383236": "PIA"
+                },
+                "r20": {
+                    "p1772378294011": "HAD",
+                    "p1772378295758": "LEC",
+                    "p1772378298046": "ALO",
+                    "p1772378299642": "ANT",
+                    "p1772378303461": "VER",
+                    "p1772378306541": "PIA",
+                    "p1772378308600": "STR",
+                    "p1772378311744": "HAM",
+                    "p1772378313028": "LIN",
+                    "p1772378314501": "COL",
+                    "p1772378316012": "LAW",
+                    "p1772378317986": "GAS",
+                    "p1772378320191": "NOR",
+                    "p1772378324269": "SAI",
+                    "p1772378327316": "BEA",
+                    "p1772378383236": "RUS"
                 }
             },
             "draftPrefs": {
@@ -4459,6 +4477,13 @@
                         "NOR",
                         "LEC"
                     ],
+                    "p1772378295758": [
+                        "ANT",
+                        "VER",
+                        "LEC",
+                        "RUS",
+                        "HAM"
+                    ],
                     "p1772378298046": [
                         "ANT",
                         "VER",
@@ -4496,6 +4521,26 @@
                         "HAD",
                         "LAW",
                         "GAS"
+                    ],
+                    "p1772378311744": [
+                        "ANT",
+                        "VER",
+                        "LEC",
+                        "HAM"
+                    ],
+                    "p1772378313028": [
+                        "ANT",
+                        "RUS",
+                        "VER",
+                        "NOR",
+                        "PIA",
+                        "HAD",
+                        "LEC",
+                        "GAS",
+                        "LAW",
+                        "LIN",
+                        "HUL",
+                        "BOR"
                     ],
                     "p1772378316012": [
                         "ANT",
@@ -4536,10 +4581,65 @@
                         "LAW",
                         "LIN",
                         "BEA"
+                    ],
+                    "p1772378327316": [
+                        "ANT",
+                        "VER",
+                        "LEC",
+                        "RUS",
+                        "HAM",
+                        "NOR",
+                        "PIA",
+                        "HAD",
+                        "LAW",
+                        "BEA",
+                        "GAS",
+                        "COL",
+                        "OCO",
+                        "HUL",
+                        "BOR",
+                        "ALO",
+                        "STR",
+                        "SAI",
+                        "ALB",
+                        "LIN"
+                    ],
+                    "p1772378383236": [
+                        "LEC",
+                        "ANT",
+                        "VER",
+                        "NOR",
+                        "RUS",
+                        "HAM"
                     ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin force-resolved draft for r20",
+                    "time": "21:07",
+                    "type": "warn"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "21:06",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:52",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:39",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "18:14",
+                    "type": "good"
+                },
                 {
                     "msg": "Admin unlocked",
                     "time": "20:27",
@@ -4763,31 +4863,6 @@
                 {
                     "msg": "Manually entered result for AZERBAIJAN",
                     "time": "15:23",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "15:22",
-                    "type": "good"
-                },
-                {
-                    "msg": "Auto-resolved draft for AZERBAIJAN \u2014 deadline passed",
-                    "time": "21:16",
-                    "type": "warn"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:34",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:17",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "18:27",
                     "type": "good"
                 }
             ],
@@ -5354,17 +5429,22 @@
                 },
                 "r20": {
                     "p1772378294011": true,
+                    "p1772378295758": true,
                     "p1772378298046": true,
                     "p1772378299642": true,
                     "p1772378303461": true,
                     "p1772378306541": true,
+                    "p1772378311744": true,
+                    "p1772378313028": true,
                     "p1772378316012": true,
                     "p1772378317986": true,
-                    "p1772378324269": true
+                    "p1772378324269": true,
+                    "p1772378327316": true,
+                    "p1772378383236": true
                 }
             }
         },
-        "updated_at": "2026-10-29T09:58:39.826+00:00",
+        "updated_at": "2026-10-29T21:07:07.251+00:00",
         "version": 1
     }
 ]
