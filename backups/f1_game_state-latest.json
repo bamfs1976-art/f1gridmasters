@@ -4616,6 +4616,16 @@
             },
             "activityLog": [
                 {
+                    "msg": "Manually entered result for MEXICO CITY",
+                    "time": "09:58",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "08:58",
+                    "type": "good"
+                },
+                {
                     "msg": "Admin force-resolved draft for r20",
                     "time": "21:07",
                     "type": "warn"
@@ -4854,16 +4864,6 @@
                     "msg": "Advanced to Race 16 (BAHRAIN)",
                     "time": "17:05",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "17:04",
-                    "type": "good"
-                },
-                {
-                    "msg": "Manually entered result for AZERBAIJAN",
-                    "time": "15:23",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -5083,6 +5083,18 @@
                     "8": "RUS",
                     "9": "LAW",
                     "10": "GAS"
+                },
+                "r20": {
+                    "1": "VER",
+                    "2": "HAM",
+                    "3": "ANT",
+                    "4": "LEC",
+                    "5": "NOR",
+                    "6": "RUS",
+                    "7": "LAW",
+                    "8": "BOR",
+                    "9": "HAD",
+                    "10": "OCO"
                 }
             },
             "notifEnabled": true,
@@ -5104,7 +5116,8 @@
                 "r16": true,
                 "r17": true,
                 "r18": true,
-                "r19": true
+                "r19": true,
+                "r20": true
             },
             "currentRaceIdx": 18,
             "draftDeadlines": {
@@ -5444,7 +5457,7 @@
                 }
             }
         },
-        "updated_at": "2026-10-29T21:07:07.251+00:00",
+        "updated_at": "2026-11-02T09:58:19.93+00:00",
         "version": 1
     }
 ]
