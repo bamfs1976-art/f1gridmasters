@@ -4612,9 +4612,83 @@
                         "RUS",
                         "HAM"
                     ]
+                },
+                "r21": {
+                    "p1772378294011": [
+                        "VER",
+                        "HAM",
+                        "ANT",
+                        "LEC",
+                        "HAD",
+                        "NOR"
+                    ],
+                    "p1772378298046": [
+                        "ANT",
+                        "VER",
+                        "HAM",
+                        "LEC",
+                        "NOR",
+                        "RUS",
+                        "PIA",
+                        "HAD",
+                        "LAW",
+                        "LIN",
+                        "GAS"
+                    ],
+                    "p1772378303461": [
+                        "VER",
+                        "HAM",
+                        "ANT",
+                        "RUS",
+                        "LEC",
+                        "HAD",
+                        "NOR"
+                    ],
+                    "p1772378311744": [
+                        "VER",
+                        "ANT",
+                        "HAM"
+                    ],
+                    "p1772378313028": [
+                        "ANT",
+                        "RUS",
+                        "VER",
+                        "HAM",
+                        "LEC",
+                        "NOR",
+                        "PIA",
+                        "HAD",
+                        "LIN",
+                        "LAW"
+                    ],
+                    "p1772378324269": [
+                        "NOR",
+                        "PIA",
+                        "HAM",
+                        "LEC",
+                        "VER",
+                        "HAD",
+                        "RUS",
+                        "ANT",
+                        "LAW",
+                        "LIN",
+                        "GAS",
+                        "OCO",
+                        "COL"
+                    ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Advanced to Race 20 (SAO PAULO)",
+                    "time": "09:12",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "09:11",
+                    "type": "good"
+                },
                 {
                     "msg": "Manually entered result for MEXICO CITY",
                     "time": "09:58",
@@ -4854,16 +4928,6 @@
                     "msg": "Restored Hadjar/Lawson picks in r14 and r16 (Kevin, Adam, Richard, Joe) \u2014 a re-resolve had reverted them",
                     "time": "21:01",
                     "type": "warn"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "20:50",
-                    "type": "good"
-                },
-                {
-                    "msg": "Advanced to Race 16 (BAHRAIN)",
-                    "time": "17:05",
-                    "type": "good"
                 }
             ],
             "predictions": {},
@@ -5119,7 +5183,7 @@
                 "r19": true,
                 "r20": true
             },
-            "currentRaceIdx": 18,
+            "currentRaceIdx": 19,
             "draftDeadlines": {
                 "r4": "2026-10-01T21:30:00.000Z",
                 "r7": "2026-05-21T20:00:00.000Z",
@@ -5454,10 +5518,17 @@
                     "p1772378324269": true,
                     "p1772378327316": true,
                     "p1772378383236": true
+                },
+                "r21": {
+                    "p1772378294011": true,
+                    "p1772378303461": true,
+                    "p1772378311744": true,
+                    "p1772378313028": true,
+                    "p1772378324269": true
                 }
             }
         },
-        "updated_at": "2026-11-02T09:58:19.93+00:00",
+        "updated_at": "2026-11-05T10:25:24.653+00:00",
         "version": 1
     }
 ]
