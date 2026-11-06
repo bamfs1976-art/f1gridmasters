@@ -447,6 +447,24 @@
                     "p1772378324269": "SAI",
                     "p1772378327316": "BEA",
                     "p1772378383236": "RUS"
+                },
+                "r21": {
+                    "p1772378294011": "HAD",
+                    "p1772378295758": "ANT",
+                    "p1772378298046": "GAS",
+                    "p1772378299642": "BOR",
+                    "p1772378303461": "VER",
+                    "p1772378306541": "RUS",
+                    "p1772378308600": "ALO",
+                    "p1772378311744": "HAM",
+                    "p1772378313028": "LIN",
+                    "p1772378314501": "ALB",
+                    "p1772378316012": "PIA",
+                    "p1772378317986": "LAW",
+                    "p1772378320191": "NOR",
+                    "p1772378324269": "OCO",
+                    "p1772378327316": "BEA",
+                    "p1772378383236": "LEC"
                 }
             },
             "draftPrefs": {
@@ -4622,6 +4640,11 @@
                         "HAD",
                         "NOR"
                     ],
+                    "p1772378295758": [
+                        "ANT",
+                        "VER",
+                        "HAM"
+                    ],
                     "p1772378298046": [
                         "ANT",
                         "VER",
@@ -4635,6 +4658,30 @@
                         "LIN",
                         "GAS"
                     ],
+                    "p1772378299642": [
+                        "VER",
+                        "ANT",
+                        "LEC",
+                        "HAM",
+                        "NOR",
+                        "RUS",
+                        "LAW",
+                        "HAD",
+                        "PIA",
+                        "LIN",
+                        "OCO",
+                        "BOR",
+                        "HUL",
+                        "GAS",
+                        "ALO",
+                        "COL",
+                        "BEA",
+                        "SAI",
+                        "ALB",
+                        "PER",
+                        "STR",
+                        "BOT"
+                    ],
                     "p1772378303461": [
                         "VER",
                         "HAM",
@@ -4643,6 +4690,15 @@
                         "LEC",
                         "HAD",
                         "NOR"
+                    ],
+                    "p1772378306541": [
+                        "VER",
+                        "HAM",
+                        "ANT",
+                        "RUS",
+                        "LEC",
+                        "NOR",
+                        "PIA"
                     ],
                     "p1772378311744": [
                         "VER",
@@ -4661,6 +4717,53 @@
                         "LIN",
                         "LAW"
                     ],
+                    "p1772378314501": [
+                        "ANT",
+                        "VER",
+                        "HAM",
+                        "NOR",
+                        "LEC",
+                        "RUS",
+                        "HAD",
+                        "PIA",
+                        "ALB",
+                        "GAS",
+                        "SAI",
+                        "BOR",
+                        "BEA",
+                        "COL",
+                        "OCO",
+                        "HUL",
+                        "LAW",
+                        "LIN",
+                        "BOT",
+                        "PER",
+                        "ALO",
+                        "STR"
+                    ],
+                    "p1772378316012": [
+                        "VER",
+                        "ANT",
+                        "NOR",
+                        "HAM",
+                        "LEC",
+                        "RUS",
+                        "PIA",
+                        "HAD",
+                        "GAS",
+                        "LAW"
+                    ],
+                    "p1772378317986": [
+                        "VER",
+                        "ANT",
+                        "RUS",
+                        "NOR",
+                        "LEC",
+                        "HAM",
+                        "HAD",
+                        "PIA",
+                        "LAW"
+                    ],
                     "p1772378324269": [
                         "NOR",
                         "PIA",
@@ -4675,10 +4778,76 @@
                         "GAS",
                         "OCO",
                         "COL"
+                    ],
+                    "p1772378327316": [
+                        "ANT",
+                        "VER",
+                        "HAM",
+                        "RUS",
+                        "LEC",
+                        "HAD",
+                        "NOR",
+                        "PIA",
+                        "GAS",
+                        "LAW",
+                        "BEA",
+                        "LIN",
+                        "COL",
+                        "HUL",
+                        "BOR",
+                        "SAI",
+                        "ALB",
+                        "ALO",
+                        "STR"
                     ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "21:36",
+                    "type": "good"
+                },
+                {
+                    "msg": "Auto-resolved draft for SAO PAULO \u2014 deadline passed",
+                    "time": "21:11",
+                    "type": "warn"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:54",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:49",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:26",
+                    "type": "good"
+                },
+                {
+                    "msg": "Deadline set for SAO PAULO: 05/11/2026, 21:00:00",
+                    "time": "19:25",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin locked in submitted picks for John in r21",
+                    "time": "19:25",
+                    "type": "warn"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "19:21",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "12:25",
+                    "type": "good"
+                },
                 {
                     "msg": "Advanced to Race 20 (SAO PAULO)",
                     "time": "09:12",
@@ -4882,51 +5051,6 @@
                 {
                     "msg": "Auto-resolved draft for BAHRAIN \u2014 deadline passed",
                     "time": "22:31",
-                    "type": "warn"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "22:21",
-                    "type": "good"
-                },
-                {
-                    "msg": "Deadline set for BAHRAIN: 01/10/2026, 22:30:00",
-                    "time": "22:20",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "22:18",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "22:13",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "22:08",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "22:06",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "22:04",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "13:00",
-                    "type": "good"
-                },
-                {
-                    "msg": "Restored Hadjar/Lawson picks in r14 and r16 (Kevin, Adam, Richard, Joe) \u2014 a re-resolve had reverted them",
-                    "time": "21:01",
                     "type": "warn"
                 }
             ],
@@ -5195,7 +5319,8 @@
                 "r13": "2026-07-23T20:00:00.000Z",
                 "r14": "2026-08-20T20:00:00.000Z",
                 "r17": "2026-09-24T20:00:00.000Z",
-                "r18": "2026-10-08T20:00:00.000Z"
+                "r18": "2026-10-08T20:00:00.000Z",
+                "r21": "2026-11-05T21:00:00.000Z"
             },
             "draftSubmitted": {
                 "r1": {
@@ -5521,14 +5646,22 @@
                 },
                 "r21": {
                     "p1772378294011": true,
+                    "p1772378295758": true,
+                    "p1772378298046": true,
+                    "p1772378299642": true,
                     "p1772378303461": true,
+                    "p1772378306541": true,
                     "p1772378311744": true,
                     "p1772378313028": true,
-                    "p1772378324269": true
+                    "p1772378314501": true,
+                    "p1772378316012": true,
+                    "p1772378317986": true,
+                    "p1772378324269": true,
+                    "p1772378327316": true
                 }
             }
         },
-        "updated_at": "2026-11-05T10:25:24.653+00:00",
+        "updated_at": "2026-11-05T21:36:20.504+00:00",
         "version": 1
     }
 ]
