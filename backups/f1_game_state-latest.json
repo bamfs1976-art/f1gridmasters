@@ -4804,6 +4804,21 @@
             },
             "activityLog": [
                 {
+                    "msg": "Advanced to Race 21 (LAS VEGAS)",
+                    "time": "08:13",
+                    "type": "good"
+                },
+                {
+                    "msg": "Manually entered result for SAO PAULO",
+                    "time": "08:12",
+                    "type": "good"
+                },
+                {
+                    "msg": "Admin unlocked",
+                    "time": "08:11",
+                    "type": "good"
+                },
+                {
                     "msg": "Admin unlocked",
                     "time": "21:36",
                     "type": "good"
@@ -5037,21 +5052,6 @@
                     "msg": "Admin unlocked",
                     "time": "16:39",
                     "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "22:33",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "22:32",
-                    "type": "good"
-                },
-                {
-                    "msg": "Auto-resolved draft for BAHRAIN \u2014 deadline passed",
-                    "time": "22:31",
-                    "type": "warn"
                 }
             ],
             "predictions": {},
@@ -5283,6 +5283,18 @@
                     "8": "BOR",
                     "9": "HAD",
                     "10": "OCO"
+                },
+                "r21": {
+                    "1": "NOR",
+                    "2": "VER",
+                    "3": "HAD",
+                    "4": "RUS",
+                    "5": "ANT",
+                    "6": "PIA",
+                    "7": "LAW",
+                    "8": "LEC",
+                    "9": "HAM",
+                    "10": "HUL"
                 }
             },
             "notifEnabled": true,
@@ -5305,9 +5317,10 @@
                 "r17": true,
                 "r18": true,
                 "r19": true,
-                "r20": true
+                "r20": true,
+                "r21": true
             },
-            "currentRaceIdx": 19,
+            "currentRaceIdx": 20,
             "draftDeadlines": {
                 "r4": "2026-10-01T21:30:00.000Z",
                 "r7": "2026-05-21T20:00:00.000Z",
@@ -5661,7 +5674,7 @@
                 }
             }
         },
-        "updated_at": "2026-11-05T21:36:20.504+00:00",
+        "updated_at": "2026-11-09T08:13:03.429+00:00",
         "version": 1
     }
 ]
