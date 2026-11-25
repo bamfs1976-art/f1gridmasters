@@ -4998,10 +4998,84 @@
                         "VER",
                         "NOR",
                         "HAM"
+                    ],
+                    "p1772378298046": [
+                        "VER",
+                        "ANT",
+                        "HAM",
+                        "LEC",
+                        "RUS",
+                        "HAD",
+                        "NOR",
+                        "PIA",
+                        "LAW"
+                    ],
+                    "p1772378303461": [
+                        "ANT",
+                        "VER",
+                        "RUS",
+                        "NOR",
+                        "HAM",
+                        "LEC",
+                        "PIA",
+                        "HAD",
+                        "GAS",
+                        "COL",
+                        "HUL",
+                        "LAW",
+                        "LIN",
+                        "BOR",
+                        "BEA",
+                        "SAI",
+                        "ALB",
+                        "OCO",
+                        "ALO"
+                    ],
+                    "p1772378311744": [
+                        "VER"
+                    ],
+                    "p1772378313028": [
+                        "VER",
+                        "ANT",
+                        "NOR",
+                        "PIA",
+                        "HAM",
+                        "LEC",
+                        "RUS",
+                        "HAD",
+                        "LAW",
+                        "GAS",
+                        "COL",
+                        "SAI",
+                        "HUL",
+                        "LIN",
+                        "OCO",
+                        "BOR",
+                        "ALO",
+                        "BEA",
+                        "ALB",
+                        "PER",
+                        "STR",
+                        "BOT"
+                    ],
+                    "p1772378316012": [
+                        "VER",
+                        "ANT",
+                        "NOR",
+                        "RUS",
+                        "PIA",
+                        "HAM",
+                        "HAD",
+                        "LEC"
                     ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "10:11",
+                    "type": "good"
+                },
                 {
                     "msg": "Advanced to Race 22 (QATAR)",
                     "time": "16:01",
@@ -5245,11 +5319,6 @@
                 {
                     "msg": "Admin unlocked",
                     "time": "19:43",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "19:38",
                     "type": "good"
                 }
             ],
@@ -5901,11 +5970,16 @@
                     "p1772378327316": true
                 },
                 "r23": {
-                    "p1772378294011": true
+                    "p1772378294011": true,
+                    "p1772378298046": true,
+                    "p1772378303461": true,
+                    "p1772378311744": true,
+                    "p1772378313028": true,
+                    "p1772378316012": true
                 }
             }
         },
-        "updated_at": "2026-11-22T16:02:39.407+00:00",
+        "updated_at": "2026-11-25T10:50:24.952+00:00",
         "version": 1
     }
 ]
