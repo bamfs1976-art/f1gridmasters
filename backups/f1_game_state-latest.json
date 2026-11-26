@@ -5010,6 +5010,30 @@
                         "PIA",
                         "LAW"
                     ],
+                    "p1772378299642": [
+                        "VER",
+                        "ANT",
+                        "NOR",
+                        "PIA",
+                        "HAM",
+                        "LEC",
+                        "RUS",
+                        "HAD",
+                        "LAW",
+                        "GAS",
+                        "COL",
+                        "SAI",
+                        "HUL",
+                        "LIN",
+                        "OCO",
+                        "BOR",
+                        "ALO",
+                        "BEA",
+                        "ALB",
+                        "PER",
+                        "STR",
+                        "BOT"
+                    ],
                     "p1772378303461": [
                         "ANT",
                         "VER",
@@ -5067,10 +5091,24 @@
                         "HAM",
                         "HAD",
                         "LEC"
+                    ],
+                    "p1772378317986": [
+                        "RUS",
+                        "VER",
+                        "HAD",
+                        "HAM",
+                        "LEC",
+                        "NOR",
+                        "ANT"
                     ]
                 }
             },
             "activityLog": [
+                {
+                    "msg": "Admin unlocked",
+                    "time": "08:45",
+                    "type": "good"
+                },
                 {
                     "msg": "Admin unlocked",
                     "time": "10:11",
@@ -5314,11 +5352,6 @@
                 {
                     "msg": "Admin unlocked",
                     "time": "19:50",
-                    "type": "good"
-                },
-                {
-                    "msg": "Admin unlocked",
-                    "time": "19:43",
                     "type": "good"
                 }
             ],
@@ -5972,14 +6005,16 @@
                 "r23": {
                     "p1772378294011": true,
                     "p1772378298046": true,
+                    "p1772378299642": true,
                     "p1772378303461": true,
                     "p1772378311744": true,
                     "p1772378313028": true,
-                    "p1772378316012": true
+                    "p1772378316012": true,
+                    "p1772378317986": true
                 }
             }
         },
-        "updated_at": "2026-11-25T10:50:24.952+00:00",
+        "updated_at": "2026-11-26T08:45:46.321+00:00",
         "version": 1
     }
 ]
